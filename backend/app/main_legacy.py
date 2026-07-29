@@ -409,10 +409,17 @@ async def router_metrics(
                 detail="Device not found in InfluxDB",
             )
 
-        uptime, uptime_time = get_latest_field(
+        uptime_raw, uptime_time = get_latest_field(
             validated_ip,
             "sysUptime",
             "mikrotik",
+        )
+
+        # SNMP sysUpTime is returned in hundredths of a second (TimeTicks).
+        uptime = (
+            round(float(uptime_raw) / 100, 2)
+            if uptime_raw is not None
+            else None
         )
 
         ping = get_ping_metrics(validated_ip)
