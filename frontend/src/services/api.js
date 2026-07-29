@@ -1,5 +1,4 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://192.168.45.196:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
 async function request(endpoint, options = {}) {
   const controller = new AbortController()
@@ -48,7 +47,7 @@ function normalizeDevice(device) {
 
 export const api = {
   health() {
-    return request('/api/health')
+    return request('/api/v1/health')
   },
 
   systemStatus() {
@@ -62,18 +61,40 @@ export const api = {
     return devices.map(normalizeDevice)
   },
 
-  device(ip) {
-    return request(`/api/devices/${encodeURIComponent(ip)}`)
+  async device(ip) {
+    const result = await request(
+      `/api/devices/${encodeURIComponent(ip)}`,
+    )
+
+    return normalizeDevice(result)
   },
 
   async metrics(ip) {
-    const result = await request(`/api/metrics/${encodeURIComponent(ip)}`)
+    const result = await request(
+      `/api/metrics/${encodeURIComponent(ip)}`,
+    )
+
     return result.metrics || result
   },
 
   async lte(ip) {
-    const result = await request(`/api/lte/${encodeURIComponent(ip)}`)
+    const result = await request(
+      `/api/lte/${encodeURIComponent(ip)}`,
+    )
+
     return result.lte || result
+  },
+
+  routeros(ip) {
+    return request(
+      `/api/v1/devices/${encodeURIComponent(ip)}/routeros`,
+    )
+  },
+
+  traffic(ip) {
+    return request(
+      `/api/v1/devices/${encodeURIComponent(ip)}/traffic`,
+    )
   },
 }
 

@@ -26,8 +26,12 @@ export function formatPercentage(value) {
 }
 
 export function formatTemperature(value) {
+  if (value === null || value === undefined || value === '') {
+    return 'غير مدعوم'
+  }
+
   const number = Number(value)
-  return Number.isFinite(number) ? `${number}°C` : '--'
+  return Number.isFinite(number) ? `${number}°C` : 'غير مدعوم'
 }
 
 export function formatBitrate(value) {

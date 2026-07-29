@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Activity,
+  ArrowDown,
   ArrowRight,
+  ArrowUp,
   Cpu,
   MemoryStick,
+  Network,
   RadioTower,
   Router,
   Signal,
@@ -14,9 +17,18 @@ import Header from '../components/layout/Header'
 import StatCard from '../components/dashboard/StatCard'
 import { api } from '../services/api'
 import {
+  formatBitrate,
   formatTemperature,
   formatUptime,
 } from '../utils/formatters'
+
+function displayValue(value, suffix = '') {
+  if (value === null || value === undefined || value === '') {
+    return 'غير متوفر'
+  }
+
+  return `${value}${suffix}`
+}
 
 export default function DeviceDetails() {
   const { ip } = useParams()
@@ -26,49 +38,99 @@ export default function DeviceDetails() {
   const [device, setDevice] = useState(null)
   const [metrics, setMetrics] = useState(null)
   const [lte, setLte] = useState(null)
+  const [routeros, setRouteros] = useState(null)
+  const [traffic, setTraffic] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [lastUpdated, setLastUpdated] = useState(null)
 
-  async function loadDevice(isRefresh = false) {
-    try {
-      setError('')
-      isRefresh ? setRefreshing(true) : setLoading(true)
+  const loadDevice = useCallback(
+    async (isRefresh = false) => {
+      try {
+        setError('')
+        isRefresh ? setRefreshing(true) : setLoading(true)
 
-      const [devices, metricData, lteResult] =
-        await Promise.all([
+        const [
+          devices,
+          metricData,
+          lteResult,
+          routerosResult,
+          trafficResult,
+        ] = await Promise.all([
           api.devices(),
           api.metrics(decodedIp),
           api.lte(decodedIp).catch(() => null),
+          api.routeros(decodedIp).catch((requestError) => {
+            console.error('RouterOS API:', requestError)
+            return null
+          }),
+          api.traffic(decodedIp).catch((requestError) => {
+            console.error('Traffic API:', requestError)
+            return null
+          }),
         ])
 
-      setDevice(
-        devices.find((item) => item.ip === decodedIp) || {
-          name: decodedIp,
-          ip: decodedIp,
-        },
-      )
-      setMetrics(metricData)
-      setLte(lteResult)
-      setLastUpdated(new Date())
-    } catch (requestError) {
-      console.error(requestError)
-      setError('تعذر تحميل تفاصيل الجهاز.')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
+        setDevice(
+          devices.find((item) => item.ip === decodedIp) || {
+            name: routerosResult?.identity || decodedIp,
+            ip: decodedIp,
+            status: 'unknown',
+          },
+        )
+
+        setMetrics(metricData)
+        setLte(lteResult)
+        setRouteros(routerosResult)
+        setTraffic(trafficResult)
+        setLastUpdated(new Date())
+      } catch (requestError) {
+        console.error(requestError)
+        setError('تعذر تحميل تفاصيل الجهاز.')
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    },
+    [decodedIp],
+  )
 
   useEffect(() => {
     loadDevice()
-  }, [decodedIp])
+
+    const interval = window.setInterval(() => {
+      loadDevice(true)
+    }, 15000)
+
+    return () => window.clearInterval(interval)
+  }, [loadDevice])
+
+  const cpuUsage =
+    routeros?.cpu_usage ?? metrics?.cpu_usage ?? null
+
+  const memoryUsage =
+    routeros?.memory_usage ?? metrics?.memory_usage ?? null
+
+  const temperature =
+    routeros?.temperature ?? metrics?.temperature ?? null
+
+  const uptime =
+    routeros?.uptime ?? metrics?.uptime_seconds ?? null
+
+  const rxBps =
+    traffic?.rx_bps ?? metrics?.rx_bps ?? null
+
+  const txBps =
+    traffic?.tx_bps ?? metrics?.tx_bps ?? null
 
   return (
     <>
       <Header
-        title={device?.name || 'تفاصيل الجهاز'}
+        title={
+          routeros?.identity ||
+          device?.name ||
+          'تفاصيل الجهاز'
+        }
         subtitle={`مراقبة الجهاز ${decodedIp}`}
         onRefresh={() => loadDevice(true)}
         refreshing={refreshing}
@@ -99,30 +161,69 @@ export default function DeviceDetails() {
 
         <StatCard
           title="استخدام CPU"
-          value={`${metrics?.cpu_usage ?? '--'}%`}
-          description="CPU Load"
+          value={
+            cpuUsage === null
+              ? 'غير متوفر'
+              : `${cpuUsage}%`
+          }
+          description={routeros?.cpu || 'CPU Load'}
           icon={Cpu}
+          tone={
+            Number(cpuUsage) >= 90
+              ? 'red'
+              : Number(cpuUsage) >= 70
+                ? 'orange'
+                : undefined
+          }
         />
 
         <StatCard
           title="استخدام الذاكرة"
-          value={`${metrics?.memory_usage ?? '--'}%`}
+          value={
+            memoryUsage === null
+              ? 'غير متوفر'
+              : `${memoryUsage}%`
+          }
           description="Memory Usage"
           icon={MemoryStick}
         />
 
         <StatCard
           title="درجة الحرارة"
-          value={formatTemperature(metrics?.temperature)}
+          value={
+            temperature === null
+              ? 'غير مدعوم'
+              : formatTemperature(temperature)
+          }
           description="System Temperature"
           icon={Thermometer}
         />
 
         <StatCard
           title="زمن التشغيل"
-          value={formatUptime(metrics?.uptime_seconds)}
+          value={formatUptime(uptime)}
           description="Device Uptime"
           icon={Activity}
+          tone="purple"
+        />
+
+        <StatCard
+          title="Download"
+          value={formatBitrate(rxBps)}
+          description={
+            traffic?.selected_interface || 'Live RX Traffic'
+          }
+          icon={ArrowDown}
+          tone="green"
+        />
+
+        <StatCard
+          title="Upload"
+          value={formatBitrate(txBps)}
+          description={
+            traffic?.selected_interface || 'Live TX Traffic'
+          }
+          icon={ArrowUp}
           tone="purple"
         />
 
@@ -137,6 +238,7 @@ export default function DeviceDetails() {
         <StatCard
           title="جودة الإشارة"
           value={
+            lte?.rsrp !== null &&
             lte?.rsrp !== undefined
               ? `${lte.rsrp} dBm`
               : 'غير متوفر'
@@ -161,23 +263,144 @@ export default function DeviceDetails() {
           <div className="details-list">
             <div>
               <span>اسم الجهاز</span>
-              <strong>{device?.name || '--'}</strong>
+              <strong>
+                {routeros?.identity || device?.name || '--'}
+              </strong>
             </div>
             <div>
               <span>عنوان IP</span>
               <strong>{decodedIp}</strong>
             </div>
             <div>
+              <span>الموديل</span>
+              <strong>
+                {routeros?.board_name || 'غير متوفر'}
+              </strong>
+            </div>
+            <div>
+              <span>إصدار RouterOS</span>
+              <strong>
+                {routeros?.version || 'غير متوفر'}
+              </strong>
+            </div>
+            <div>
+              <span>المنصة</span>
+              <strong>
+                {routeros?.platform || device?.type || '--'}
+              </strong>
+            </div>
+            <div>
+              <span>المعمارية</span>
+              <strong>
+                {routeros?.architecture || 'غير متوفر'}
+              </strong>
+            </div>
+            <div>
               <span>الموقع</span>
               <strong>{device?.site || '--'}</strong>
             </div>
             <div>
-              <span>النوع</span>
-              <strong>{device?.type || '--'}</strong>
-            </div>
-            <div>
               <span>الحالة</span>
               <strong>{device?.status || '--'}</strong>
+            </div>
+          </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">Live Traffic</p>
+              <h3>حركة الشبكة الحية</h3>
+            </div>
+
+            <Network size={22} />
+          </div>
+
+          <div className="details-list">
+            <div>
+              <span>المنفذ المختار</span>
+              <strong>
+                {traffic?.selected_interface || 'غير متوفر'}
+              </strong>
+            </div>
+            <div>
+              <span>Download</span>
+              <strong>{formatBitrate(rxBps)}</strong>
+            </div>
+            <div>
+              <span>Upload</span>
+              <strong>{formatBitrate(txBps)}</strong>
+            </div>
+            <div>
+              <span>إجمالي الحركة</span>
+              <strong>
+                {formatBitrate(traffic?.total_bps)}
+              </strong>
+            </div>
+            <div>
+              <span>عدد المنافذ</span>
+              <strong>
+                {traffic?.interfaces?.length ?? 0}
+              </strong>
+            </div>
+          </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">System Resources</p>
+              <h3>موارد النظام</h3>
+            </div>
+
+            <Cpu size={22} />
+          </div>
+
+          <div className="details-list">
+            <div>
+              <span>نوع المعالج</span>
+              <strong>
+                {routeros?.cpu || 'غير متوفر'}
+              </strong>
+            </div>
+            <div>
+              <span>عدد الأنوية</span>
+              <strong>
+                {displayValue(routeros?.cpu_count)}
+              </strong>
+            </div>
+            <div>
+              <span>تردد المعالج</span>
+              <strong>
+                {displayValue(
+                  routeros?.cpu_frequency_mhz,
+                  ' MHz',
+                )}
+              </strong>
+            </div>
+            <div>
+              <span>الذاكرة الكلية</span>
+              <strong>
+                {routeros?.total_memory_bytes
+                  ? `${(
+                      routeros.total_memory_bytes /
+                      1024 /
+                      1024
+                    ).toFixed(1)} MB`
+                  : 'غير متوفر'}
+              </strong>
+            </div>
+            <div>
+              <span>الذاكرة الحرة</span>
+              <strong>
+                {routeros?.free_memory_bytes
+                  ? `${(
+                      routeros.free_memory_bytes /
+                      1024 /
+                      1024
+                    ).toFixed(1)} MB`
+                  : 'غير متوفر'}
+              </strong>
             </div>
           </div>
         </article>
