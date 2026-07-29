@@ -63,7 +63,7 @@ def first_number(data: dict[str, Any], keys: list[str]) -> float | None:
 
 
 def device_ip(device: dict[str, Any]) -> str | None:
-    for key in ("router_ip", "agent_host", "ip", "host", "address"):
+    for key in ("router_ip", "ip_address", "agent_host", "ip", "host", "address"):
         value = device.get(key)
 
         if value:
