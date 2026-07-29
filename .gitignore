@@ -1,0 +1,59 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/npm-debug.log*
+frontend/yarn-error.log*
+
+# Backend
+backend/__pycache__/
+backend/app/__pycache__/
+backend/.venv/
+backend/venv/
+backend/*.pyc
+backend/**/*.pyc
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*~
+
+# Backups and archives
+*.backup
+*.backup-*
+*.bak
+*.tar
+*.tar.gz
+src-backup-*/
+frontend/src-backup-*/
+backend/app/main.py.backup-*
+
+# Logs and runtime
+*.log
+logs/
+tmp/
+.cache/
+
+# Docker persistent data
+influxdb-data/
+grafana-data/
+postgres-data/
+redis-data/

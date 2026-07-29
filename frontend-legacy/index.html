@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>SS4TS NOC</title>
+
+  <style>
+    :root {
+      --bg: #080d16;
+      --sidebar: #0d1420;
+      --card: #111b2a;
+      --card-hover: #162235;
+      --border: #243147;
+      --text: #f3f6fb;
+      --muted: #8d9bb0;
+      --orange: #ff8a1f;
+      --orange-light: #ffa44c;
+      --green: #35d07f;
+      --red: #ff5f68;
+      --blue: #4d9fff;
+      --yellow: #f7c948;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input {
+      font-family: inherit;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--sidebar);
+      border-left: 1px solid var(--border);
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .logo {
+      padding: 0 12px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-title {
+      color: var(--orange);
+      font-size: 27px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .logo-subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .menu {
+      margin-top: 25px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 14px;
+      border-radius: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: 0.2s;
+    }
+
+    .menu-item:hover,
+    .menu-item.active {
+      background: rgba(255, 138, 31, 0.12);
+      color: var(--orange);
+    }
+
+    .menu-icon {
+      font-size: 19px;
+    }
+
+    .sidebar-footer {
+      position: absolute;
+      bottom: 20px;
+      right: 16px;
+      left: 16px;
+      padding: 14px;
+      background: #101a29;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--green);
+    }
+
+    .main {
+      padding: 26px;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .page-title h1 {
+      margin: 0;
+      font-size: 27px;
+    }
+
+    .page-title p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .time-box {
+      text-align: left;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .time-box strong {
+      display: block;
+      color: var(--text);
+      font-size: 17px;
+      margin-bottom: 4px;
+    }
+
+    .router-search {
+      background: linear-gradient(135deg, #121d2d, #0f1724);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .router-search-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .router-search-title h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .router-search-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      direction: ltr;
+    }
+
+    .router-input {
+      height: 52px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #090f18;
+      color: var(--text);
+      font-size: 18px;
+      direction: ltr;
+      outline: none;
+    }
+
+    .router-input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(255, 138, 31, 0.12);
+    }
+
+    .btn {
+      height: 52px;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 22px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #141414;
+    }
+
+    .btn-primary:hover {
+      background: var(--orange-light);
+    }
+
+    .btn-secondary {
+      background: #192638;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #22334a;
+    }
+
+    .message {
+      min-height: 22px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .recent-wrapper {
+      margin-top: 15px;
+    }
+
+    .recent-title {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 9px;
+    }
+
+    .recent-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      direction: ltr;
+    }
+
+    .recent-ip {
+      background: #0a111b;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .recent-ip:hover {
+      color: var(--orange);
+      border-color: var(--orange);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .metric-card {
+      position: relative;
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 19px;
+      transition: 0.2s;
+    }
+
+    .metric-card:hover {
+      background: var(--card-hover);
+      transform: translateY(-2px);
+    }
+
+    .metric-icon {
+      font-size: 26px;
+      margin-bottom: 15px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 800;
+      margin-top: 7px;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .metric-status {
+      margin-top: 9px;
+      font-size: 12px;
+      color: var(--green);
+    }
+
+    .metric-line {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--orange);
+      opacity: 0.75;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .panel-header span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .traffic-placeholder {
+      height: 240px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px dashed #34435a;
+      border-radius: 12px;
+      background:
+        linear-gradient(rgba(77, 159, 255, 0.03), rgba(77, 159, 255, 0.03)),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 39px,
+          rgba(141, 155, 176, 0.08) 40px
+        );
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .device-list {
+      display: grid;
+      gap: 11px;
+    }
+
+    .device {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px;
+      background: #0d1623;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .device-info strong {
+      display: block;
+      font-size: 14px;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .device-info span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .device-state {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    @media (max-width: 1050px) {
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .layout {
+        display: block;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        padding: 17px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .search-row {
+        grid-template-columns: 1fr;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .time-box {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-title">SS4TS NOC</div>
+        <div class="logo-subtitle">Network Operations Center</div>
+      </div>
+
+      <nav class="menu">
+        <a class="menu-item active" href="#">
+          <span class="menu-icon">🏠</span>
+          لوحة التحكم
+        </a>
+
+        <a class="menu-item" href="#">
+          <span class="menu-icon">🖥️</span>
+          الأجهزة
+        </a>
+
+        <a class="menu-item" href="#">
+          <span class="menu-icon">📈</span>
+          حركة الشبكة
+        </a>
+
+        <a class="menu-item" href="#">
+          <span class="menu-icon">📡</span>
+          LTE و5G
+        </a>
+
+        <a class="menu-item" href="#">
+          <span class="menu-icon">🗺️</span>
+          خريطة المواقع
+        </a>
+
+        <a class="menu-item" href="#">
+          <span class="menu-icon">🚨</span>
+          التنبيهات
+        </a>
+
+        <a class="menu-item" href="http://192.168.45.196:3000" target="_blank">
+          <span class="menu-icon">📊</span>
+          فتح Grafana
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-line">
+          <span>حالة النظام</span>
+          <span class="status-dot"></span>
+        </div>
+        <div style="color:var(--muted);font-size:12px;margin-top:8px">
+          جميع الخدمات تعمل
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <header class="topbar">
+        <div class="page-title">
+          <h1>لوحة مراقبة الشبكة</h1>
+          <p>مراقبة أجهزة MikroTik والبنية التحتية لشركة SS4TS</p>
+        </div>
+
+        <div class="time-box">
+          <strong id="currentTime">--:--</strong>
+          <span id="currentDate">--</span>
+        </div>
+      </header>
+
+      <section class="router-search">
+        <div class="router-search-title">
+          <h2>🌐 اختيار جهاز MikroTik</h2>
+          <span>أدخل عنوان IP لعرض بيانات الجهاز</span>
+        </div>
+
+        <div class="search-row">
+          <input
+            id="routerIp"
+            class="router-input"
+            type="text"
+            value="192.168.45.99"
+            placeholder="192.168.45.99"
+            autocomplete="off"
+          >
+
+          <button id="connectButton" class="btn btn-primary">
+            اتصال بالجهاز
+          </button>
+
+          <button id="grafanaButton" class="btn btn-secondary">
+            فتح Grafana
+          </button>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="recent-wrapper">
+          <div class="recent-title">آخر الأجهزة المستخدمة</div>
+          <div id="recentDevices" class="recent-list"></div>
+        </div>
+      </section>
+
+      <section class="cards">
+
+        <article class="metric-card">
+          <div class="metric-icon">⚙️</div>
+          <div class="metric-label">استخدام المعالج</div>
+          <div id="cpuValue" class="metric-value">--%</div>
+          <div class="metric-status">● في انتظار البيانات</div>
+          <div class="metric-line"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-icon">🧠</div>
+          <div class="metric-label">استخدام الذاكرة</div>
+          <div id="memoryValue" class="metric-value">--%</div>
+          <div class="metric-status">● في انتظار البيانات</div>
+          <div class="metric-line" style="background:var(--blue)"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-icon">🌡️</div>
+          <div class="metric-label">درجة الحرارة</div>
+          <div id="temperatureValue" class="metric-value">--°C</div>
+          <div class="metric-status">● في انتظار البيانات</div>
+          <div class="metric-line" style="background:var(--red)"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-icon">⏱️</div>
+          <div class="metric-label">مدة التشغيل</div>
+          <div id="uptimeValue" class="metric-value">--</div>
+          <div class="metric-status">● في انتظار البيانات</div>
+          <div class="metric-line" style="background:var(--green)"></div>
+        </article>
+
+      </section>
+
+      <section class="content-grid">
+
+        <article class="panel">
+          <div class="panel-header">
+            <h3>📈 حركة الشبكة</h3>
+            <span>آخر 6 ساعات</span>
+          </div>
+
+          <div class="traffic-placeholder">
+            سيتم ربط هذا القسم ببيانات InfluxDB<br>
+            RX / TX لجميع واجهات الراوتر
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h3>🖥️ الأجهزة الأخيرة</h3>
+            <span>الحالة الحالية</span>
+          </div>
+
+          <div id="deviceList" class="device-list">
+            <div class="device">
+              <div class="device-info">
+                <strong>192.168.45.99</strong>
+                <span>MikroTik Router</span>
+              </div>
+              <div class="device-state"></div>
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    "use strict";
+
+    const grafanaBaseUrl = "http://192.168.45.196:3000";
+    const apiBaseUrl = "http://192.168.45.196:8000";
+    const storageKey = "ss4ts_recent_router_ips";
+
+    const routerIp = document.getElementById("routerIp");
+    const connectButton = document.getElementById("connectButton");
+    const grafanaButton = document.getElementById("grafanaButton");
+    const message = document.getElementById("message");
+    const recentDevices = document.getElementById("recentDevices");
+    const deviceList = document.getElementById("deviceList");
+
+    function isValidIPv4(ip) {
+      const parts = ip.trim().split(".");
+
+      if (parts.length !== 4) {
+        return false;
+      }
+
+      return parts.every((part) => {
+        if (!/^\d{1,3}$/.test(part)) {
+          return false;
+        }
+
+        const value = Number(part);
+        return value >= 0 && value <= 255;
+      });
+    }
+
+    function getRecentIps() {
+      try {
+        const values = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        return Array.isArray(values) ? values : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRecentIp(ip) {
+      const current = getRecentIps().filter((item) => item !== ip);
+      const updated = [ip, ...current].slice(0, 8);
+
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      renderRecentIps();
+      renderDeviceList();
+    }
+
+    function renderRecentIps() {
+      const ips = getRecentIps();
+      recentDevices.innerHTML = "";
+
+      if (ips.length === 0) {
+        recentDevices.innerHTML =
+          '<span style="color:var(--muted);font-size:13px">لا توجد أجهزة محفوظة</span>';
+        return;
+      }
+
+      ips.forEach((ip) => {
+        const button = document.createElement("button");
+        button.className = "recent-ip";
+        button.textContent = ip;
+
+        button.addEventListener("click", () => {
+          routerIp.value = ip;
+          connectToRouter();
+        });
+
+        recentDevices.appendChild(button);
+      });
+    }
+
+    function renderDeviceList() {
+      const ips = getRecentIps();
+      const devices = ips.length ? ips.slice(0, 5) : ["192.168.45.99"];
+
+      deviceList.innerHTML = "";
+
+      devices.forEach((ip) => {
+        const item = document.createElement("div");
+        item.className = "device";
+
+        item.innerHTML = `
+          <div class="device-info">
+            <strong>${ip}</strong>
+            <span>MikroTik Router</span>
+          </div>
+          <div class="device-state"></div>
+        `;
+
+        deviceList.appendChild(item);
+      });
+    }
+
+    function formatUptime(seconds) {
+      if (
+        seconds === null ||
+        seconds === undefined ||
+        Number.isNaN(Number(seconds))
+      ) {
+        return "--";
+      }
+
+      const totalSeconds = Number(seconds);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+      if (days > 0) {
+        return `${days} يوم ${hours} ساعة`;
+      }
+
+      if (hours > 0) {
+        return `${hours} ساعة ${minutes} دقيقة`;
+      }
+
+      return `${minutes} دقيقة`;
+    }
+
+    async function connectToRouter() {
+      const ip = routerIp.value.trim();
+
+      if (!isValidIPv4(ip)) {
+        message.textContent = "❌ عنوان IP غير صحيح.";
+        message.style.color = "var(--red)";
+        routerIp.focus();
+        return;
+      }
+
+      message.textContent = `⏳ جارٍ قراءة بيانات الراوتر ${ip}...`;
+      message.style.color = "var(--yellow)";
+      connectButton.disabled = true;
+
+      try {
+        const response = await fetch(
+          `${apiBaseUrl}/api/metrics/${encodeURIComponent(ip)}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const metrics = data.metrics || {};
+
+        document.getElementById("cpuValue").textContent =
+          metrics.cpu_usage !== null &&
+          metrics.cpu_usage !== undefined
+            ? `${metrics.cpu_usage}%`
+            : "--%";
+
+        document.getElementById("memoryValue").textContent =
+          metrics.memory_usage !== null &&
+          metrics.memory_usage !== undefined
+            ? `${metrics.memory_usage}%`
+            : "--%";
+
+        document.getElementById("temperatureValue").textContent =
+          metrics.temperature !== null &&
+          metrics.temperature !== undefined
+            ? `${metrics.temperature}°C`
+            : "--°C";
+
+        document.getElementById("uptimeValue").textContent =
+          formatUptime(metrics.uptime_seconds);
+
+        saveRecentIp(ip);
+
+        message.textContent =
+          `✅ تم الاتصال بـ ${data.device_name} — الحالة: ${data.status}`;
+
+        message.style.color = "var(--green)";
+      } catch (error) {
+        console.error("SS4TS API error:", error);
+
+        document.getElementById("cpuValue").textContent = "--%";
+        document.getElementById("memoryValue").textContent = "--%";
+        document.getElementById("temperatureValue").textContent = "--°C";
+        document.getElementById("uptimeValue").textContent = "--";
+
+        message.textContent =
+          "❌ تعذر قراءة بيانات الراوتر من SS4TS API.";
+
+        message.style.color = "var(--red)";
+      } finally {
+        connectButton.disabled = false;
+      }
+    }
+
+    function openGrafana() {
+      const ip = routerIp.value.trim();
+
+      if (!isValidIPv4(ip)) {
+        message.textContent = "❌ أدخل عنوان IP صحيحًا أولًا.";
+        message.style.color = "var(--red)";
+        return;
+      }
+
+      saveRecentIp(ip);
+
+      const url =
+        `${grafanaBaseUrl}/?var-router_ip=${encodeURIComponent(ip)}`;
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function updateClock() {
+      const now = new Date();
+
+      document.getElementById("currentTime").textContent =
+        now.toLocaleTimeString("ar-SA", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+
+      document.getElementById("currentDate").textContent =
+        now.toLocaleDateString("ar-SA", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+    }
+
+    connectButton.addEventListener("click", connectToRouter);
+    grafanaButton.addEventListener("click", openGrafana);
+
+    routerIp.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        connectToRouter();
+      }
+    });
+
+    renderRecentIps();
+    renderDeviceList();
+    updateClock();
+
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
