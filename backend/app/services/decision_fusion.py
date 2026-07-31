@@ -150,7 +150,65 @@ class DecisionFusionService:
         )
 
     @staticmethod
+    def _root_cause_fusion_score(
+        cause: RootCause,
+    ) -> float:
+        """
+        Prioritize specific telemetry-backed causes over generic
+        availability or impact-description causes.
+
+        RootCause.rank_score remains untouched; this score is used only
+        when selecting the primary cause in the fusion layer.
+        """
+
+        cause_id = cause.cause_id.lower()
+
+        specificity_bonus = 0.0
+
+        if cause_id.startswith(
+            "cause:power:"
+        ):
+            specificity_bonus = 30.0
+
+        elif cause_id.startswith(
+            "cause:upstream:"
+        ):
+            specificity_bonus = 22.0
+
+        elif cause_id.startswith(
+            "cause:interface:"
+        ):
+            specificity_bonus = 20.0
+
+        elif cause_id.startswith(
+            "cause:routing:"
+        ):
+            specificity_bonus = 18.0
+
+        elif cause_id.startswith(
+            "cause:availability:"
+        ):
+            specificity_bonus = 5.0
+
+        elif cause_id.startswith(
+            "impact-cause:"
+        ):
+            specificity_bonus = -20.0
+
+        evidence_bonus = min(
+            len(cause.evidence) * 0.5,
+            5.0,
+        )
+
+        return (
+            cause.rank_score
+            + specificity_bonus
+            + evidence_bonus
+        )
+
+    @classmethod
     def _deduplicate_root_causes(
+        cls,
         values: list[RootCause],
     ) -> list[RootCause]:
         unique: dict[
@@ -165,16 +223,18 @@ class DecisionFusionService:
 
             if (
                 current is None
-                or item.rank_score
-                > current.rank_score
+                or cls._root_cause_fusion_score(
+                    item
+                )
+                > cls._root_cause_fusion_score(
+                    current
+                )
             ):
                 unique[item.cause_id] = item
 
         return sorted(
             unique.values(),
-            key=lambda item: (
-                item.rank_score
-            ),
+            key=cls._root_cause_fusion_score,
             reverse=True,
         )
 
