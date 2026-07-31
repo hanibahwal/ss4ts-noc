@@ -1,6 +1,10 @@
 .ss-ui-table-wrap {
   position: relative;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  width: 100%;
   overflow: auto;
 
   border-radius:
@@ -73,6 +77,9 @@
 }
 
 .ss-ui-table td {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   height:
     var(--ss-table-row-height);
 
@@ -236,4 +243,43 @@
   .ss-ui-table {
     min-width: 820px;
   }
+}
+
+
+/* =========================================================
+   Sprint 1.6.2-D3.1-H4.1
+   Row styling extension
+========================================================= */
+
+.ss-ui-table tbody tr.has-errors {
+  background:
+    color-mix(
+      in srgb,
+      var(--ss-danger-soft) 48%,
+      transparent
+    );
+}
+
+.ss-ui-table tbody tr.has-errors:hover {
+  background:
+    color-mix(
+      in srgb,
+      var(--ss-danger-soft) 66%,
+      transparent
+    );
+}
+
+.ss-ui-table tbody tr.is-down {
+  opacity: 0.78;
+}
+
+.ss-ui-table tbody tr.is-down td {
+  color:
+    var(--ss-text-muted);
+}
+
+.ss-ui-table tbody tr.is-selected.has-errors {
+  box-shadow:
+    inset 3px 0
+    var(--ss-danger);
 }
