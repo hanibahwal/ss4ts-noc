@@ -300,9 +300,20 @@ class RootCauseAnalysisService:
         self,
         node_id: str,
     ) -> list[KnowledgeNode]:
-        return self.query.dependencies(
+        """
+        Return direct upstream dependencies, including failed nodes.
+
+        Root-cause analysis must inspect inactive dependencies because
+        those nodes are often the actual cause of the source failure.
+        """
+
+        return self.query.neighbors(
             node_id,
-            recursive=False,
+            direction="outgoing",
+            relationships={
+                RelationshipType.DEPENDS_ON,
+            },
+            include_inactive=True,
         )
 
     def _direct_dependents(
