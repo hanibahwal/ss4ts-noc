@@ -375,3 +375,45 @@ def test_invalid_direction_rejected() -> None:
             "core",
             direction="sideways",
         )
+
+
+def test_bidirectional_neighbor_from_reverse_endpoint() -> None:
+    query = KnowledgeGraphQuery(
+        make_graph()
+    )
+
+    neighbors = query.neighbors(
+        "access-b",
+        relationships={
+            RelationshipType.CONNECTED_TO,
+        },
+    )
+
+    assert {
+        node.id
+        for node in neighbors
+    } == {
+        "access-a",
+    }
+
+
+def test_bidirectional_neighbor_never_returns_self() -> None:
+    query = KnowledgeGraphQuery(
+        make_graph()
+    )
+
+    for node_id in (
+        "access-a",
+        "access-b",
+    ):
+        neighbors = query.neighbors(
+            node_id,
+            relationships={
+                RelationshipType.CONNECTED_TO,
+            },
+        )
+
+        assert node_id not in {
+            node.id
+            for node in neighbors
+        }
