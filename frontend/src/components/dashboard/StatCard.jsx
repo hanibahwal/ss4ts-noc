@@ -1,7 +1,9 @@
-import SSCard from '../ui/SSCard'
+import {
+  SSMetric,
+} from '../ui'
 
 
-const TONE_ACCENT_MAP = {
+const TONE_MAP = {
   blue: 'primary',
   green: 'success',
   red: 'danger',
@@ -9,6 +11,7 @@ const TONE_ACCENT_MAP = {
   purple: 'purple',
   download: 'download',
   upload: 'upload',
+  neutral: 'neutral',
 }
 
 
@@ -16,7 +19,7 @@ export default function StatCard({
   title,
   value,
   description,
-  icon: Icon,
+  icon,
   tone = 'blue',
   loading = false,
   interactive = false,
@@ -24,17 +27,12 @@ export default function StatCard({
   className = '',
   onClick,
 }) {
-  const accent =
-    TONE_ACCENT_MAP[tone] ||
+  const metricTone =
+    TONE_MAP[tone] ||
     'primary'
 
-  const isInteractive =
-    interactive ||
-    typeof onClick === 'function'
-
   return (
-    <SSCard
-      as="article"
+    <SSMetric
       className={
         [
           'stat-card',
@@ -44,63 +42,24 @@ export default function StatCard({
           .filter(Boolean)
           .join(' ')
       }
-      variant="default"
-      density="compact"
-      accent={accent}
+      title={title}
+      value={
+        value ??
+        'غير متوفر'
+      }
+      description={description}
+      icon={icon}
+      tone={metricTone}
+      size="md"
+      layout="horizontal"
       loading={loading}
-      interactive={isInteractive}
+      interactive={
+        interactive ||
+        typeof onClick ===
+          'function'
+      }
       selected={selected}
-      noBodyPadding
-      bodyClassName="stat-card-layout"
       onClick={onClick}
-      role={
-        isInteractive
-          ? 'button'
-          : undefined
-      }
-      tabIndex={
-        isInteractive
-          ? 0
-          : undefined
-      }
-      onKeyDown={
-        isInteractive
-          ? (event) => {
-              if (
-                event.key === 'Enter' ||
-                event.key === ' '
-              ) {
-                event.preventDefault()
-
-                onClick?.(event)
-              }
-            }
-          : undefined
-      }
-    >
-      <div className="stat-icon">
-        {Icon ? (
-          <Icon
-            size={23}
-            aria-hidden="true"
-          />
-        ) : null}
-      </div>
-
-      <div className="stat-card-content">
-        <span>{title}</span>
-
-        <strong>
-          {value ??
-            'غير متوفر'}
-        </strong>
-
-        {description ? (
-          <small>
-            {description}
-          </small>
-        ) : null}
-      </div>
-    </SSCard>
+    />
   )
 }
