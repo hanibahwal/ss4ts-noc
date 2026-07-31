@@ -670,7 +670,12 @@ class DecisionFusionService:
             or source.id
         )
 
-        return DecisionIntelligenceResult(
+        fused_root_cause_ids = [
+            cause.cause_id
+            for cause in root_causes
+        ]
+
+        result = DecisionIntelligenceResult(
             router_ip=router_ip,
             device_name=source.label,
             engine_name=(
@@ -733,6 +738,22 @@ class DecisionFusionService:
                     impact.decision_id,
             },
         )
+
+        # DecisionIntelligenceResult.__post_init__ sorts root causes
+        # in place using generic rank_score. Restore the exact fusion
+        # ordering captured before model initialization.
+        root_cause_by_id = {
+            cause.cause_id: cause
+            for cause in result.root_causes
+        }
+
+        result.root_causes = [
+            root_cause_by_id[cause_id]
+            for cause_id in fused_root_cause_ids
+            if cause_id in root_cause_by_id
+        ]
+
+        return result
 
 
 def fuse_graph_decision(
