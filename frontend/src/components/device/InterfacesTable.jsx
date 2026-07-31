@@ -680,6 +680,102 @@ function renderTypeCell(item) {
 }
 
 
+function createInterfaceColumns({
+  selectInterface,
+  effectiveSelectedInterface,
+}) {
+  return [
+    {
+      key: 'status',
+      header: 'الحالة',
+      sortable: true,
+      minWidth: 150,
+      cell: ({ row }) =>
+        renderStatusCell(row),
+    },
+    {
+      key: 'interface',
+      header: 'الواجهة',
+      sortable: true,
+      minWidth: 200,
+      cell: ({ row }) =>
+        renderInterfaceCell(row),
+    },
+    {
+      key: 'type',
+      header: 'النوع',
+      sortable: true,
+      minWidth: 120,
+      cell: ({ row }) =>
+        renderTypeCell(row),
+    },
+    {
+      key: 'speed',
+      header: 'السرعة',
+      sortable: true,
+      minWidth: 130,
+      cell: ({ row }) =>
+        renderSpeedCell(row),
+    },
+    {
+      key: 'download',
+      header: 'Download',
+      sortable: true,
+      minWidth: 130,
+      cell: ({ row }) =>
+        renderDownloadCell(row),
+    },
+    {
+      key: 'upload',
+      header: 'Upload',
+      sortable: true,
+      minWidth: 130,
+      cell: ({ row }) =>
+        renderUploadCell(row),
+    },
+    {
+      key: 'utilization',
+      header: 'الاستخدام',
+      sortable: true,
+      minWidth: 180,
+      cell: ({ row }) =>
+        renderUtilizationCell(row),
+    },
+    {
+      key: 'errors',
+      header: 'الأخطاء',
+      sortable: true,
+      minWidth: 150,
+      cell: ({ row }) =>
+        renderErrorsCell(row),
+    },
+    {
+      key: 'mtu',
+      header: 'MTU',
+      sortable: true,
+      minWidth: 90,
+      cell: ({ row }) =>
+        renderMtuCell(row),
+    },
+    {
+      key: 'action',
+      header: 'الإجراء',
+      sortable: false,
+      minWidth: 120,
+      cell: ({ row }) =>
+        renderActionCell({
+          item: row,
+          selected:
+            effectiveSelectedInterface ===
+            row.if_descr,
+          onSelect:
+            selectInterface,
+        }),
+    },
+  ]
+}
+
+
 export default function InterfacesTable({
   ip,
   selectedInterface = '',
@@ -753,6 +849,19 @@ export default function InterfacesTable({
     selectedInterface ||
     apiSelectedInterface ||
     ''
+
+
+  const interfaceColumns =
+    useMemo(
+      () =>
+        createInterfaceColumns({
+          selectInterface,
+          effectiveSelectedInterface,
+        }),
+      [
+        effectiveSelectedInterface,
+      ],
+    )
 
   const displayedInterfaces =
     useMemo(() => {
