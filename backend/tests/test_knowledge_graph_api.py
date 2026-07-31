@@ -257,3 +257,90 @@ def test_decision_timeline_route_is_registered() -> None:
         "nodes/{node_id}/decision/timeline"
         in paths
     )
+
+
+def test_execution_plan_endpoint() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_execution_plan(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    assert (
+        result["source_node_id"]
+        == "device:10.0.0.1"
+    )
+
+    assert result["dry_run_only"] is True
+
+    assert (
+        result["automatic_execution_allowed"]
+        is False
+    )
+
+    assert (
+        result["statistics"]["step_count"]
+        == 7
+    )
+
+    assert (
+        result["statistics"]
+        ["mutating_step_count"]
+        == 1
+    )
+
+    assert (
+        result["statistics"]
+        ["rollback_available"]
+        is True
+    )
+
+    command_step = next(
+        step
+        for step in result["steps"]
+        if step["type"] == "command"
+    )
+
+    assert command_step["command"].startswith(
+        "DRY_RUN_ONLY:"
+    )
+
+    assert (
+        command_step["requires_approval"]
+        is True
+    )
+
+
+def test_execution_plan_missing_node_returns_404() -> None:
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            knowledge_graph
+            .knowledge_graph_execution_plan(
+                "device:missing",
+                max_depth=10,
+            )
+        )
+
+    assert exc.value.status_code == 404
+
+    assert (
+        "Graph node not found"
+        in str(exc.value.detail)
+    )
+
+
+def test_execution_plan_route_is_registered() -> None:
+    paths = {
+        route.path
+        for route in api_router.routes
+    }
+
+    assert (
+        "/api/v1/knowledge-graph/"
+        "nodes/{node_id}/decision/execution-plan"
+        in paths
+    )
