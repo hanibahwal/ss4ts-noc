@@ -232,16 +232,34 @@ class KnowledgeGraphQuery:
                     )
                 )
 
-                if edge.bidirectional:
-                    steps.append(
-                        TraversalStep(
-                            source_id=edge.target_id,
-                            target_id=node_id,
-                            edge_id=edge.id,
-                            relationship=edge.type,
-                            depth=depth,
-                        )
+            for edge in self._incoming[
+                node_id
+            ]:
+                if not edge.bidirectional:
+                    continue
+
+                if (
+                    not include_inactive
+                    and not edge.active
+                ):
+                    continue
+
+                if (
+                    relationships is not None
+                    and edge.type
+                    not in relationships
+                ):
+                    continue
+
+                steps.append(
+                    TraversalStep(
+                        source_id=node_id,
+                        target_id=edge.source_id,
+                        edge_id=edge.id,
+                        relationship=edge.type,
+                        depth=depth,
                     )
+                )
 
         if direction in {
             "incoming",
@@ -273,16 +291,34 @@ class KnowledgeGraphQuery:
                     )
                 )
 
-                if edge.bidirectional:
-                    steps.append(
-                        TraversalStep(
-                            source_id=edge.source_id,
-                            target_id=node_id,
-                            edge_id=edge.id,
-                            relationship=edge.type,
-                            depth=depth,
-                        )
+            for edge in self._outgoing[
+                node_id
+            ]:
+                if not edge.bidirectional:
+                    continue
+
+                if (
+                    not include_inactive
+                    and not edge.active
+                ):
+                    continue
+
+                if (
+                    relationships is not None
+                    and edge.type
+                    not in relationships
+                ):
+                    continue
+
+                steps.append(
+                    TraversalStep(
+                        source_id=node_id,
+                        target_id=edge.target_id,
+                        edge_id=edge.id,
+                        relationship=edge.type,
+                        depth=depth,
                     )
+                )
 
         unique: dict[
             tuple[str, str],
