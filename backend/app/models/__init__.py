@@ -21,6 +21,15 @@ from app.models.device import (
     DeviceSnapshot,
     DeviceStatus,
 )
+from app.models.knowledge_graph import (
+    GraphSnapshot,
+    ImpactPath,
+    KnowledgeEdge,
+    KnowledgeNode,
+    NodeType,
+    RelationshipType,
+    normalize_graph,
+)
 from app.models.interface import (
     InterfaceKind,
     InterfaceSnapshot,
@@ -56,6 +65,13 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "normalize_graph",
+    "RelationshipType",
+    "NodeType",
+    "KnowledgeNode",
+    "KnowledgeEdge",
+    "ImpactPath",
+    "GraphSnapshot",
     "CapacityForecast",
     "DecisionIntelligenceResult",
     "DecisionPriority",
