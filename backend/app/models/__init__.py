@@ -45,6 +45,15 @@ from app.models.impact_decision import (
     ImpactSeverity,
     normalize_impact_decisions,
 )
+from app.models.execution_plan import (
+    ExecutionPlan,
+    ExecutionPlanStatus,
+    ExecutionPlanStep,
+    ExecutionSafetyLevel,
+    ExecutionStepStatus,
+    ExecutionStepType,
+    normalize_execution_plan,
+)
 from app.models.interface import (
     InterfaceKind,
     InterfaceSnapshot,
@@ -80,6 +89,13 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "normalize_execution_plan",
+    "ExecutionStepType",
+    "ExecutionStepStatus",
+    "ExecutionSafetyLevel",
+    "ExecutionPlanStep",
+    "ExecutionPlanStatus",
+    "ExecutionPlan",
     "normalize_decision_timeline",
     "TimelineEventType",
     "TimelineEventStatus",
