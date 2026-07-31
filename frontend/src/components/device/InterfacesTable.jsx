@@ -472,6 +472,104 @@ function UtilizationBar({
 }
 
 
+function renderSpeedCell(item) {
+  return (
+    <div className="interface-pro-speed">
+      <strong>
+        {formatSpeed(
+          item.speed_bps,
+        )}
+      </strong>
+
+      <small>
+        Link Speed
+      </small>
+    </div>
+  )
+}
+
+
+function renderDownloadCell(item) {
+  return (
+    <span className="interface-pro-rate download">
+      <ArrowDown size={14} />
+
+      {formatBitrate(
+        item.rx_bps,
+      )}
+    </span>
+  )
+}
+
+
+function renderUploadCell(item) {
+  return (
+    <span className="interface-pro-rate upload">
+      <ArrowUp size={14} />
+
+      {formatBitrate(
+        item.tx_bps,
+      )}
+    </span>
+  )
+}
+
+
+function renderUtilizationCell(item) {
+  return (
+    <UtilizationBar
+      value={
+        item.utilization_percent
+      }
+    />
+  )
+}
+
+
+function renderErrorsCell(item) {
+  return (
+    <div
+      className={
+        item.has_errors
+          ? 'interface-pro-errors warning'
+          : 'interface-pro-errors healthy'
+      }
+    >
+      {item.has_errors ? (
+        <AlertTriangle size={15} />
+      ) : (
+        <CheckCircle2 size={15} />
+      )}
+
+      <div>
+        <strong>
+          {item.total_errors}
+        </strong>
+
+        <small>
+          RX
+          {' '}
+          {item.rx_errors}
+          {' '}
+          / TX
+          {' '}
+          {item.tx_errors}
+        </small>
+      </div>
+    </div>
+  )
+}
+
+
+function renderMtuCell(item) {
+  return (
+    <span className="interface-pro-mtu">
+      {item.mtu || '--'}
+    </span>
+  )
+}
+
+
 function renderStatusCell(item) {
   const status =
     getOperationalStatus(item)
@@ -1298,53 +1396,21 @@ export default function InterfacesTable({
                       </td>
 
                       <td>
-                        <UtilizationBar
-                          value={
-                            item.utilization_percent
-                          }
-                        />
+                        {renderUtilizationCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
-                        <div
-                          className={
-                            item.has_errors
-                              ? 'interface-pro-errors warning'
-                              : 'interface-pro-errors healthy'
-                          }
-                        >
-                          {item.has_errors ? (
-                            <AlertTriangle
-                              size={15}
-                            />
-                          ) : (
-                            <CheckCircle2
-                              size={15}
-                            />
-                          )}
-
-                          <div>
-                            <strong>
-                              {item.total_errors}
-                            </strong>
-
-                            <small>
-                              RX
-                              {' '}
-                              {item.rx_errors}
-                              {' '}
-                              / TX
-                              {' '}
-                              {item.tx_errors}
-                            </small>
-                          </div>
-                        </div>
+                        {renderErrorsCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
-                        <span className="interface-pro-mtu">
-                          {item.mtu || '--'}
-                        </span>
+                        {renderMtuCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
