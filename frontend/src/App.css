@@ -1348,3 +1348,79 @@ button {
     height: 40px;
   }
 }
+
+
+/* =========================================================
+   Sprint 1.6.2-D3.1-H1
+   StatCard to SSMetric pilot migration
+========================================================= */
+
+.stat-card.ss-ui-metric {
+  min-height: 112px;
+}
+
+.stat-card.ss-ui-metric
+.ss-ui-metric__icon {
+  width: 44px;
+  height: 44px;
+}
+
+.stat-card.ss-ui-metric
+.ss-ui-metric__value strong {
+  font-size: clamp(
+    1rem,
+    1.35vw,
+    1.3rem
+  );
+}
+
+.stat-card.ss-ui-metric
+.ss-ui-metric__description {
+  max-width: 100%;
+}
+
+/* Route-level loading state */
+.route-loading {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: min(52vh, 520px);
+  padding: 40px 24px;
+  overflow: hidden;
+  color: #dbeafe;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: center;
+  isolation: isolate;
+}
+
+.route-loading::before {
+  content: '';
+  width: 42px;
+  height: 42px;
+  margin-block-end: 64px;
+  border: 3px solid rgba(96, 165, 250, 0.2);
+  border-top-color: #60a5fa;
+  border-radius: 999px;
+  animation: route-loading-spin 0.85s linear infinite;
+}
+
+@keyframes route-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 720px) {
+  .route-loading {
+    min-height: 42vh;
+    padding: 32px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-loading::before {
+    animation-duration: 1.8s;
+  }
+}
