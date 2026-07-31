@@ -217,6 +217,20 @@ const SSTable = forwardRef(
                           column.minWidth,
                       }}
                       scope="col"
+                      aria-sort={
+                        sortable
+                          ? (
+                              active
+                                ? (
+                                    sortDirection ===
+                                    'desc'
+                                      ? 'descending'
+                                      : 'ascending'
+                                  )
+                                : 'none'
+                            )
+                          : undefined
+                      }
                     >
                       {sortable ? (
                         <button
