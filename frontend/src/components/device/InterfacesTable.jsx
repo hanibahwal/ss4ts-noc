@@ -570,6 +570,43 @@ function renderMtuCell(item) {
 }
 
 
+function renderActionCell({
+  item,
+  selected,
+  onSelect,
+}) {
+  return (
+    <button
+      type="button"
+      className={
+        selected
+          ? 'interface-pro-select selected'
+          : 'interface-pro-select'
+      }
+      onClick={(event) => {
+        event.stopPropagation()
+
+        onSelect(
+          item.if_descr,
+        )
+      }}
+      aria-pressed={selected}
+      aria-label={
+        selected
+          ? `الواجهة ${item.if_descr} معروضة حاليًا`
+          : `عرض الرسم البياني للواجهة ${item.if_descr}`
+      }
+    >
+      <Activity size={15} />
+
+      {selected
+        ? 'معروض'
+        : 'عرض الرسم'}
+    </button>
+  )
+}
+
+
 function renderStatusCell(item) {
   const status =
     getOperationalStatus(item)
@@ -1414,27 +1451,12 @@ export default function InterfacesTable({
                       </td>
 
                       <td>
-                        <button
-                          type="button"
-                          className={
-                            selected
-                              ? 'interface-pro-select selected'
-                              : 'interface-pro-select'
-                          }
-                          onClick={() =>
-                            selectInterface(
-                              item.if_descr,
-                            )
-                          }
-                        >
-                          <Activity
-                            size={15}
-                          />
-
-                          {selected
-                            ? 'معروض'
-                            : 'عرض الرسم'}
-                        </button>
+                        {renderActionCell({
+                          item,
+                          selected,
+                          onSelect:
+                            selectInterface,
+                        })}
                       </td>
                     </tr>
                   )
