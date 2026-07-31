@@ -60,3 +60,13 @@ redis-data/
 
 # Local sprint backup files
 *.bak-*
+
+# Local backup and temporary files
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+*~
+*.before-*
+frontend/src-backup-*/
