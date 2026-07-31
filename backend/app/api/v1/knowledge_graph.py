@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query
 
 from app.api.v1.dashboard import (
     dashboard as get_dashboard_snapshot,
@@ -20,6 +20,9 @@ from app.services.decision_timeline import (
 )
 from app.services.execution_planner import (
     build_execution_plan,
+)
+from app.services.execution_simulator import (
+    simulate_execution_plan,
 )
 from app.services.knowledge_graph import (
     build_graph_from_devices,
@@ -712,3 +715,127 @@ async def knowledge_graph_execution_plan(
         ) from exc
 
     return plan.to_dict()
+
+
+@router.post(
+    "/nodes/{node_id}/decision/"
+    "execution-plan/simulate"
+)
+async def knowledge_graph_execution_simulation(
+    node_id: str,
+    payload: Annotated[
+        dict,
+        Body(
+            default_factory=dict,
+        ),
+    ],
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+        ),
+    ] = 10,
+    refresh: bool = False,
+) -> dict:
+    """
+    Simulate a safe execution plan without contacting network devices.
+
+    approval_granted controls the simulated approval gate.
+    fail_step_ids allows deterministic failure testing and rollback.
+    """
+
+    graph = await build_runtime_graph(
+        refresh=refresh
+    )
+
+    query = _query(graph)
+
+    _node_or_404(
+        query,
+        node_id,
+    )
+
+    approval_granted = bool(
+        payload.get(
+            "approval_granted",
+            False,
+        )
+    )
+
+    raw_fail_step_ids = payload.get(
+        "fail_step_ids",
+        [],
+    )
+
+    if not isinstance(
+        raw_fail_step_ids,
+        list,
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "fail_step_ids must be a list"
+            ),
+        )
+
+    fail_step_ids = {
+        str(item).strip()
+        for item in raw_fail_step_ids
+        if str(item).strip()
+    }
+
+    try:
+        plan = build_execution_plan(
+            graph,
+            node_id,
+            max_depth=max_depth,
+        )
+
+        result = simulate_execution_plan(
+            plan,
+            approval_granted=
+                approval_granted,
+            fail_step_ids=
+                fail_step_ids,
+        )
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Graph node not found: "
+                f"{node_id}"
+            ),
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+
+    response = result.to_dict()
+
+    response["request"] = {
+        "approval_granted":
+            approval_granted,
+        "fail_step_ids":
+            sorted(fail_step_ids),
+        "max_depth":
+            max_depth,
+    }
+
+    response["safety"] = {
+        "network_io_performed":
+            False,
+        "device_command_executed":
+            False,
+        "dry_run_only":
+            True,
+    }
+
+    return response

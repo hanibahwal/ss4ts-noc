@@ -344,3 +344,313 @@ def test_execution_plan_route_is_registered() -> None:
         "nodes/{node_id}/decision/execution-plan"
         in paths
     )
+
+
+def test_execution_simulation_blocks_without_approval() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_execution_simulation(
+            "device:10.0.0.1",
+            payload={
+                "approval_granted": False,
+                "fail_step_ids": [],
+            },
+            max_depth=10,
+        )
+    )
+
+    assert result["status"] == "blocked"
+    assert result["dry_run"] is True
+
+    assert (
+        result["safety"]
+        ["network_io_performed"]
+        is False
+    )
+
+    assert (
+        result["safety"]
+        ["device_command_executed"]
+        is False
+    )
+
+
+def test_execution_simulation_completes_with_approval() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_execution_simulation(
+            "device:10.0.0.1",
+            payload={
+                "approval_granted": True,
+                "fail_step_ids": [],
+            },
+            max_depth=10,
+        )
+    )
+
+    assert result["status"] == "completed"
+
+    assert (
+        result["statistics"]
+        ["failed_step_count"]
+        == 0
+    )
+
+    assert (
+        result["approval_granted"]
+        is True
+    )
+
+
+def test_execution_simulation_verification_failure_rolls_back() -> None:
+    plan = run(
+        knowledge_graph
+        .knowledge_graph_execution_plan(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    verify_step = next(
+        step
+        for step in plan["steps"]
+        if step["type"] == "verify"
+    )
+
+    result = run(
+        knowledge_graph
+        .knowledge_graph_execution_simulation(
+            "device:10.0.0.1",
+            payload={
+                "approval_granted": True,
+                "fail_step_ids": [
+                    verify_step["step_id"],
+                ],
+            },
+            max_depth=10,
+        )
+    )
+
+    assert result["status"] == "rolled_back"
+
+    assert (
+        result["rollback_performed"]
+        is True
+    )
+
+    assert (
+        result["failure_step_id"]
+        == verify_step["step_id"]
+    )
+
+
+def test_execution_simulation_invalid_fail_steps_returns_400() -> None:
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            knowledge_graph
+            .knowledge_graph_execution_simulation(
+                "device:10.0.0.1",
+                payload={
+                    "approval_granted": True,
+                    "fail_step_ids": "invalid",
+                },
+                max_depth=10,
+            )
+        )
+
+    assert exc.value.status_code == 400
+
+    assert (
+        "must be a list"
+        in str(exc.value.detail)
+    )
+
+
+def test_execution_simulation_missing_node_returns_404() -> None:
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            knowledge_graph
+            .knowledge_graph_execution_simulation(
+                "device:missing",
+                payload={
+                    "approval_granted": True,
+                    "fail_step_ids": [],
+                },
+                max_depth=10,
+            )
+        )
+
+    assert exc.value.status_code == 404
+
+
+def test_execution_simulation_route_is_registered() -> None:
+    paths = {
+        route.path
+        for route in api_router.routes
+    }
+
+    assert (
+        "/api/v1/knowledge-graph/"
+        "nodes/{node_id}/decision/"
+        "execution-plan/simulate"
+        in paths
+    )
+
+
+def test_execution_simulation_blocks_without_approval() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_execution_simulation(
+            "device:10.0.0.1",
+            payload={
+                "approval_granted": False,
+                "fail_step_ids": [],
+            },
+            max_depth=10,
+        )
+    )
+
+    assert result["status"] == "blocked"
+    assert result["dry_run"] is True
+
+    assert (
+        result["safety"]
+        ["network_io_performed"]
+        is False
+    )
+
+    assert (
+        result["safety"]
+        ["device_command_executed"]
+        is False
+    )
+
+
+def test_execution_simulation_completes_with_approval() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_execution_simulation(
+            "device:10.0.0.1",
+            payload={
+                "approval_granted": True,
+                "fail_step_ids": [],
+            },
+            max_depth=10,
+        )
+    )
+
+    assert result["status"] == "completed"
+
+    assert (
+        result["statistics"]
+        ["failed_step_count"]
+        == 0
+    )
+
+    assert (
+        result["approval_granted"]
+        is True
+    )
+
+
+def test_execution_simulation_verification_failure_rolls_back() -> None:
+    plan = run(
+        knowledge_graph
+        .knowledge_graph_execution_plan(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    verify_step = next(
+        step
+        for step in plan["steps"]
+        if step["type"] == "verify"
+    )
+
+    result = run(
+        knowledge_graph
+        .knowledge_graph_execution_simulation(
+            "device:10.0.0.1",
+            payload={
+                "approval_granted": True,
+                "fail_step_ids": [
+                    verify_step["step_id"],
+                ],
+            },
+            max_depth=10,
+        )
+    )
+
+    assert result["status"] == "rolled_back"
+
+    assert (
+        result["rollback_performed"]
+        is True
+    )
+
+    assert (
+        result["failure_step_id"]
+        == verify_step["step_id"]
+    )
+
+
+def test_execution_simulation_invalid_fail_steps_returns_400() -> None:
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            knowledge_graph
+            .knowledge_graph_execution_simulation(
+                "device:10.0.0.1",
+                payload={
+                    "approval_granted": True,
+                    "fail_step_ids": "invalid",
+                },
+                max_depth=10,
+            )
+        )
+
+    assert exc.value.status_code == 400
+
+    assert (
+        "must be a list"
+        in str(exc.value.detail)
+    )
+
+
+def test_execution_simulation_missing_node_returns_404() -> None:
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            knowledge_graph
+            .knowledge_graph_execution_simulation(
+                "device:missing",
+                payload={
+                    "approval_granted": True,
+                    "fail_step_ids": [],
+                },
+                max_depth=10,
+            )
+        )
+
+    assert exc.value.status_code == 404
+
+
+def test_execution_simulation_route_is_registered() -> None:
+    paths = {
+        route.path
+        for route in api_router.routes
+    }
+
+    assert (
+        "/api/v1/knowledge-graph/"
+        "nodes/{node_id}/decision/"
+        "execution-plan/simulate"
+        in paths
+    )
