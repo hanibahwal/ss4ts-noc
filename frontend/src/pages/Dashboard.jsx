@@ -153,8 +153,11 @@ export default function Dashboard() {
   async function loadData(isRefresh = false) {
     try {
       setError('')
-      isRefresh ? setRefreshing(true) : setLoading(true)
-
+if (isRefresh) {
+  setRefreshing(true)
+} else {
+  setLoading(true)
+}
       const deviceList = await api.devices()
 
       const results = await Promise.allSettled(

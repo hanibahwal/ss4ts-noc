@@ -813,20 +813,11 @@ export default function InterfacesTable({
     selectedInterface ||
     apiSelectedInterface ||
     ''
-
-
   const interfaceColumns =
-    useMemo(
-      () =>
-        createInterfaceColumns({
-          selectInterface,
-          effectiveSelectedInterface,
-        }),
-      [
-        effectiveSelectedInterface,
-      ],
-    )
-
+    createInterfaceColumns({
+      selectInterface,
+      effectiveSelectedInterface,
+    })
   const displayedInterfaces =
     useMemo(() => {
       const normalizedSearch =
