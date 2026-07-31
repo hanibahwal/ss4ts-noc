@@ -22,3 +22,8 @@ from app.services.root_cause_analysis import (
     SPOFAssessment,
     analyze_root_causes,
 )
+
+from app.services.decision_fusion import (
+    DecisionFusionService,
+    fuse_graph_decision,
+)
