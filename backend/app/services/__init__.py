@@ -27,3 +27,8 @@ from app.services.decision_fusion import (
     DecisionFusionService,
     fuse_graph_decision,
 )
+
+from app.services.decision_timeline import (
+    DecisionTimelineBuilder,
+    build_decision_timeline,
+)
