@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -273,11 +273,13 @@ async def knowledge_graph_path(
     target_id: str,
     direction: Direction = "both",
     relationships: str | None = None,
-    max_depth: int = Query(
-        default=20,
-        ge=1,
-        le=100,
-    ),
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+        ),
+    ] = 20,
     refresh: bool = False,
 ) -> dict:
     graph = await build_runtime_graph(
@@ -377,11 +379,13 @@ async def knowledge_graph_neighbors(
 async def knowledge_graph_dependencies(
     node_id: str,
     recursive: bool = False,
-    max_depth: int = Query(
-        default=10,
-        ge=0,
-        le=100,
-    ),
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=0,
+            le=100,
+        ),
+    ] = 10,
     refresh: bool = False,
 ) -> dict:
     graph = await build_runtime_graph(
@@ -413,11 +417,13 @@ async def knowledge_graph_dependencies(
 async def knowledge_graph_dependents(
     node_id: str,
     recursive: bool = False,
-    max_depth: int = Query(
-        default=10,
-        ge=0,
-        le=100,
-    ),
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=0,
+            le=100,
+        ),
+    ] = 10,
     refresh: bool = False,
 ) -> dict:
     graph = await build_runtime_graph(
@@ -448,11 +454,13 @@ async def knowledge_graph_dependents(
 @router.get("/nodes/{node_id}/blast-radius")
 async def knowledge_graph_blast_radius(
     node_id: str,
-    max_depth: int = Query(
-        default=10,
-        ge=0,
-        le=100,
-    ),
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=0,
+            le=100,
+        ),
+    ] = 10,
     include_paths: bool = True,
     refresh: bool = False,
 ) -> dict:
