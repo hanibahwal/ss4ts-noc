@@ -1280,41 +1280,21 @@ export default function InterfacesTable({
                       </td>
 
                       <td>
-                        <div className="interface-pro-speed">
-                          <strong>
-                            {formatSpeed(
-                              item.speed_bps,
-                            )}
-                          </strong>
-
-                          <small>
-                            Link Speed
-                          </small>
-                        </div>
+                        {renderSpeedCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
-                        <span className="interface-pro-rate download">
-                          <ArrowDown
-                            size={14}
-                          />
-
-                          {formatBitrate(
-                            item.rx_bps,
-                          )}
-                        </span>
+                        {renderDownloadCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
-                        <span className="interface-pro-rate upload">
-                          <ArrowUp
-                            size={14}
-                          />
-
-                          {formatBitrate(
-                            item.tx_bps,
-                          )}
-                        </span>
+                        {renderUploadCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
