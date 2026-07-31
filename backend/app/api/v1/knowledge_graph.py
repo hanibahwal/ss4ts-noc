@@ -15,6 +15,9 @@ from app.models.knowledge_graph import (
 from app.services.decision_fusion import (
     fuse_graph_decision,
 )
+from app.services.decision_timeline import (
+    build_decision_timeline,
+)
 from app.services.knowledge_graph import (
     build_graph_from_devices,
 )
@@ -586,3 +589,63 @@ async def knowledge_graph_decision(
     )
 
     return payload
+
+
+@router.get(
+    "/nodes/{node_id}/decision/timeline"
+)
+async def knowledge_graph_decision_timeline(
+    node_id: str,
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+        ),
+    ] = 10,
+    refresh: bool = False,
+) -> dict:
+    """
+    Build an ordered and explainable decision timeline for a graph node.
+
+    The timeline describes observation, evidence, root cause, impact,
+    backup availability, recommendation and final engineering decision.
+    """
+
+    graph = await build_runtime_graph(
+        refresh=refresh
+    )
+
+    query = _query(graph)
+
+    _node_or_404(
+        query,
+        node_id,
+    )
+
+    try:
+        timeline = build_decision_timeline(
+            graph,
+            node_id,
+            max_depth=max_depth,
+        )
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Graph node not found: "
+                f"{node_id}"
+            ),
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+
+    return timeline.to_dict()

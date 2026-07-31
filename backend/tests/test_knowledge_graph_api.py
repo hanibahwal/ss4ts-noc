@@ -188,3 +188,72 @@ def test_invalid_relationship_returns_400() -> None:
         )
 
     assert exc.value.status_code == 400
+
+
+def test_decision_timeline_endpoint() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_decision_timeline(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    assert (
+        result["source_node_id"]
+        == "device:10.0.0.1"
+    )
+
+    assert (
+        result["statistics"]
+        ["event_count"]
+        == 7
+    )
+
+    assert result["events"][0]["type"] == (
+        "observation"
+    )
+
+    assert result["events"][-1]["type"] == (
+        "decision"
+    )
+
+    assert result["final_event"] is not None
+
+    assert (
+        result["final_event"]["actionable"]
+        is True
+    )
+
+
+def test_decision_timeline_missing_node_returns_404() -> None:
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            knowledge_graph
+            .knowledge_graph_decision_timeline(
+                "device:missing",
+                max_depth=10,
+            )
+        )
+
+    assert exc.value.status_code == 404
+
+    assert (
+        "Graph node not found"
+        in str(exc.value.detail)
+    )
+
+
+def test_decision_timeline_route_is_registered() -> None:
+    paths = {
+        route.path
+        for route in api_router.routes
+    }
+
+    assert (
+        "/api/v1/knowledge-graph/"
+        "nodes/{node_id}/decision/timeline"
+        in paths
+    )
