@@ -1,19 +1,39 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
-import Alerts from './pages/Alerts'
-import Dashboard from './pages/Dashboard'
-import DeviceDetails from './pages/DeviceDetails'
-import Devices from './pages/Devices'
-import LTE from './pages/LTE'
-import Maps from './pages/Maps'
-import Settings from './pages/Settings'
-import Topology from './pages/Topology'
 import './App.css'
+
+const Alerts = lazy(() => import('./pages/Alerts'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const DeviceDetails = lazy(() => import('./pages/DeviceDetails'))
+const Devices = lazy(() => import('./pages/Devices'))
+const LTE = lazy(() => import('./pages/LTE'))
+const Maps = lazy(() => import('./pages/Maps'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Topology = lazy(() => import('./pages/Topology'))
+
+
+function RouteFallback() {
+  return (
+    <div
+      className="route-loading"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      جارٍ تحميل الصفحة...
+    </div>
+  )
+}
+
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense
+        fallback={<RouteFallback />}
+      >
+        <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/devices" element={<Devices />} />
@@ -27,7 +47,8 @@ export default function App() {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }
