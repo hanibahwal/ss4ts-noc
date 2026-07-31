@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
+import AppErrorBoundary from './components/common/AppErrorBoundary'
 import './App.css'
 
 const Alerts = lazy(() => import('./pages/Alerts'))
@@ -29,7 +30,8 @@ function RouteFallback() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <AppErrorBoundary>
+      <BrowserRouter>
       <Suspense
         fallback={<RouteFallback />}
       >
@@ -49,6 +51,7 @@ export default function App() {
         </Route>
         </Routes>
       </Suspense>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AppErrorBoundary>
   )
 }
