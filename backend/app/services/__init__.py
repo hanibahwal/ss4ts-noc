@@ -10,3 +10,8 @@ from app.services.knowledge_graph_query import (
     KnowledgeGraphQuery,
     TraversalStep,
 )
+
+from app.services.impact_analysis import (
+    ImpactAnalysisService,
+    analyze_graph_impact,
+)
