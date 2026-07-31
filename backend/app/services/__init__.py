@@ -37,3 +37,8 @@ from app.services.execution_planner import (
     ExecutionPlanBuilder,
     build_execution_plan,
 )
+
+from app.services.execution_simulator import (
+    ExecutionSimulator,
+    simulate_execution_plan,
+)
