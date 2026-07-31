@@ -8,12 +8,9 @@ import {
   Activity,
   AlertTriangle,
   ArrowDown,
-  ArrowDownUp,
   ArrowUp,
   Cable,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   CircleOff,
   Download,
   EthernetPort,
@@ -34,6 +31,7 @@ import {
   SSMetric,
   SSProgress,
   SSStatusChip,
+  SSTable,
 } from '../ui'
 import { formatBitrate } from '../../utils/formatters'
 
@@ -320,40 +318,6 @@ function escapeCsvValue(value) {
     '"',
     '""',
   )}"`
-}
-
-
-function SortButton({
-  column,
-  activeColumn,
-  direction,
-  onSort,
-  children,
-}) {
-  const active =
-    column === activeColumn
-
-  return (
-    <button
-      type="button"
-      className={
-        active
-          ? 'interfaces-pro-sort active'
-          : 'interfaces-pro-sort'
-      }
-      onClick={() => onSort(column)}
-    >
-      <span>{children}</span>
-
-      {!active ? (
-        <ArrowDownUp size={13} />
-      ) : direction === 'asc' ? (
-        <ChevronUp size={14} />
-      ) : (
-        <ChevronDown size={14} />
-      )}
-    </button>
-  )
 }
 
 
@@ -1334,259 +1298,46 @@ export default function InterfacesTable({
         </div>
       ) : (
         <div className="interfaces-pro-table-wrapper">
-          <table className="interfaces-pro-table">
-            <thead>
-              <tr>
-                <th>
-                  <SortButton
-                    column="status"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    الحالة
-                  </SortButton>
-                </th>
-
-                <th>
-                  <SortButton
-                    column="interface"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    الواجهة
-                  </SortButton>
-                </th>
-
-                <th>
-                  <SortButton
-                    column="type"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    النوع
-                  </SortButton>
-                </th>
-
-                <th>
-                  <SortButton
-                    column="speed"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    السرعة
-                  </SortButton>
-                </th>
-
-                <th>
-                  <SortButton
-                    column="download"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    Download
-                  </SortButton>
-                </th>
-
-                <th>
-                  <SortButton
-                    column="upload"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    Upload
-                  </SortButton>
-                </th>
-
-                <th>
-                  <SortButton
-                    column="utilization"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    الاستخدام
-                  </SortButton>
-                </th>
-
-                <th>
-                  <SortButton
-                    column="errors"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    الأخطاء
-                  </SortButton>
-                </th>
-
-                <th>
-                  <SortButton
-                    column="mtu"
-                    activeColumn={
-                      sortColumn
-                    }
-                    direction={
-                      sortDirection
-                    }
-                    onSort={handleSort}
-                  >
-                    MTU
-                  </SortButton>
-                </th>
-
-                <th>الإجراء</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {displayedInterfaces.map(
-                (item) => {
-                  const selected =
-                    effectiveSelectedInterface ===
-                    item.if_descr
-
-                  return (
-                    <tr
-                      key={`${item.if_index}-${item.if_descr}`}
-                      className={[
-                        selected
-                          ? 'selected'
-                          : '',
-                        item.has_errors
-                          ? 'has-errors'
-                          : '',
-                        !item.is_oper_up
-                          ? 'is-down'
-                          : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                      onDoubleClick={() =>
-                        selectInterface(
-                          item.if_descr,
-                        )
-                      }
-                    >
-                      <td>
-                        {renderStatusCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderInterfaceCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderTypeCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderSpeedCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderDownloadCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderUploadCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderUtilizationCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderErrorsCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderMtuCell(
-                          item,
-                        )}
-                      </td>
-
-                      <td>
-                        {renderActionCell({
-                          item,
-                          selected,
-                          onSelect:
-                            selectInterface,
-                        })}
-                      </td>
-                    </tr>
-                  )
-                },
-              )}
-            </tbody>
-          </table>
-
-          {!displayedInterfaces.length && (
-            <div className="interfaces-pro-no-results">
-              <Search size={28} />
-
-              <strong>
-                لا توجد نتائج مطابقة
-              </strong>
-
-              <span>
-                غيّر البحث أو عامل التصفية.
-              </span>
-            </div>
-          )}
+          <SSTable
+            columns={interfaceColumns}
+            rows={displayedInterfaces}
+            rowKey={(row) =>
+              row.if_descr
+            }
+            selectedRowKey={
+              effectiveSelectedInterface
+            }
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onRowDoubleClick={(row) =>
+              selectInterface(
+                row.if_descr,
+              )
+            }
+            rowClassName={(row) =>
+              [
+                row.has_errors
+                  ? 'has-errors'
+                  : '',
+                !row.is_oper_up
+                  ? 'is-down'
+                  : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
+            }
+            rowAriaLabel={(row) =>
+              `واجهة ${row.if_descr}`
+            }
+            density="compact"
+            stickyHeader
+            striped
+            hoverable
+            bordered
+            emptyTitle="لا توجد نتائج مطابقة"
+            emptyDescription="غيّر البحث أو الفلتر لعرض واجهات أخرى."
+          />
         </div>
       )}
     </article>

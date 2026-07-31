@@ -333,95 +333,6 @@
   background: rgba(96, 165, 250, 0.35);
 }
 
-.interfaces-pro-table {
-  width: 100% !important;
-  min-width: 1320px;
-  margin: 0;
-  border-collapse: collapse;
-  table-layout: auto;
-  direction: rtl;
-}
-
-.interfaces-pro-table thead {
-  width: 100%;
-}
-
-.interfaces-pro-table th {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  padding: 13px 14px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(7, 20, 38, 0.98);
-  color: #7187a1;
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-align: right;
-  white-space: nowrap;
-  backdrop-filter: blur(14px);
-}
-
-.interfaces-pro-table td {
-  padding: 14px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.075);
-  color: #aebed0;
-  font-size: 0.73rem;
-  text-align: right;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-.interfaces-pro-table tbody tr {
-  transition:
-    background 0.2s ease,
-    box-shadow 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.interfaces-pro-table tbody tr:hover {
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.interfaces-pro-table tbody tr.selected {
-  background: rgba(59, 130, 246, 0.1);
-  box-shadow: inset -3px 0 0 #3b82f6;
-}
-
-.interfaces-pro-table tbody tr.has-errors {
-  background-image: linear-gradient(
-    90deg,
-    transparent,
-    rgba(245, 158, 11, 0.035)
-  );
-}
-
-.interfaces-pro-table tbody tr.is-down {
-  opacity: 0.72;
-}
-
-.interfaces-pro-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-/* ---------- Sorting ---------- */
-
-.interfaces-pro-sort {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.interfaces-pro-sort:hover,
-.interfaces-pro-sort.active {
-  color: #60a5fa;
-}
-
 /* ---------- Status ---------- */
 
 .interface-pro-status-cell {
@@ -638,12 +549,6 @@
 .interface-utilization {
   min-width: 155px;
 }
-
-
-
-
-
-
 
 
 .interface-utilization.unavailable span {
@@ -906,4 +811,51 @@
   .interface-utilization-progress.ss-ui-progress {
     min-width: 100px;
   }
+}
+
+
+/* =========================================================
+   Sprint 1.6.2-D3.1-H2
+   Interfaces Summary Cards to SSMetric
+========================================================= */
+
+.interfaces-pro-summary-card.ss-ui-metric {
+  min-height: 92px;
+  padding: var(--ss-space-3);
+}
+
+.interfaces-pro-summary-card.ss-ui-metric
+.ss-ui-metric__icon {
+  width: 40px;
+  height: 40px;
+}
+
+.interfaces-pro-summary-card.ss-ui-metric
+.ss-ui-metric__value strong {
+  font-size: 1.15rem;
+}
+
+.interfaces-pro-summary-card.ss-ui-metric
+.ss-ui-metric__description {
+  max-width: 100%;
+}
+
+.interfaces-pro-summary-card.healthy {
+  --ss-metric-color: var(--ss-success);
+  --ss-metric-soft: var(--ss-success-soft);
+}
+
+.interfaces-pro-summary-card.warning {
+  --ss-metric-color: var(--ss-warning);
+  --ss-metric-soft: var(--ss-warning-soft);
+}
+
+.interfaces-pro-summary-card.critical {
+  --ss-metric-color: var(--ss-danger);
+  --ss-metric-soft: var(--ss-danger-soft);
+}
+
+.interfaces-pro-summary-card.traffic {
+  --ss-metric-color: var(--ss-download);
+  --ss-metric-soft: var(--ss-download-soft);
 }
