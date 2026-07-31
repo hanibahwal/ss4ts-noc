@@ -81,6 +81,8 @@ const SSTable = forwardRef(
       emptyDescription = '',
       rowKey = 'id',
       selectedRowKey = null,
+      rowClassName = '',
+      rowAriaLabel = null,
       onRowClick,
       onRowDoubleClick,
       sortColumn = '',
@@ -120,6 +122,42 @@ const SSTable = forwardRef(
         row?.[rowKey] ??
         index
       )
+    }
+
+
+    function resolveRowClassName(
+      row,
+      index,
+    ) {
+      if (
+        typeof rowClassName ===
+        'function'
+      ) {
+        return rowClassName(
+          row,
+          index,
+        )
+      }
+
+      return rowClassName
+    }
+
+
+    function resolveRowAriaLabel(
+      row,
+      index,
+    ) {
+      if (
+        typeof rowAriaLabel ===
+        'function'
+      ) {
+        return rowAriaLabel(
+          row,
+          index,
+        )
+      }
+
+      return rowAriaLabel
     }
 
     return (
@@ -292,6 +330,18 @@ const SSTable = forwardRef(
                     selectedRowKey ===
                       key
 
+                  const customRowClassName =
+                    resolveRowClassName(
+                      row,
+                      rowIndex,
+                    )
+
+                  const ariaLabel =
+                    resolveRowAriaLabel(
+                      row,
+                      rowIndex,
+                    )
+
                   return (
                     <tr
                       key={key}
@@ -301,9 +351,14 @@ const SSTable = forwardRef(
                         isInteractive &&
                           'is-interactive',
                         row.className,
+                        customRowClassName,
                       )}
                       aria-selected={
                         selected ||
+                        undefined
+                      }
+                      aria-label={
+                        ariaLabel ||
                         undefined
                       }
                       tabIndex={
