@@ -16,6 +16,13 @@ from app.models.decision import (
     normalize_root_causes,
     normalize_signals,
 )
+from app.models.decision_timeline import (
+    DecisionTimeline,
+    DecisionTimelineEvent,
+    TimelineEventStatus,
+    TimelineEventType,
+    normalize_decision_timeline,
+)
 from app.models.device import (
     DevicePlatform,
     DeviceSnapshot,
@@ -73,6 +80,11 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "normalize_decision_timeline",
+    "TimelineEventType",
+    "TimelineEventStatus",
+    "DecisionTimelineEvent",
+    "DecisionTimeline",
     "normalize_impact_decisions",
     "ImpactSeverity",
     "ImpactDecision",
