@@ -30,6 +30,14 @@ from app.models.knowledge_graph import (
     RelationshipType,
     normalize_graph,
 )
+from app.models.impact_decision import (
+    AffectedEntity,
+    AffectedEntityType,
+    ImpactAnalysisResult,
+    ImpactDecision,
+    ImpactSeverity,
+    normalize_impact_decisions,
+)
 from app.models.interface import (
     InterfaceKind,
     InterfaceSnapshot,
@@ -65,6 +73,12 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "normalize_impact_decisions",
+    "ImpactSeverity",
+    "ImpactDecision",
+    "ImpactAnalysisResult",
+    "AffectedEntityType",
+    "AffectedEntity",
     "normalize_graph",
     "RelationshipType",
     "NodeType",
