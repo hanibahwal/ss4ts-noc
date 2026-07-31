@@ -31,6 +31,7 @@ import {
 import useInterfaces from '../../hooks/useInterfaces'
 
 import {
+  SSMetric,
   SSProgress,
   SSStatusChip,
 } from '../ui'
@@ -360,23 +361,45 @@ function SummaryCard({
   title,
   value,
   description,
-  icon: Icon,
-  tone,
+  icon,
+  tone = 'primary',
 }) {
-  return (
-    <div
-      className={`interfaces-pro-summary-card ${tone}`}
-    >
-      <div>
-        <span>{title}</span>
-        <strong>{value}</strong>
-        <small>{description}</small>
-      </div>
+  const metricTone =
+    tone === 'healthy'
+      ? 'success'
+      : tone === 'warning'
+        ? 'warning'
+        : tone === 'critical'
+          ? 'danger'
+          : tone === 'traffic'
+            ? 'download'
+            : tone === 'purple'
+              ? 'purple'
+              : tone === 'neutral'
+                ? 'neutral'
+                : 'primary'
 
-      <div className="interfaces-pro-summary-icon">
-        <Icon size={20} />
-      </div>
-    </div>
+  return (
+    <SSMetric
+      className={
+        [
+          'interfaces-pro-summary-card',
+          tone,
+        ]
+          .filter(Boolean)
+          .join(' ')
+      }
+      title={title}
+      value={
+        value ??
+        'غير متوفر'
+      }
+      description={description}
+      icon={icon}
+      tone={metricTone}
+      size="sm"
+      layout="horizontal"
+    />
   )
 }
 
@@ -445,6 +468,79 @@ function UtilizationBar({
         animated
       />
     </div>
+  )
+}
+
+
+function renderStatusCell(item) {
+  const status =
+    getOperationalStatus(item)
+
+  return (
+    <div className="interface-pro-status-cell">
+      <SSStatusChip
+        status={status.status}
+        label={status.label}
+        size="sm"
+        dot
+        showIcon={false}
+      />
+
+      <small>
+        {status.description}
+      </small>
+    </div>
+  )
+}
+
+
+function renderInterfaceCell(item) {
+  const presentation =
+    getInterfacePresentation(item)
+
+  const Icon =
+    presentation.icon
+
+  return (
+    <div className="interface-pro-name-cell">
+      <div
+        className={
+          `interface-pro-icon ` +
+          `${presentation.className}`
+        }
+      >
+        <Icon size={18} />
+      </div>
+
+      <div>
+        <strong>
+          {item.if_descr}
+        </strong>
+
+        <span>
+          Index
+          {' '}
+          #{item.if_index}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+
+function renderTypeCell(item) {
+  const presentation =
+    getInterfacePresentation(item)
+
+  return (
+    <span
+      className={
+        `interface-pro-type ` +
+        `${presentation.className}`
+      }
+    >
+      {presentation.label}
+    </span>
   )
 }
 
@@ -1139,19 +1235,6 @@ export default function InterfacesTable({
             <tbody>
               {displayedInterfaces.map(
                 (item) => {
-                  const presentation =
-                    getInterfacePresentation(
-                      item,
-                    )
-
-                  const Icon =
-                    presentation.icon
-
-                  const status =
-                    getOperationalStatus(
-                      item,
-                    )
-
                   const selected =
                     effectiveSelectedInterface ===
                     item.if_descr
@@ -1179,49 +1262,21 @@ export default function InterfacesTable({
                       }
                     >
                       <td>
-                        <div className="interface-pro-status-cell">
-                          <SSStatusChip
-                            status={status.status}
-                            label={status.label}
-                            size="sm"
-                            dot
-                            showIcon={false}
-                          />
-
-                          <small>
-                            {status.description}
-                          </small>
-                        </div>
+                        {renderStatusCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
-                        <div className="interface-pro-name-cell">
-                          <div
-                            className={`interface-pro-icon ${presentation.className}`}
-                          >
-                            <Icon size={18} />
-                          </div>
-
-                          <div>
-                            <strong>
-                              {item.if_descr}
-                            </strong>
-
-                            <span>
-                              Index
-                              {' '}
-                              #{item.if_index}
-                            </span>
-                          </div>
-                        </div>
+                        {renderInterfaceCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
-                        <span
-                          className={`interface-pro-type ${presentation.className}`}
-                        >
-                          {presentation.label}
-                        </span>
+                        {renderTypeCell(
+                          item,
+                        )}
                       </td>
 
                       <td>
