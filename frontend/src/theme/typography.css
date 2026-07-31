@@ -1,0 +1,83 @@
+:root {
+  --ss-font-family:
+    Inter,
+    'Segoe UI',
+    Tahoma,
+    Arial,
+    sans-serif;
+
+  --ss-font-mono:
+    'JetBrains Mono',
+    'Cascadia Code',
+    Consolas,
+    monospace;
+
+  --ss-font-size-xs: 11px;
+  --ss-font-size-sm: 12px;
+  --ss-font-size-md: 14px;
+  --ss-font-size-lg: 16px;
+  --ss-font-size-xl: 18px;
+  --ss-font-size-2xl: 22px;
+  --ss-font-size-3xl: 28px;
+
+  --ss-font-normal: 400;
+  --ss-font-medium: 500;
+  --ss-font-semibold: 600;
+  --ss-font-bold: 700;
+  --ss-font-black: 800;
+
+  --ss-line-tight: 1.25;
+  --ss-line-normal: 1.55;
+  --ss-line-relaxed: 1.75;
+}
+
+.ss-heading-page {
+  margin: 0;
+  color: var(--ss-text-primary);
+  font-size: var(--ss-font-size-3xl);
+  font-weight: var(--ss-font-bold);
+  line-height: var(--ss-line-tight);
+}
+
+.ss-heading-section {
+  margin: 0;
+  color: var(--ss-text-primary);
+  font-size: var(--ss-font-size-2xl);
+  font-weight: var(--ss-font-bold);
+  line-height: var(--ss-line-tight);
+}
+
+.ss-heading-card {
+  margin: 0;
+  color: var(--ss-text-primary);
+  font-size: var(--ss-font-size-xl);
+  font-weight: var(--ss-font-semibold);
+  line-height: var(--ss-line-normal);
+}
+
+.ss-body {
+  color: var(--ss-text-secondary);
+  font-size: var(--ss-font-size-md);
+  line-height: var(--ss-line-relaxed);
+}
+
+.ss-caption {
+  color: var(--ss-text-muted);
+  font-size: var(--ss-font-size-sm);
+  line-height: var(--ss-line-normal);
+}
+
+.ss-eyebrow {
+  display: block;
+  margin-bottom: var(--ss-space-1);
+  color: var(--ss-primary);
+  font-size: var(--ss-font-size-xs);
+  font-weight: var(--ss-font-black);
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.ss-mono {
+  font-family: var(--ss-font-mono);
+}

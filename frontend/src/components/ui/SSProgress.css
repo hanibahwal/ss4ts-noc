@@ -1,0 +1,355 @@
+.ss-ui-progress {
+  --ss-progress-color:
+    var(--ss-primary);
+
+  --ss-progress-soft:
+    var(--ss-primary-soft);
+
+  --ss-progress-height:
+    8px;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.ss-ui-progress__header {
+  display: flex;
+  margin-bottom:
+    var(--ss-space-2);
+
+  gap:
+    var(--ss-space-3);
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+}
+
+.ss-ui-progress__heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ss-ui-progress__label {
+  overflow: hidden;
+
+  color:
+    var(--ss-text-secondary);
+
+  font-size:
+    var(--ss-font-size-sm);
+
+  font-weight:
+    var(--ss-font-semibold);
+
+  line-height:
+    var(--ss-line-normal);
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.ss-ui-progress__description {
+  overflow: hidden;
+
+  color:
+    var(--ss-text-subtle);
+
+  font-size:
+    var(--ss-font-size-xs);
+
+  line-height:
+    var(--ss-line-normal);
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.ss-ui-progress__value {
+  flex: 0 0 auto;
+
+  color:
+    var(--ss-progress-color);
+
+  font-size:
+    var(--ss-font-size-sm);
+
+  font-weight:
+    var(--ss-font-bold);
+}
+
+.ss-ui-progress__track {
+  position: relative;
+  width: 100%;
+  height:
+    var(--ss-progress-height);
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--ss-border-subtle);
+
+  border-radius:
+    var(--ss-radius-pill);
+
+  background:
+    rgba(148, 163, 184, 0.10);
+}
+
+.ss-ui-progress__fill {
+  display: block;
+  height: 100%;
+
+  border-radius:
+    inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(
+        in srgb,
+        var(--ss-progress-color) 72%,
+        transparent
+      ),
+      var(--ss-progress-color)
+    );
+
+  box-shadow:
+    0 0 12px
+    var(--ss-progress-soft);
+
+  transition:
+    width
+    var(--ss-duration-gauge)
+    var(--ss-ease-standard);
+}
+
+.ss-ui-progress__marker {
+  position: absolute;
+  z-index: 2;
+  top: -3px;
+  width: 2px;
+  height:
+    calc(
+      100% + 6px
+    );
+
+  border-radius:
+    var(--ss-radius-pill);
+
+  background:
+    var(--ss-text-primary);
+
+  box-shadow:
+    0 0 0 2px
+    rgba(2, 6, 23, 0.5);
+
+  transform:
+    translateX(-50%);
+}
+
+.ss-ui-progress__footer {
+  margin-top:
+    var(--ss-space-2);
+
+  color:
+    var(--ss-text-muted);
+
+  font-size:
+    var(--ss-font-size-xs);
+}
+
+/* ---------------------------------------------------------
+   Sizes
+--------------------------------------------------------- */
+
+.ss-ui-progress--size-xs {
+  --ss-progress-height:
+    4px;
+}
+
+.ss-ui-progress--size-sm {
+  --ss-progress-height:
+    6px;
+}
+
+.ss-ui-progress--size-md {
+  --ss-progress-height:
+    8px;
+}
+
+.ss-ui-progress--size-lg {
+  --ss-progress-height:
+    12px;
+}
+
+/* ---------------------------------------------------------
+   Variants
+--------------------------------------------------------- */
+
+.ss-ui-progress--variant-default
+.ss-ui-progress__track {
+  background:
+    rgba(148, 163, 184, 0.10);
+}
+
+.ss-ui-progress--variant-soft
+.ss-ui-progress__track {
+  border-color:
+    transparent;
+
+  background:
+    var(--ss-progress-soft);
+}
+
+.ss-ui-progress--variant-outline
+.ss-ui-progress__track {
+  background:
+    transparent;
+}
+
+/* ---------------------------------------------------------
+   Tones
+--------------------------------------------------------- */
+
+.ss-ui-progress--tone-primary,
+.ss-ui-progress--tone-info {
+  --ss-progress-color:
+    var(--ss-primary);
+
+  --ss-progress-soft:
+    var(--ss-primary-soft);
+}
+
+.ss-ui-progress--tone-success {
+  --ss-progress-color:
+    var(--ss-success);
+
+  --ss-progress-soft:
+    var(--ss-success-soft);
+}
+
+.ss-ui-progress--tone-warning {
+  --ss-progress-color:
+    var(--ss-warning);
+
+  --ss-progress-soft:
+    var(--ss-warning-soft);
+}
+
+.ss-ui-progress--tone-danger,
+.ss-ui-progress--tone-critical {
+  --ss-progress-color:
+    var(--ss-danger);
+
+  --ss-progress-soft:
+    var(--ss-danger-soft);
+}
+
+.ss-ui-progress--tone-purple {
+  --ss-progress-color:
+    var(--ss-purple);
+
+  --ss-progress-soft:
+    var(--ss-purple-soft);
+}
+
+.ss-ui-progress--tone-download {
+  --ss-progress-color:
+    var(--ss-download);
+
+  --ss-progress-soft:
+    var(--ss-download-soft);
+}
+
+.ss-ui-progress--tone-upload {
+  --ss-progress-color:
+    var(--ss-upload);
+
+  --ss-progress-soft:
+    var(--ss-upload-soft);
+}
+
+.ss-ui-progress--tone-neutral {
+  --ss-progress-color:
+    var(--ss-neutral);
+
+  --ss-progress-soft:
+    var(--ss-neutral-soft);
+}
+
+/* ---------------------------------------------------------
+   Stripes and animation
+--------------------------------------------------------- */
+
+.ss-ui-progress--striped
+.ss-ui-progress__fill {
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.13) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.13) 50%,
+      rgba(255, 255, 255, 0.13) 75%,
+      transparent 75%,
+      transparent
+    );
+
+  background-size:
+    18px 18px;
+}
+
+.ss-ui-progress--striped.ss-ui-progress--animated
+.ss-ui-progress__fill {
+  animation:
+    ss-progress-stripes
+    900ms
+    linear
+    infinite;
+}
+
+/* ---------------------------------------------------------
+   Indeterminate
+--------------------------------------------------------- */
+
+.ss-ui-progress--indeterminate
+.ss-ui-progress__fill {
+  width: 42%;
+
+  animation:
+    ss-progress-indeterminate
+    1.2s
+    var(--ss-ease-standard)
+    infinite;
+}
+
+@keyframes ss-progress-stripes {
+  to {
+    background-position:
+      18px 0;
+  }
+}
+
+@keyframes ss-progress-indeterminate {
+  0% {
+    transform:
+      translateX(-125%);
+  }
+
+  100% {
+    transform:
+      translateX(260%);
+  }
+}

@@ -1,0 +1,45 @@
+:root {
+  /* Spacing scale */
+  --ss-space-0: 0;
+  --ss-space-1: 4px;
+  --ss-space-2: 8px;
+  --ss-space-3: 12px;
+  --ss-space-4: 16px;
+  --ss-space-5: 20px;
+  --ss-space-6: 24px;
+  --ss-space-7: 28px;
+  --ss-space-8: 32px;
+  --ss-space-10: 40px;
+  --ss-space-12: 48px;
+
+  /* Application spacing */
+  --ss-page-gap: 16px;
+  --ss-section-gap: 16px;
+  --ss-grid-gap: 12px;
+  --ss-card-padding: 16px;
+  --ss-card-padding-compact: 12px;
+  --ss-header-height: 56px;
+
+  /* Radius */
+  --ss-radius-xs: 6px;
+  --ss-radius-sm: 8px;
+  --ss-radius-md: 12px;
+  --ss-radius-lg: 16px;
+  --ss-radius-xl: 18px;
+  --ss-radius-2xl: 24px;
+  --ss-radius-pill: 999px;
+
+  /* Component sizes */
+  --ss-icon-xs: 14px;
+  --ss-icon-sm: 16px;
+  --ss-icon-md: 20px;
+  --ss-icon-lg: 24px;
+  --ss-icon-xl: 28px;
+
+  --ss-button-sm: 36px;
+  --ss-button-md: 40px;
+  --ss-button-lg: 44px;
+
+  --ss-table-row-height: 44px;
+  --ss-badge-height: 26px;
+}

@@ -1,0 +1,33 @@
+.ss-ui-status-chip {
+  max-width: 100%;
+}
+
+.ss-ui-status-chip
+.ss-ui-badge__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ss-ui-status-chip--running
+.ss-ui-badge__icon {
+  animation:
+    ss-spin
+    800ms
+    linear
+    infinite;
+}
+
+.ss-ui-status-chip--online,
+.ss-ui-status-chip--active {
+  box-shadow:
+    0 0 18px
+    rgba(34, 197, 94, 0.06);
+}
+
+.ss-ui-status-chip--offline,
+.ss-ui-status-chip--failed,
+.ss-ui-status-chip--critical {
+  box-shadow:
+    0 0 18px
+    rgba(239, 68, 68, 0.06);
+}

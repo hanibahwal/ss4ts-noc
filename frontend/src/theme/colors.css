@@ -1,0 +1,68 @@
+:root {
+  /* Base surfaces */
+  --ss-bg-page: #020b18;
+  --ss-bg-shell: #061225;
+  --ss-bg-panel: #0a192e;
+  --ss-bg-panel-soft: #0d1d33;
+  --ss-bg-panel-strong: #10223b;
+  --ss-bg-elevated: #132844;
+  --ss-bg-hover: rgba(56, 189, 248, 0.07);
+  --ss-bg-selected: rgba(59, 130, 246, 0.14);
+  --ss-bg-overlay: rgba(2, 6, 23, 0.82);
+
+  /* Borders */
+  --ss-border-subtle: rgba(148, 163, 184, 0.10);
+  --ss-border-default: rgba(148, 163, 184, 0.17);
+  --ss-border-strong: rgba(148, 163, 184, 0.27);
+  --ss-border-focus: rgba(56, 189, 248, 0.75);
+
+  /* Text */
+  --ss-text-primary: #f8fafc;
+  --ss-text-secondary: #cbd5e1;
+  --ss-text-muted: #94a3b8;
+  --ss-text-subtle: #64748b;
+  --ss-text-disabled: #475569;
+
+  /* Brand */
+  --ss-primary: #38bdf8;
+  --ss-primary-strong: #0ea5e9;
+  --ss-primary-soft: rgba(56, 189, 248, 0.12);
+  --ss-primary-glow: rgba(56, 189, 248, 0.22);
+
+  --ss-secondary: #8b5cf6;
+  --ss-secondary-soft: rgba(139, 92, 246, 0.12);
+
+  /* Status */
+  --ss-success: #22c55e;
+  --ss-success-strong: #16a34a;
+  --ss-success-soft: rgba(34, 197, 94, 0.12);
+
+  --ss-warning: #f59e0b;
+  --ss-warning-strong: #d97706;
+  --ss-warning-soft: rgba(245, 158, 11, 0.12);
+
+  --ss-danger: #ef4444;
+  --ss-danger-strong: #dc2626;
+  --ss-danger-soft: rgba(239, 68, 68, 0.12);
+
+  --ss-info: #3b82f6;
+  --ss-info-soft: rgba(59, 130, 246, 0.12);
+
+  --ss-purple: #a78bfa;
+  --ss-purple-soft: rgba(167, 139, 250, 0.12);
+
+  /* Network metrics */
+  --ss-download: #10b981;
+  --ss-download-soft: rgba(16, 185, 129, 0.12);
+
+  --ss-upload: #8b5cf6;
+  --ss-upload-soft: rgba(139, 92, 246, 0.12);
+
+  --ss-neutral: #64748b;
+  --ss-neutral-soft: rgba(100, 116, 139, 0.13);
+
+  /* Charts */
+  --ss-chart-grid: rgba(148, 163, 184, 0.10);
+  --ss-chart-axis: #64748b;
+  --ss-chart-tooltip: rgba(2, 10, 23, 0.96);
+}

@@ -1218,3 +1218,133 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   SS4TS StatCard migration
+   Sprint 1.6.2-D3.1-B
+========================================================= */
+
+.stat-card.ss-ui-card {
+  min-height: 112px;
+  padding: 0;
+}
+
+.stat-card.ss-ui-card::before {
+  opacity: 0.48;
+}
+
+.stat-card .stat-card-layout {
+  display: grid;
+  min-height: inherit;
+  padding: var(--ss-card-padding);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--ss-space-3);
+  align-items: center;
+}
+
+.stat-card .stat-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--ss-card-accent) 26%,
+      transparent
+    );
+  border-radius: var(--ss-radius-md);
+  background: var(--ss-card-accent-soft);
+  color: var(--ss-card-accent);
+}
+
+.stat-card .stat-card-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ss-space-1);
+}
+
+.stat-card .stat-card-content span {
+  overflow: hidden;
+  color: var(--ss-text-muted);
+  font-size: var(--ss-font-size-sm);
+  font-weight: var(--ss-font-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-card .stat-card-content strong {
+  overflow: hidden;
+  color: var(--ss-text-primary);
+  font-size: clamp(
+    1rem,
+    1.4vw,
+    1.3rem
+  );
+  font-weight: var(--ss-font-bold);
+  line-height: var(--ss-line-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-card .stat-card-content small {
+  overflow: hidden;
+  color: var(--ss-text-subtle);
+  font-size: var(--ss-font-size-xs);
+  line-height: var(--ss-line-normal);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-card.tone-green {
+  --ss-card-accent: var(--ss-success);
+  --ss-card-accent-soft: var(--ss-success-soft);
+}
+
+.stat-card.tone-red {
+  --ss-card-accent: var(--ss-danger);
+  --ss-card-accent-soft: var(--ss-danger-soft);
+}
+
+.stat-card.tone-orange {
+  --ss-card-accent: var(--ss-warning);
+  --ss-card-accent-soft: var(--ss-warning-soft);
+}
+
+.stat-card.tone-purple {
+  --ss-card-accent: var(--ss-purple);
+  --ss-card-accent-soft: var(--ss-purple-soft);
+}
+
+.stat-card.tone-blue {
+  --ss-card-accent: var(--ss-primary);
+  --ss-card-accent-soft: var(--ss-primary-soft);
+}
+
+.stat-card.tone-download {
+  --ss-card-accent: var(--ss-download);
+  --ss-card-accent-soft: var(--ss-download-soft);
+}
+
+.stat-card.tone-upload {
+  --ss-card-accent: var(--ss-upload);
+  --ss-card-accent-soft: var(--ss-upload-soft);
+}
+
+@media (max-width: 640px) {
+  .stat-card.ss-ui-card {
+    min-height: 100px;
+  }
+
+  .stat-card .stat-card-layout {
+    padding: var(--ss-space-3);
+  }
+
+  .stat-card .stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+}

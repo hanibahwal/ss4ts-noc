@@ -57,3 +57,6 @@ influxdb-data/
 grafana-data/
 postgres-data/
 redis-data/
+
+# Local sprint backup files
+*.bak-*

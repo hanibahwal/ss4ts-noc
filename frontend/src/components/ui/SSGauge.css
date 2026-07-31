@@ -1,0 +1,276 @@
+.ss-ui-gauge {
+  --ss-gauge-color:
+    var(--ss-primary);
+
+  --ss-gauge-soft:
+    var(--ss-primary-soft);
+
+  --ss-gauge-size:
+    132px;
+
+  display: inline-flex;
+  min-width: 0;
+  flex-direction: column;
+
+  gap:
+    var(--ss-space-3);
+
+  align-items:
+    center;
+
+  color:
+    var(--ss-gauge-color);
+}
+
+.ss-ui-gauge__visual {
+  position: relative;
+  width:
+    var(--ss-gauge-size);
+
+  height:
+    var(--ss-gauge-size);
+}
+
+.ss-ui-gauge__visual svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+
+  transform:
+    rotate(-90deg);
+}
+
+.ss-ui-gauge__track,
+.ss-ui-gauge__value {
+  fill: none;
+}
+
+.ss-ui-gauge__track {
+  stroke:
+    rgba(148, 163, 184, 0.12);
+}
+
+.ss-ui-gauge__value {
+  stroke-linecap:
+    round;
+
+  filter:
+    drop-shadow(
+      0 0 7px
+      var(--ss-gauge-soft)
+    );
+
+  transition:
+    stroke-dasharray
+    var(--ss-duration-gauge)
+    var(--ss-ease-standard);
+}
+
+.ss-ui-gauge__center {
+  position: absolute;
+  inset: 0;
+
+  display: grid;
+  place-content: center;
+
+  color:
+    var(--ss-text-primary);
+
+  text-align:
+    center;
+}
+
+.ss-ui-gauge__icon {
+  width: 20px;
+  height: 20px;
+  margin:
+    0 auto
+    var(--ss-space-1);
+
+  color:
+    var(--ss-gauge-color);
+}
+
+.ss-ui-gauge__number {
+  display: flex;
+  gap: 3px;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.ss-ui-gauge__number strong {
+  font-size:
+    clamp(
+      1.35rem,
+      2vw,
+      1.9rem
+    );
+
+  font-weight:
+    var(--ss-font-black);
+
+  line-height: 1;
+}
+
+.ss-ui-gauge__number span {
+  color:
+    var(--ss-text-muted);
+
+  font-size:
+    var(--ss-font-size-xs);
+}
+
+.ss-ui-gauge__caption {
+  display: flex;
+  max-width:
+    calc(
+      var(--ss-gauge-size)
+      + 30px
+    );
+
+  flex-direction: column;
+
+  gap:
+    var(--ss-space-1);
+
+  align-items:
+    center;
+
+  text-align:
+    center;
+}
+
+.ss-ui-gauge__caption strong {
+  color:
+    var(--ss-text-secondary);
+
+  font-size:
+    var(--ss-font-size-sm);
+
+  font-weight:
+    var(--ss-font-semibold);
+}
+
+.ss-ui-gauge__caption span {
+  color:
+    var(--ss-text-subtle);
+
+  font-size:
+    var(--ss-font-size-xs);
+
+  line-height:
+    var(--ss-line-normal);
+}
+
+/* ---------------------------------------------------------
+   Sizes
+--------------------------------------------------------- */
+
+.ss-ui-gauge--size-xs {
+  --ss-gauge-size:
+    74px;
+}
+
+.ss-ui-gauge--size-sm {
+  --ss-gauge-size:
+    102px;
+}
+
+.ss-ui-gauge--size-md {
+  --ss-gauge-size:
+    132px;
+}
+
+.ss-ui-gauge--size-lg {
+  --ss-gauge-size:
+    168px;
+}
+
+.ss-ui-gauge--size-xl {
+  --ss-gauge-size:
+    210px;
+}
+
+/* ---------------------------------------------------------
+   Tones
+--------------------------------------------------------- */
+
+.ss-ui-gauge--tone-primary,
+.ss-ui-gauge--tone-info {
+  --ss-gauge-color:
+    var(--ss-primary);
+
+  --ss-gauge-soft:
+    var(--ss-primary-soft);
+}
+
+.ss-ui-gauge--tone-success {
+  --ss-gauge-color:
+    var(--ss-success);
+
+  --ss-gauge-soft:
+    var(--ss-success-soft);
+}
+
+.ss-ui-gauge--tone-warning {
+  --ss-gauge-color:
+    var(--ss-warning);
+
+  --ss-gauge-soft:
+    var(--ss-warning-soft);
+}
+
+.ss-ui-gauge--tone-danger,
+.ss-ui-gauge--tone-critical {
+  --ss-gauge-color:
+    var(--ss-danger);
+
+  --ss-gauge-soft:
+    var(--ss-danger-soft);
+}
+
+.ss-ui-gauge--tone-purple {
+  --ss-gauge-color:
+    var(--ss-purple);
+
+  --ss-gauge-soft:
+    var(--ss-purple-soft);
+}
+
+.ss-ui-gauge--tone-download {
+  --ss-gauge-color:
+    var(--ss-download);
+
+  --ss-gauge-soft:
+    var(--ss-download-soft);
+}
+
+.ss-ui-gauge--tone-upload {
+  --ss-gauge-color:
+    var(--ss-upload);
+
+  --ss-gauge-soft:
+    var(--ss-upload-soft);
+}
+
+.ss-ui-gauge--tone-neutral {
+  --ss-gauge-color:
+    var(--ss-neutral);
+
+  --ss-gauge-soft:
+    var(--ss-neutral-soft);
+}
+
+@media (max-width: 640px) {
+  .ss-ui-gauge--size-lg {
+    --ss-gauge-size:
+      144px;
+  }
+
+  .ss-ui-gauge--size-xl {
+    --ss-gauge-size:
+      176px;
+  }
+}

@@ -1,0 +1,302 @@
+.ss-ui-badge {
+  --ss-badge-color:
+    var(--ss-text-secondary);
+
+  --ss-badge-background:
+    var(--ss-neutral-soft);
+
+  --ss-badge-border:
+    var(--ss-border-default);
+
+  display: inline-flex;
+  min-width: 0;
+  min-height: var(--ss-badge-height);
+  padding: 4px 10px;
+
+  border:
+    1px solid
+    var(--ss-badge-border);
+
+  border-radius:
+    var(--ss-radius-pill);
+
+  background:
+    var(--ss-badge-background);
+
+  color:
+    var(--ss-badge-color);
+
+  gap:
+    var(--ss-space-1);
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  font-size:
+    var(--ss-font-size-xs);
+
+  font-weight:
+    var(--ss-font-bold);
+
+  line-height: 1;
+  white-space: nowrap;
+
+  transition:
+    border-color
+      var(--ss-duration-normal)
+      var(--ss-ease-standard),
+    background
+      var(--ss-duration-normal)
+      var(--ss-ease-standard),
+    color
+      var(--ss-duration-normal)
+      var(--ss-ease-standard),
+    transform
+      var(--ss-duration-normal)
+      var(--ss-ease-standard);
+}
+
+.ss-ui-badge__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ss-ui-badge__icon {
+  flex: 0 0 auto;
+}
+
+.ss-ui-badge__dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      currentColor 16%,
+      transparent
+    );
+}
+
+.ss-ui-badge--pulse
+.ss-ui-badge__dot {
+  animation:
+    ss-badge-pulse
+    1.6s
+    ease-in-out
+    infinite;
+}
+
+.ss-ui-badge--uppercase {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------
+   Sizes
+--------------------------------------------------------- */
+
+.ss-ui-badge--size-sm {
+  min-height: 22px;
+  padding: 3px 8px;
+  font-size: 10px;
+}
+
+.ss-ui-badge--size-md {
+  min-height:
+    var(--ss-badge-height);
+}
+
+.ss-ui-badge--size-lg {
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size:
+    var(--ss-font-size-sm);
+}
+
+/* ---------------------------------------------------------
+   Variants
+--------------------------------------------------------- */
+
+.ss-ui-badge--variant-soft {
+  background:
+    var(--ss-badge-background);
+}
+
+.ss-ui-badge--variant-solid {
+  border-color:
+    transparent;
+
+  background:
+    var(--ss-badge-color);
+
+  color:
+    #ffffff;
+}
+
+.ss-ui-badge--variant-outline {
+  background:
+    transparent;
+}
+
+.ss-ui-badge--variant-ghost {
+  border-color:
+    transparent;
+
+  background:
+    transparent;
+}
+
+/* ---------------------------------------------------------
+   Tones
+--------------------------------------------------------- */
+
+.ss-ui-badge--tone-neutral {
+  --ss-badge-color:
+    var(--ss-text-secondary);
+
+  --ss-badge-background:
+    var(--ss-neutral-soft);
+
+  --ss-badge-border:
+    var(--ss-border-default);
+}
+
+.ss-ui-badge--tone-primary,
+.ss-ui-badge--tone-info {
+  --ss-badge-color:
+    var(--ss-primary);
+
+  --ss-badge-background:
+    var(--ss-primary-soft);
+
+  --ss-badge-border:
+    rgba(56, 189, 248, 0.28);
+}
+
+.ss-ui-badge--tone-success {
+  --ss-badge-color:
+    var(--ss-success);
+
+  --ss-badge-background:
+    var(--ss-success-soft);
+
+  --ss-badge-border:
+    rgba(34, 197, 94, 0.28);
+}
+
+.ss-ui-badge--tone-warning {
+  --ss-badge-color:
+    var(--ss-warning);
+
+  --ss-badge-background:
+    var(--ss-warning-soft);
+
+  --ss-badge-border:
+    rgba(245, 158, 11, 0.30);
+}
+
+.ss-ui-badge--tone-danger,
+.ss-ui-badge--tone-critical {
+  --ss-badge-color:
+    var(--ss-danger);
+
+  --ss-badge-background:
+    var(--ss-danger-soft);
+
+  --ss-badge-border:
+    rgba(239, 68, 68, 0.30);
+}
+
+.ss-ui-badge--tone-purple {
+  --ss-badge-color:
+    var(--ss-purple);
+
+  --ss-badge-background:
+    var(--ss-purple-soft);
+
+  --ss-badge-border:
+    rgba(167, 139, 250, 0.30);
+}
+
+.ss-ui-badge--tone-download {
+  --ss-badge-color:
+    var(--ss-download);
+
+  --ss-badge-background:
+    var(--ss-download-soft);
+
+  --ss-badge-border:
+    rgba(16, 185, 129, 0.28);
+}
+
+.ss-ui-badge--tone-upload {
+  --ss-badge-color:
+    var(--ss-upload);
+
+  --ss-badge-background:
+    var(--ss-upload-soft);
+
+  --ss-badge-border:
+    rgba(139, 92, 246, 0.28);
+}
+
+/* ---------------------------------------------------------
+   Removable
+--------------------------------------------------------- */
+
+.ss-ui-badge--removable {
+  padding-inline-end:
+    5px;
+}
+
+.ss-ui-badge__remove {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  color:
+    currentColor;
+
+  cursor: pointer;
+  place-items: center;
+
+  font-size: 14px;
+  line-height: 1;
+
+  transition:
+    background
+      var(--ss-duration-fast)
+      var(--ss-ease-standard),
+    transform
+      var(--ss-duration-fast)
+      var(--ss-ease-standard);
+}
+
+.ss-ui-badge__remove:hover {
+  background:
+    rgba(255, 255, 255, 0.16);
+
+  transform:
+    scale(1.06);
+}
+
+@keyframes ss-badge-pulse {
+  50% {
+    opacity: 0.52;
+    transform: scale(0.78);
+  }
+}
