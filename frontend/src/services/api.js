@@ -1,49 +1,101 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || ''
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || ''
 
-async function request(endpoint, options = {}) {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 10000)
+
+async function request(
+  endpoint,
+  options = {},
+) {
+  const controller =
+    new AbortController()
+
+  const timeout = globalThis.setTimeout(
+    () => controller.abort(),
+    10000,
+  )
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
+    const response = await fetch(
+      `${API_BASE_URL}${endpoint}`,
+      {
+        ...options,
+
+        headers: {
+          'Content-Type':
+            'application/json',
+
+          ...options.headers,
+        },
+
+        signal: controller.signal,
       },
-      signal: controller.signal,
-    })
+    )
 
     if (!response.ok) {
-      throw new Error(`API error: HTTP ${response.status}`)
+      let errorMessage =
+        `API error: HTTP ${response.status}`
+
+      try {
+        const errorBody =
+          await response.json()
+
+        if (errorBody?.detail) {
+          errorMessage = String(
+            errorBody.detail,
+          )
+        }
+      } catch {
+        // Keep the default HTTP error
+        // when the response is not JSON.
+      }
+
+      throw new Error(errorMessage)
     }
 
     return await response.json()
   } catch (error) {
     if (error.name === 'AbortError') {
-      throw new Error('انتهت مهلة الاتصال بخادم API')
+      throw new Error(
+        'انتهت مهلة الاتصال بخادم API',
+      )
     }
 
     throw error
   } finally {
-    clearTimeout(timeout)
+    globalThis.clearTimeout(timeout)
   }
 }
+
 
 function normalizeDevice(device) {
   return {
     ...device,
-    ip: device.ip || device.ip_address,
-    name: device.name || device.identity || 'MikroTik Router',
+
+    ip:
+      device.ip ||
+      device.ip_address,
+
+    name:
+      device.name ||
+      device.identity ||
+      'MikroTik Router',
+
     type:
       device.type ||
       device.device_type ||
       device.model ||
       'MikroTik RouterOS',
-    site: device.site || 'غير محدد',
-    status: device.status || 'unknown',
+
+    site:
+      device.site ||
+      'غير محدد',
+
+    status:
+      device.status ||
+      'unknown',
   }
 }
+
 
 export const api = {
   health() {
@@ -55,10 +107,18 @@ export const api = {
   },
 
   async devices() {
-    const result = await request('/api/devices')
-    const devices = Array.isArray(result) ? result : result.devices || []
+    const result = await request(
+      '/api/devices',
+    )
 
-    return devices.map(normalizeDevice)
+    const devices =
+      Array.isArray(result)
+        ? result
+        : result.devices || []
+
+    return devices.map(
+      normalizeDevice,
+    )
   },
 
   async device(ip) {
@@ -96,6 +156,47 @@ export const api = {
       `/api/v1/devices/${encodeURIComponent(ip)}/traffic`,
     )
   },
+
+  trafficHistory(
+    ip,
+    {
+      interfaceName = '',
+      minutes = 15,
+      window = 10,
+    } = {},
+  ) {
+    const searchParams =
+      new URLSearchParams({
+        minutes: String(minutes),
+        window: String(window),
+      })
+
+    if (interfaceName) {
+      searchParams.set(
+        'interface',
+        interfaceName,
+      )
+    }
+
+    return request(
+      `/api/v1/devices/${encodeURIComponent(ip)}/traffic/history?${searchParams.toString()}`,
+    )
+  },
+
+  interfaces(
+    ip,
+    minutes = 15,
+  ) {
+    const searchParams =
+      new URLSearchParams({
+        minutes: String(minutes),
+      })
+
+    return request(
+      `/api/v1/devices/${encodeURIComponent(ip)}/interfaces?${searchParams.toString()}`,
+    )
+  },
 }
+
 
 export { API_BASE_URL }

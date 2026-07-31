@@ -969,3 +969,42 @@
     --ss-gauge-size: 104px;
   }
 }
+
+
+/* =========================================================
+   Sprint 1.6.2-D3.1-H3
+   SSTable Small Pilot
+========================================================= */
+
+.decision-pilot-table {
+  display: grid;
+  gap: var(--ss-space-4);
+}
+
+.decision-pilot-table__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.decision-pilot-table__header h3 {
+  margin: var(--ss-space-1) 0 0;
+  color: var(--ss-text-primary);
+}
+
+.decision-pilot-stage {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.decision-pilot-stage strong {
+  color: var(--ss-text-primary);
+  font-size: var(--ss-font-size-sm);
+}
+
+.decision-pilot-stage span {
+  color: var(--ss-text-muted);
+  font-size: var(--ss-font-size-xs);
+}

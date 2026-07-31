@@ -25,6 +25,7 @@ import {
   SSGauge,
   SSProgress,
   SSStatusChip,
+  SSTable,
 } from '../ui'
 
 import './DecisionIntelligenceCenter.css'
@@ -638,6 +639,45 @@ function ErrorState({
 }
 
 
+
+const DECISION_PILOT_COLUMNS = [
+  {
+    key: 'stage',
+    header: 'المرحلة',
+    minWidth: 150,
+    cell: ({ row }) => (
+      <div className="decision-pilot-stage">
+        <strong>{row.stage}</strong>
+        <span>{row.stageEnglish}</span>
+      </div>
+    ),
+  },
+  {
+    key: 'title',
+    header: 'العنوان',
+    minWidth: 220,
+    accessorKey: 'title',
+  },
+  {
+    key: 'description',
+    header: 'التفاصيل',
+    minWidth: 320,
+    accessorKey: 'description',
+  },
+  {
+    key: 'status',
+    header: 'الحالة',
+    minWidth: 120,
+    cell: ({ row }) => (
+      <SSStatusChip
+        status={row.status}
+        label={row.statusLabel}
+        size="sm"
+      />
+    ),
+  },
+]
+
 export default function DecisionIntelligenceCenter({
   ip,
   selectedInterface = '',
@@ -707,6 +747,78 @@ export default function DecisionIntelligenceCenter({
     primarySignal?.evidence ||
     primaryRootCause?.evidence ||
     []
+
+
+  const decisionPilotRows = [
+    {
+      id: 'signal',
+      stage: 'الإشارة',
+      stageEnglish: 'Top Signal',
+      title:
+        primarySignal?.title ||
+        'لا توجد إشارة',
+      description:
+        primarySignal?.description ||
+        'لا توجد تفاصيل متاحة.',
+      status:
+        primarySignal?.risk ||
+        'unknown',
+      statusLabel:
+        riskConfig.label,
+    },
+    {
+      id: 'root-cause',
+      stage: 'السبب الجذري',
+      stageEnglish: 'Root Cause',
+      title:
+        primaryRootCause?.title ||
+        'لا يوجد سبب جذري',
+      description:
+        primaryRootCause?.description ||
+        'لا توجد تفاصيل متاحة.',
+      status:
+        primaryRootCause?.risk ||
+        'unknown',
+      statusLabel:
+        primaryRootCause?.risk ||
+        'غير معروف',
+    },
+    {
+      id: 'recommendation',
+      stage: 'التوصية',
+      stageEnglish: 'Recommendation',
+      title:
+        primaryRecommendation?.title ||
+        'لا توجد توصية',
+      description:
+        primaryRecommendation?.action ||
+        'لا توجد تفاصيل متاحة.',
+      status:
+        primaryRecommendation?.priority ||
+        'proposed',
+      statusLabel:
+        primaryRecommendation?.priority ||
+        'مقترح',
+    },
+    {
+      id: 'decision',
+      stage: 'القرار',
+      stageEnglish: 'Decision',
+      title:
+        primaryDecision?.title ||
+        'لا يوجد قرار',
+      description:
+        primaryDecision?.action ||
+        primaryDecision?.reason ||
+        'لا توجد تفاصيل متاحة.',
+      status:
+        primaryDecision?.status ||
+        'proposed',
+      statusLabel:
+        primaryDecision?.status ||
+        'مقترح',
+    },
+  ]
 
   return (
     <section
@@ -960,6 +1072,31 @@ export default function DecisionIntelligenceCenter({
           ) : null}
         </DecisionChainCard>
       </div>
+
+      <section className="decision-pilot-table">
+        <div className="decision-pilot-table__header">
+          <div>
+            <span className="decision-section-kicker">
+              SSTABLE PILOT
+            </span>
+
+            <h3>ملخص سلسلة القرار</h3>
+          </div>
+        </div>
+
+        <SSTable
+          columns={DECISION_PILOT_COLUMNS}
+          rows={decisionPilotRows}
+          rowKey="id"
+          density="compact"
+          stickyHeader
+          striped
+          hoverable
+          bordered
+          emptyTitle="لا توجد بيانات للقرار"
+          emptyDescription="لم ينتج التحليل الحالي عناصر قابلة للعرض."
+        />
+      </section>
 
       <div className="decision-details-grid">
         <section className="decision-evidence-card">
