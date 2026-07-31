@@ -12,6 +12,9 @@ from app.api.v1.decision_intelligence import (
 from app.api.v1.health import (
     router as health_router,
 )
+from app.api.v1.knowledge_graph import (
+    router as knowledge_graph_router,
+)
 from app.api.v1.routeros import (
     router as routeros_router,
 )
@@ -47,4 +50,9 @@ api_router.include_router(
 
 api_router.include_router(
     decision_intelligence_router
+)
+
+
+api_router.include_router(
+    knowledge_graph_router
 )
