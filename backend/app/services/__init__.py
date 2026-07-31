@@ -15,3 +15,10 @@ from app.services.impact_analysis import (
     ImpactAnalysisService,
     analyze_graph_impact,
 )
+
+from app.services.root_cause_analysis import (
+    RootCauseAnalysisResult,
+    RootCauseAnalysisService,
+    SPOFAssessment,
+    analyze_root_causes,
+)
