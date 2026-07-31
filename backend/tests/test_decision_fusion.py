@@ -168,14 +168,33 @@ def test_fusion_contains_ranked_root_causes() -> None:
 
     assert len(result.root_causes) >= 2
 
-    scores = [
-        item.rank_score
+    service = DecisionFusionService(
+        make_graph(
+            upstream_failed=True
+        )
+    )
+
+    fusion_scores = [
+        service._root_cause_fusion_score(
+            item
+        )
         for item in result.root_causes
     ]
 
-    assert scores == sorted(
-        scores,
+    assert fusion_scores == sorted(
+        fusion_scores,
         reverse=True,
+    )
+
+    assert (
+        result.primary_root_cause
+        is not None
+    )
+
+    assert (
+        result.primary_root_cause
+        .cause_id
+        .startswith("cause:upstream:")
     )
 
 
