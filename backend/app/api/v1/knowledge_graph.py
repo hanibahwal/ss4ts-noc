@@ -12,6 +12,9 @@ from app.models.knowledge_graph import (
     GraphSnapshot,
     RelationshipType,
 )
+from app.services.decision_fusion import (
+    fuse_graph_decision,
+)
 from app.services.knowledge_graph import (
     build_graph_from_devices,
 )
@@ -503,3 +506,83 @@ async def knowledge_graph_blast_radius(
             for path in paths
         ],
     }
+
+
+@router.get(
+    "/nodes/{node_id}/decision"
+)
+async def knowledge_graph_decision(
+    node_id: str,
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+        ),
+    ] = 10,
+    refresh: bool = False,
+) -> dict:
+    """
+    Build one explainable engineering decision for a graph node.
+
+    The response fuses blast-radius analysis, root-cause ranking,
+    SPOF detection, backup awareness and remediation recommendations.
+    """
+
+    graph = await build_runtime_graph(
+        refresh=refresh
+    )
+
+    query = _query(graph)
+
+    _node_or_404(
+        query,
+        node_id,
+    )
+
+    try:
+        result = fuse_graph_decision(
+            graph,
+            node_id,
+            max_depth=max_depth,
+        )
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Graph node not found: "
+                f"{node_id}"
+            ),
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+
+    payload = result.to_dict()
+
+    payload["primary_root_cause"] = (
+        result.primary_root_cause.to_dict()
+        if result.primary_root_cause
+        else None
+    )
+
+    payload["primary_recommendation"] = (
+        result.primary_recommendation.to_dict()
+        if result.primary_recommendation
+        else None
+    )
+
+    payload["primary_decision"] = (
+        result.primary_decision.to_dict()
+        if result.primary_decision
+        else None
+    )
+
+    return payload
