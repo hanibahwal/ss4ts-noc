@@ -82,3 +82,7 @@ from app.services.execution_lease_store import (
     DEFAULT_EXECUTION_LEASE_TTL_SECONDS,
     ExecutionLeaseStore,
 )
+
+from app.services.execution_heartbeat_store import (
+    ExecutionHeartbeatStore,
+)
