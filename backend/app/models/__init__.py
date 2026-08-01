@@ -62,6 +62,14 @@ from app.models.impact_decision import (
     ImpactSeverity,
     normalize_impact_decisions,
 )
+from app.models.execution_authorization import (
+    ApprovalIdentity,
+    ApprovalRole,
+    AuthorizationDecision,
+    AuthorizationStatus,
+    ExecutionAuthorization,
+    ExecutionRiskClass,
+)
 from app.models.execution_plan import (
     ExecutionPlan,
     ExecutionPlanStatus,
@@ -106,6 +114,12 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "ExecutionRiskClass",
+    "ExecutionAuthorization",
+    "AuthorizationStatus",
+    "AuthorizationDecision",
+    "ApprovalRole",
+    "ApprovalIdentity",
     "normalize_decision_audit",
     "DecisionAuditStatus",
     "DecisionAuditRecord",
