@@ -42,3 +42,8 @@ from app.services.execution_simulator import (
     ExecutionSimulator,
     simulate_execution_plan,
 )
+
+from app.services.decision_explanation import (
+    DecisionExplanationService,
+    build_decision_explanation,
+)
