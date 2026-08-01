@@ -934,4 +934,3 @@ def test_decision_trace_route_is_registered() -> None:
         "nodes/{node_id}/decision/trace"
         in paths
     )
-
