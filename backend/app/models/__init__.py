@@ -81,6 +81,14 @@ from app.models.execution_concurrency import (
     calculate_request_fingerprint,
     canonical_mutation_json,
 )
+from app.models.execution_lease import (
+    ExecutionLease,
+    ExecutionLeaseError,
+    ExecutionLeaseStatus,
+    LeaseConflict,
+    LeaseTokenMismatch,
+    LeaseVersionConflict,
+)
 from app.models.execution_plan import (
     ExecutionPlan,
     ExecutionPlanStatus,
@@ -125,6 +133,12 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "LeaseVersionConflict",
+    "LeaseTokenMismatch",
+    "LeaseConflict",
+    "ExecutionLeaseStatus",
+    "ExecutionLeaseError",
+    "ExecutionLease",
     "canonical_mutation_json",
     "calculate_request_fingerprint",
     "IdempotencyDisposition",
