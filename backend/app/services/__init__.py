@@ -64,3 +64,9 @@ from app.services.execution_safety_policy import (
     ExecutionSafetyPolicy,
     evaluate_execution_policy,
 )
+
+from app.services.execution_authorization import (
+    DEFAULT_AUTHORIZATION_TTL_MINUTES,
+    ExecutionAuthorizationService,
+    build_execution_authorization,
+)
