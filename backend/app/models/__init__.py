@@ -81,6 +81,10 @@ from app.models.execution_concurrency import (
     calculate_request_fingerprint,
     canonical_mutation_json,
 )
+from app.models.execution_runtime_observability import (
+    RecoveryRuntimeObservability,
+    RuntimeHealthStatus,
+)
 from app.models.execution_recovery_scheduler import (
     DEFAULT_RECOVERY_BATCH_SIZE,
     DEFAULT_RECOVERY_INTERVAL_SECONDS,
@@ -159,6 +163,8 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "RuntimeHealthStatus",
+    "RecoveryRuntimeObservability",
     "RecoverySchedulerVersionConflict",
     "RecoverySchedulerStatus",
     "RecoverySchedulerRunStatus",
