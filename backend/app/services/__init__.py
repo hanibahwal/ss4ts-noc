@@ -120,3 +120,8 @@ from app.services.execution_runtime_metrics_store import (
     RuntimeMetricsStoreError,
     RuntimeMetricsVersionConflict,
 )
+
+from app.services.execution_runtime_observability import (
+    ExecutionRuntimeObservabilityService,
+    collect_runtime_observability,
+)
