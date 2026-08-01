@@ -31,6 +31,10 @@ from app.api.v1.execution_recovery import (
 from app.api.v1.execution_recovery_scheduler import (
     router as execution_recovery_scheduler_router,
 )
+
+from app.api.v1.execution_recovery_runtime import (
+    router as execution_recovery_runtime_router,
+)
 from app.api.v1.health import (
     router as health_router,
 )
@@ -102,6 +106,11 @@ api_router.include_router(
 
 api_router.include_router(
     execution_recovery_scheduler_router
+)
+
+
+api_router.include_router(
+    execution_recovery_runtime_router
 )
 
 
