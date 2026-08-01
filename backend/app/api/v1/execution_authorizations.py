@@ -17,6 +17,10 @@ from pydantic import (
 from app.api.v1.knowledge_graph import (
     build_runtime_graph,
 )
+from app.models.execution_concurrency import (
+    AuthorizationVersionConflict,
+    IdempotencyConflict,
+)
 from app.models.execution_authorization import (
     ApprovalIdentity,
     ApprovalRole,
@@ -90,6 +94,15 @@ class CreateAuthorizationPayload(BaseModel):
 class ApprovalPayload(BaseModel):
     approver: ApproverPayload
 
+    expected_version: int = Field(
+        ge=1,
+    )
+
+    idempotency_key: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
 
 class RejectionPayload(BaseModel):
     approver: ApproverPayload
@@ -153,6 +166,12 @@ def _response(
     store: ExecutionAuthorizationStore,
 ) -> dict:
     payload = authorization.to_dict()
+
+    payload["record_version"] = (
+        store.get_record_version(
+            authorization.authorization_id
+        )
+    )
 
     payload["verified"] = store.verify(
         authorization.authorization_id
@@ -347,6 +366,10 @@ async def list_execution_authorizations(
                     item.metadata.get(
                         "required_role"
                     ),
+                "record_version":
+                    store.get_record_version(
+                        item.authorization_id
+                    ),
                 "is_expired":
                     item.is_expired,
                 "is_usable":
@@ -404,12 +427,25 @@ async def approve_execution_authorization(
     try:
         store = get_authorization_store()
 
-        approved = store.approve(
+        mutation = store.approve_atomic(
             authorization_id,
             approver=_identity(
                 payload.approver
             ),
+            expected_version=
+                payload.expected_version,
+            idempotency_key=
+                payload.idempotency_key,
         )
+
+        approved = store.get(
+            authorization_id
+        )
+
+        if approved is None:
+            raise _not_found(
+                authorization_id
+            )
     except KeyError as exc:
         raise _not_found(
             authorization_id
@@ -418,6 +454,34 @@ async def approve_execution_authorization(
         raise HTTPException(
             status_code=403,
             detail=str(exc),
+        ) from exc
+    except AuthorizationVersionConflict as exc:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "type":
+                    "version_conflict",
+                "message":
+                    str(exc),
+                "authorization_id":
+                    exc.authorization_id,
+                "expected_version":
+                    exc.expected_version,
+                "actual_version":
+                    exc.actual_version,
+            },
+        ) from exc
+    except IdempotencyConflict as exc:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "type":
+                    "idempotency_conflict",
+                "message":
+                    str(exc),
+                "idempotency_key":
+                    exc.idempotency_key,
+            },
         ) from exc
     except ValueError as exc:
         raise HTTPException(
@@ -433,10 +497,16 @@ async def approve_execution_authorization(
             detail=str(exc),
         ) from exc
 
-    return _response(
+    response = _response(
         approved,
         store=store,
     )
+
+    response["mutation"] = (
+        mutation.to_dict()
+    )
+
+    return response
 
 
 @router.post(

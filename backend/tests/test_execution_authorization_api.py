@@ -47,6 +47,14 @@ def approver_payload(
     role: ApprovalRole = (
         ApprovalRole.SENIOR_ENGINEER
     ),
+    *,
+    expected_version: int = 1,
+    idempotency_key: str = (
+        "approve-api-001"
+    ),
+    identity_id: str = (
+        "user:approver"
+    ),
 ):
     return (
         execution_authorizations
@@ -54,11 +62,16 @@ def approver_payload(
             approver=(
                 execution_authorizations
                 .ApproverPayload(
-                    identity_id="user:approver",
+                    identity_id=
+                        identity_id,
                     display_name="Approver",
                     role=role,
                 )
-            )
+            ),
+            expected_version=
+                expected_version,
+            idempotency_key=
+                idempotency_key,
         )
     )
 
@@ -508,3 +521,188 @@ def test_routes_are_registered() -> None:
     }
 
     assert expected.issubset(paths)
+
+def test_approval_returns_new_mutation(
+    authorization_environment,
+) -> None:
+    created = run(
+        execution_authorizations
+        .create_execution_authorization(
+            "device:core",
+            requester_payload(),
+            max_depth=10,
+            refresh=False,
+        )
+    )
+
+    approved = run(
+        execution_authorizations
+        .approve_execution_authorization(
+            created["authorization_id"],
+            approver_payload(
+                idempotency_key=
+                    "approve-new-001"
+            ),
+        )
+    )
+
+    assert approved["record_version"] == 2
+
+    assert (
+        approved["mutation"]["disposition"]
+        == "new"
+    )
+
+    assert (
+        approved["mutation"]["current_version"]
+        == 2
+    )
+
+
+def test_same_approval_request_is_replayed(
+    authorization_environment,
+) -> None:
+    created = run(
+        execution_authorizations
+        .create_execution_authorization(
+            "device:core",
+            requester_payload(),
+            max_depth=10,
+            refresh=False,
+        )
+    )
+
+    payload = approver_payload(
+        idempotency_key=
+            "approve-replay-api-001"
+    )
+
+    first = run(
+        execution_authorizations
+        .approve_execution_authorization(
+            created["authorization_id"],
+            payload,
+        )
+    )
+
+    replay = run(
+        execution_authorizations
+        .approve_execution_authorization(
+            created["authorization_id"],
+            payload,
+        )
+    )
+
+    assert (
+        first["mutation"]["disposition"]
+        == "new"
+    )
+
+    assert (
+        replay["mutation"]["disposition"]
+        == "replay"
+    )
+
+    assert replay["record_version"] == 2
+
+
+def test_stale_approval_version_returns_409(
+    authorization_environment,
+) -> None:
+    created = run(
+        execution_authorizations
+        .create_execution_authorization(
+            "device:core",
+            requester_payload(),
+            max_depth=10,
+            refresh=False,
+        )
+    )
+
+    run(
+        execution_authorizations
+        .approve_execution_authorization(
+            created["authorization_id"],
+            approver_payload(
+                idempotency_key=
+                    "approve-version-api-001"
+            ),
+        )
+    )
+
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            execution_authorizations
+            .approve_execution_authorization(
+                created["authorization_id"],
+                approver_payload(
+                    expected_version=1,
+                    idempotency_key=
+                        "approve-version-api-002",
+                ),
+            )
+        )
+
+    assert exc.value.status_code == 409
+
+    assert (
+        exc.value.detail["type"]
+        == "version_conflict"
+    )
+
+    assert (
+        exc.value.detail["actual_version"]
+        == 2
+    )
+
+
+def test_idempotency_key_conflict_returns_409(
+    authorization_environment,
+) -> None:
+    created = run(
+        execution_authorizations
+        .create_execution_authorization(
+            "device:core",
+            requester_payload(),
+            max_depth=10,
+            refresh=False,
+        )
+    )
+
+    run(
+        execution_authorizations
+        .approve_execution_authorization(
+            created["authorization_id"],
+            approver_payload(
+                idempotency_key=
+                    "approve-key-api-001",
+                identity_id=
+                    "user:first",
+            ),
+        )
+    )
+
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            execution_authorizations
+            .approve_execution_authorization(
+                created["authorization_id"],
+                approver_payload(
+                    idempotency_key=
+                        "approve-key-api-001",
+                    identity_id=
+                        "user:second",
+                ),
+            )
+        )
+
+    assert exc.value.status_code == 409
+
+    assert (
+        exc.value.detail["type"]
+        == "idempotency_conflict"
+    )
