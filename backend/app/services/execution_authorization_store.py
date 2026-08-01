@@ -13,6 +13,14 @@ from datetime import (
 from pathlib import Path
 from typing import Any
 
+from app.models.execution_concurrency import (
+    AuthorizationMutationAction,
+    AuthorizationMutationResult,
+    AuthorizationMutationToken,
+    AuthorizationVersionConflict,
+    IdempotencyConflict,
+    IdempotencyDisposition,
+)
 from app.models.execution_authorization import (
     ApprovalIdentity,
     ApprovalRole,
@@ -292,6 +300,69 @@ class ExecutionAuthorizationStore:
 
                     checksum TEXT NOT NULL,
                     updated_at TEXT NOT NULL
+                )
+                """
+            )
+
+            authorization_columns = {
+                row["name"]
+                for row in connection.execute(
+                    """
+                    PRAGMA table_info(
+                        execution_authorizations
+                    )
+                    """
+                ).fetchall()
+            }
+
+            if (
+                "record_version"
+                not in authorization_columns
+            ):
+                connection.execute(
+                    """
+                    ALTER TABLE
+                    execution_authorizations
+                    ADD COLUMN
+                    record_version INTEGER
+                    NOT NULL DEFAULT 1
+                    """
+                )
+
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS
+                execution_authorization_idempotency (
+                    idempotency_key TEXT PRIMARY KEY,
+                    authorization_id TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    request_fingerprint TEXT NOT NULL,
+
+                    previous_version INTEGER NOT NULL,
+                    current_version INTEGER NOT NULL,
+
+                    response_payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+
+                    FOREIGN KEY (
+                        authorization_id
+                    )
+                    REFERENCES execution_authorizations (
+                        authorization_id
+                    )
+                    ON DELETE CASCADE
+                )
+                """
+            )
+
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS
+                idx_execution_authorization_idempotency
+                ON execution_authorization_idempotency (
+                    authorization_id,
+                    action,
+                    created_at DESC
                 )
                 """
             )
@@ -1103,6 +1174,425 @@ class ExecutionAuthorizationStore:
         )
 
         return approved
+
+    def get_record_version(
+        self,
+        authorization_id: str,
+    ) -> int:
+        normalized = str(
+            authorization_id
+        ).strip()
+
+        if not normalized:
+            raise ValueError(
+                "authorization_id must not be empty"
+            )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            row = connection.execute(
+                """
+                SELECT record_version
+                FROM execution_authorizations
+                WHERE authorization_id = ?
+                """,
+                (
+                    normalized,
+                ),
+            ).fetchone()
+
+        if row is None:
+            raise KeyError(
+                "Authorization not found"
+            )
+
+        return int(
+            row["record_version"]
+        )
+
+    def approve_atomic(
+        self,
+        authorization_id: str,
+        *,
+        approver: ApprovalIdentity,
+        expected_version: int,
+        idempotency_key: str,
+    ) -> AuthorizationMutationResult:
+        """
+        Approve an authorization using one atomic SQLite transaction.
+
+        The idempotency record, authorization update, checksum update,
+        and lifecycle event are committed together.
+        """
+
+        if not isinstance(
+            approver,
+            ApprovalIdentity,
+        ):
+            raise TypeError(
+                "approver must be "
+                "an ApprovalIdentity"
+            )
+
+        token = AuthorizationMutationToken(
+            authorization_id=
+                authorization_id,
+            action=(
+                AuthorizationMutationAction
+                .APPROVE
+            ),
+            expected_version=
+                expected_version,
+            idempotency_key=
+                idempotency_key,
+            actor_identity_id=
+                approver.identity_id,
+            payload={
+                "approver":
+                    approver.to_dict(),
+            },
+        )
+
+        connection = self._connect()
+
+        try:
+            connection.execute(
+                "BEGIN IMMEDIATE"
+            )
+
+            replay_row = connection.execute(
+                """
+                SELECT *
+                FROM
+                    execution_authorization_idempotency
+                WHERE idempotency_key = ?
+                """,
+                (
+                    token.idempotency_key,
+                ),
+            ).fetchone()
+
+            if replay_row is not None:
+                if (
+                    replay_row[
+                        "request_fingerprint"
+                    ]
+                    != token.request_fingerprint
+                ):
+                    raise IdempotencyConflict(
+                        idempotency_key=
+                            token.idempotency_key
+                    )
+
+                connection.commit()
+
+                return AuthorizationMutationResult(
+                    authorization_id=
+                        replay_row[
+                            "authorization_id"
+                        ],
+                    action=(
+                        AuthorizationMutationAction(
+                            replay_row["action"]
+                        )
+                    ),
+                    previous_version=int(
+                        replay_row[
+                            "previous_version"
+                        ]
+                    ),
+                    current_version=int(
+                        replay_row[
+                            "current_version"
+                        ]
+                    ),
+                    disposition=(
+                        IdempotencyDisposition
+                        .REPLAY
+                    ),
+                    idempotency_key=
+                        token.idempotency_key,
+                    request_fingerprint=
+                        token.request_fingerprint,
+                    response_payload=json.loads(
+                        replay_row[
+                            "response_payload"
+                        ]
+                    ),
+                )
+
+            row = connection.execute(
+                """
+                SELECT *
+                FROM execution_authorizations
+                WHERE authorization_id = ?
+                """,
+                (
+                    token.authorization_id,
+                ),
+            ).fetchone()
+
+            if row is None:
+                raise KeyError(
+                    "Authorization not found"
+                )
+
+            actual_version = int(
+                row["record_version"]
+            )
+
+            if (
+                actual_version
+                != token.expected_version
+            ):
+                raise AuthorizationVersionConflict(
+                    authorization_id=
+                        token.authorization_id,
+                    expected_version=
+                        token.expected_version,
+                    actual_version=
+                        actual_version,
+                )
+
+            authorization = (
+                self._record_from_row(
+                    row
+                )
+            )
+
+            if authorization.status != (
+                AuthorizationStatus.PENDING
+            ):
+                raise ValueError(
+                    "Only pending authorization "
+                    "can be approved"
+                )
+
+            if authorization.is_expired:
+                raise ValueError(
+                    "Authorization has expired"
+                )
+
+            required_role = ApprovalRole(
+                authorization.metadata.get(
+                    "required_role",
+                    ApprovalRole
+                    .ADMINISTRATOR.value,
+                )
+            )
+
+            if not self._role_satisfies(
+                approver.role,
+                required_role,
+            ):
+                raise PermissionError(
+                    "Approver role is insufficient"
+                )
+
+            approved = replace(
+                authorization,
+                status=(
+                    AuthorizationStatus.APPROVED
+                ),
+                decision=(
+                    AuthorizationDecision.ALLOW
+                ),
+                approver=approver,
+                approved_at=datetime.now(
+                    timezone.utc
+                ),
+                execution_allowed=True,
+                rejection_reason=None,
+            )
+
+            checksum = (
+                calculate_authorization_checksum(
+                    approved
+                )
+            )
+
+            updated_at = datetime.now(
+                timezone.utc
+            ).isoformat()
+
+            current_version = (
+                actual_version + 1
+            )
+
+            cursor = connection.execute(
+                """
+                UPDATE execution_authorizations
+                SET
+                    approver_payload = ?,
+                    status = ?,
+                    decision = ?,
+                    approved_at = ?,
+                    rejection_reason = ?,
+                    execution_allowed = ?,
+                    checksum = ?,
+                    updated_at = ?,
+                    record_version =
+                        record_version + 1
+                WHERE authorization_id = ?
+                  AND status = ?
+                  AND record_version = ?
+                """,
+                (
+                    canonical_authorization_json(
+                        approver.to_dict()
+                    ),
+                    approved.status.value,
+                    approved.decision.value,
+                    approved.approved_at
+                    .isoformat(),
+                    approved.rejection_reason,
+                    int(
+                        approved.execution_allowed
+                    ),
+                    checksum,
+                    updated_at,
+                    token.authorization_id,
+                    AuthorizationStatus
+                    .PENDING.value,
+                    token.expected_version,
+                ),
+            )
+
+            if cursor.rowcount != 1:
+                current_row = (
+                    connection.execute(
+                        """
+                        SELECT record_version
+                        FROM execution_authorizations
+                        WHERE authorization_id = ?
+                        """,
+                        (
+                            token
+                            .authorization_id,
+                        ),
+                    ).fetchone()
+                )
+
+                actual = (
+                    int(
+                        current_row[
+                            "record_version"
+                        ]
+                    )
+                    if current_row
+                    else actual_version
+                )
+
+                raise AuthorizationVersionConflict(
+                    authorization_id=
+                        token.authorization_id,
+                    expected_version=
+                        token.expected_version,
+                    actual_version=actual,
+                )
+
+            response_payload = (
+                approved.to_dict()
+            )
+
+            response_payload[
+                "record_version"
+            ] = current_version
+
+            connection.execute(
+                """
+                INSERT INTO
+                execution_authorization_idempotency (
+                    idempotency_key,
+                    authorization_id,
+                    action,
+                    request_fingerprint,
+                    previous_version,
+                    current_version,
+                    response_payload,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    token.idempotency_key,
+                    token.authorization_id,
+                    token.action.value,
+                    token.request_fingerprint,
+                    actual_version,
+                    current_version,
+                    canonical_authorization_json(
+                        response_payload
+                    ),
+                    datetime.now(
+                        timezone.utc
+                    ).isoformat(),
+                ),
+            )
+
+            connection.execute(
+                """
+                INSERT INTO
+                execution_authorization_events (
+                    authorization_id,
+                    event_type,
+                    event_at,
+                    actor_payload,
+                    details_payload
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    token.authorization_id,
+                    "approved",
+                    datetime.now(
+                        timezone.utc
+                    ).isoformat(),
+                    canonical_authorization_json(
+                        approver.to_dict()
+                    ),
+                    canonical_authorization_json({
+                        "required_role":
+                            required_role.value,
+                        "previous_version":
+                            actual_version,
+                        "current_version":
+                            current_version,
+                        "idempotency_key":
+                            token
+                            .idempotency_key,
+                    }),
+                ),
+            )
+
+            connection.commit()
+
+            return AuthorizationMutationResult(
+                authorization_id=
+                    token.authorization_id,
+                action=token.action,
+                previous_version=
+                    actual_version,
+                current_version=
+                    current_version,
+                disposition=(
+                    IdempotencyDisposition.NEW
+                ),
+                idempotency_key=
+                    token.idempotency_key,
+                request_fingerprint=
+                    token.request_fingerprint,
+                response_payload=
+                    response_payload,
+            )
+
+        except Exception:
+            connection.rollback()
+            raise
+
+        finally:
+            connection.close()
 
     def reject(
         self,
