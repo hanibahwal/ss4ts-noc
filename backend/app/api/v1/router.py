@@ -9,6 +9,9 @@ from app.api.v1.dashboard import (
 from app.api.v1.decision_intelligence import (
     router as decision_intelligence_router,
 )
+from app.api.v1.decision_audits import (
+    router as decision_audits_router,
+)
 from app.api.v1.health import (
     router as health_router,
 )
@@ -50,6 +53,11 @@ api_router.include_router(
 
 api_router.include_router(
     decision_intelligence_router
+)
+
+
+api_router.include_router(
+    decision_audits_router
 )
 
 
