@@ -23,6 +23,10 @@ from app.api.v1.execution_leases import (
 from app.api.v1.execution_heartbeats import (
     router as execution_heartbeats_router,
 )
+
+from app.api.v1.execution_recovery import (
+    router as execution_recovery_router,
+)
 from app.api.v1.health import (
     router as health_router,
 )
@@ -84,6 +88,11 @@ api_router.include_router(
 
 api_router.include_router(
     execution_heartbeats_router
+)
+
+
+api_router.include_router(
+    execution_recovery_router
 )
 
 
