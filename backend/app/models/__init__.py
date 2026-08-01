@@ -16,6 +16,11 @@ from app.models.decision import (
     normalize_root_causes,
     normalize_signals,
 )
+from app.models.decision_audit import (
+    DecisionAuditRecord,
+    DecisionAuditStatus,
+    normalize_decision_audit,
+)
 from app.models.decision_explanation import (
     DecisionExplanation,
     EvidenceItem,
@@ -101,6 +106,9 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "normalize_decision_audit",
+    "DecisionAuditStatus",
+    "DecisionAuditRecord",
     "normalize_decision_trace",
     "DecisionTraceStageType",
     "DecisionTraceStageStatus",

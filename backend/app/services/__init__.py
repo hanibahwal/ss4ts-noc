@@ -52,3 +52,9 @@ from app.services.decision_trace import (
     DecisionTraceBuilder,
     build_decision_trace,
 )
+
+from app.services.decision_audit_store import (
+    DecisionAuditStore,
+    calculate_audit_checksum,
+    canonical_json,
+)
