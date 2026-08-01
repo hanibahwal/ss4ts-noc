@@ -21,6 +21,13 @@ from app.models.decision_explanation import (
     EvidenceItem,
     ExplanationItem,
 )
+from app.models.decision_trace import (
+    DecisionTrace,
+    DecisionTraceStage,
+    DecisionTraceStageStatus,
+    DecisionTraceStageType,
+    normalize_decision_trace,
+)
 from app.models.decision_timeline import (
     DecisionTimeline,
     DecisionTimelineEvent,
@@ -94,6 +101,11 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "normalize_decision_trace",
+    "DecisionTraceStageType",
+    "DecisionTraceStageStatus",
+    "DecisionTraceStage",
+    "DecisionTrace",
     "ExplanationItem",
     "EvidenceItem",
     "DecisionExplanation",
