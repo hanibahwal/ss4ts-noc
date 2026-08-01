@@ -1,15 +1,46 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.main_legacy import app as legacy_app
+from app.services.execution_recovery_scheduler_runtime import (
+    get_recovery_scheduler_runtime,
+    runtime_enabled_from_environment,
+)
+
+
+@asynccontextmanager
+async def lifespan(
+    application: FastAPI,
+):
+    runtime = None
+
+    if runtime_enabled_from_environment():
+        runtime = (
+            get_recovery_scheduler_runtime()
+        )
+
+        await runtime.start()
+
+        application.state            .recovery_scheduler_runtime = (
+                runtime
+            )
+
+    try:
+        yield
+    finally:
+        if runtime is not None:
+            await runtime.stop()
 
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="SS4TS Network Operations Center API",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
