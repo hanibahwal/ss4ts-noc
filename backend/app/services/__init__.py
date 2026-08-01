@@ -95,3 +95,9 @@ from app.services.execution_recovery_scheduler_store import (
     DEFAULT_RECOVERY_SCHEDULER_ID,
     ExecutionRecoverySchedulerStore,
 )
+
+from app.services.execution_recovery_scheduler import (
+    ExecutionRecoverySchedulerService,
+    RecoverySchedulerExecutionResult,
+    run_recovery_scheduler_once,
+)
