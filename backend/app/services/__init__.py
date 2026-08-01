@@ -47,3 +47,8 @@ from app.services.decision_explanation import (
     DecisionExplanationService,
     build_decision_explanation,
 )
+
+from app.services.decision_trace import (
+    DecisionTraceBuilder,
+    build_decision_trace,
+)
