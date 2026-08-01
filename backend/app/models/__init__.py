@@ -16,6 +16,11 @@ from app.models.decision import (
     normalize_root_causes,
     normalize_signals,
 )
+from app.models.decision_explanation import (
+    DecisionExplanation,
+    EvidenceItem,
+    ExplanationItem,
+)
 from app.models.decision_timeline import (
     DecisionTimeline,
     DecisionTimelineEvent,
@@ -89,6 +94,9 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "ExplanationItem",
+    "EvidenceItem",
+    "DecisionExplanation",
     "normalize_execution_plan",
     "ExecutionStepType",
     "ExecutionStepStatus",
