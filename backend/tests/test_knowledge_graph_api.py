@@ -783,4 +783,3 @@ def test_decision_explanation_route_is_registered() -> None:
         "nodes/{node_id}/decision/explanation"
         in paths
     )
-
