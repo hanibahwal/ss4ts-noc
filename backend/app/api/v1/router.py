@@ -15,6 +15,10 @@ from app.api.v1.decision_audits import (
 from app.api.v1.execution_authorizations import (
     router as execution_authorizations_router,
 )
+
+from app.api.v1.execution_leases import (
+    router as execution_leases_router,
+)
 from app.api.v1.health import (
     router as health_router,
 )
@@ -66,6 +70,11 @@ api_router.include_router(
 
 api_router.include_router(
     execution_authorizations_router
+)
+
+
+api_router.include_router(
+    execution_leases_router
 )
 
 
