@@ -81,6 +81,14 @@ from app.models.execution_concurrency import (
     calculate_request_fingerprint,
     canonical_mutation_json,
 )
+from app.models.execution_recovery import (
+    ExecutionRecovery,
+    ExecutionRecoveryError,
+    RecoveryDecision,
+    RecoveryReason,
+    RecoveryStatus,
+    RecoveryVersionConflict,
+)
 from app.models.execution_heartbeat import (
     DEFAULT_HEARTBEAT_INTERVAL_SECONDS,
     DEFAULT_HEARTBEAT_TIMEOUT_SECONDS,
@@ -142,6 +150,12 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "RecoveryVersionConflict",
+    "RecoveryStatus",
+    "RecoveryReason",
+    "RecoveryDecision",
+    "ExecutionRecoveryError",
+    "ExecutionRecovery",
     "WorkerHeartbeatVersionConflict",
     "WorkerHeartbeatStatus",
     "WorkerHeartbeatOwnerMismatch",
