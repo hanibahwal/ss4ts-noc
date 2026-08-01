@@ -39,6 +39,10 @@ from app.api.v1.execution_recovery_runtime import (
 from app.api.v1.execution_runtime_observability import (
     router as execution_runtime_observability_router,
 )
+
+from app.api.v1.execution_runtime_prometheus import (
+    router as execution_runtime_prometheus_router,
+)
 from app.api.v1.health import (
     router as health_router,
 )
@@ -120,6 +124,11 @@ api_router.include_router(
 
 api_router.include_router(
     execution_runtime_observability_router
+)
+
+
+api_router.include_router(
+    execution_runtime_prometheus_router
 )
 
 

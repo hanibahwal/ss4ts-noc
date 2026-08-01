@@ -125,3 +125,8 @@ from app.services.execution_runtime_observability import (
     ExecutionRuntimeObservabilityService,
     collect_runtime_observability,
 )
+
+from app.services.prometheus_runtime_metrics import (
+    PROMETHEUS_CONTENT_TYPE,
+    render_runtime_prometheus_metrics,
+)
