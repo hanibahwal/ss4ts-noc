@@ -70,3 +70,10 @@ from app.services.execution_authorization import (
     ExecutionAuthorizationService,
     build_execution_authorization,
 )
+
+from app.services.execution_authorization_store import (
+    DEFAULT_AUTHORIZATION_DATABASE,
+    ExecutionAuthorizationStore,
+    calculate_authorization_checksum,
+    canonical_authorization_json,
+)
