@@ -70,6 +70,17 @@ from app.models.execution_authorization import (
     ExecutionAuthorization,
     ExecutionRiskClass,
 )
+from app.models.execution_concurrency import (
+    AuthorizationConcurrencyError,
+    AuthorizationMutationAction,
+    AuthorizationMutationResult,
+    AuthorizationMutationToken,
+    AuthorizationVersionConflict,
+    IdempotencyConflict,
+    IdempotencyDisposition,
+    calculate_request_fingerprint,
+    canonical_mutation_json,
+)
 from app.models.execution_plan import (
     ExecutionPlan,
     ExecutionPlanStatus,
@@ -114,6 +125,15 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "canonical_mutation_json",
+    "calculate_request_fingerprint",
+    "IdempotencyDisposition",
+    "IdempotencyConflict",
+    "AuthorizationVersionConflict",
+    "AuthorizationMutationToken",
+    "AuthorizationMutationResult",
+    "AuthorizationMutationAction",
+    "AuthorizationConcurrencyError",
     "ExecutionRiskClass",
     "ExecutionAuthorization",
     "AuthorizationStatus",
