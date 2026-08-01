@@ -15,6 +15,9 @@ from app.models.knowledge_graph import (
 from app.services.decision_fusion import (
     fuse_graph_decision,
 )
+from app.services.decision_explanation import (
+    build_decision_explanation,
+)
 from app.services.decision_timeline import (
     build_decision_timeline,
 )
@@ -836,6 +839,79 @@ async def knowledge_graph_execution_simulation(
             False,
         "dry_run_only":
             True,
+    }
+
+    return response
+
+
+@router.get(
+    "/nodes/{node_id}/decision/explanation"
+)
+async def knowledge_graph_decision_explanation(
+    node_id: str,
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+        ),
+    ] = 10,
+    refresh: bool = False,
+) -> dict:
+    """
+    Build a read-only explanation for an engineering decision.
+
+    The response explains root causes, evidence, blast radius,
+    resilience, recommendations and the final fused decision.
+    """
+
+    graph = await build_runtime_graph(
+        refresh=refresh
+    )
+
+    query = _query(graph)
+
+    _node_or_404(
+        query,
+        node_id,
+    )
+
+    try:
+        explanation = (
+            build_decision_explanation(
+                graph,
+                node_id,
+                max_depth=max_depth,
+            )
+        )
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Graph node not found: "
+                f"{node_id}"
+            ),
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+
+    response = explanation.to_dict()
+
+    response["safety"] = {
+        "read_only":
+            True,
+        "network_io_performed":
+            False,
+        "device_command_executed":
+            False,
     }
 
     return response

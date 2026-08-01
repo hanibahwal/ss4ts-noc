@@ -654,3 +654,133 @@ def test_execution_simulation_route_is_registered() -> None:
         "execution-plan/simulate"
         in paths
     )
+
+
+def test_decision_explanation_endpoint() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_decision_explanation(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    assert result["decision_id"]
+    assert result["summary"]
+    assert result["confidence"] >= 0
+    assert result["why"]
+    assert result["recommendations"]
+
+    assert (
+        result["metadata"]
+        ["source_node_id"]
+        == "device:10.0.0.1"
+    )
+
+    assert (
+        result["safety"]["read_only"]
+        is True
+    )
+
+    assert (
+        result["safety"]
+        ["network_io_performed"]
+        is False
+    )
+
+    assert (
+        result["safety"]
+        ["device_command_executed"]
+        is False
+    )
+
+
+def test_decision_explanation_contains_primary_cause() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_decision_explanation(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    root_causes = [
+        item
+        for item in result["why"]
+        if (
+            item["metadata"].get(
+                "explanation_type"
+            )
+            == "root_cause"
+        )
+    ]
+
+    assert root_causes
+
+    assert (
+        root_causes[0]["metadata"]
+        ["cause_id"]
+        == result["metadata"]
+        ["primary_cause_id"]
+    )
+
+
+def test_decision_explanation_contains_impact() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_decision_explanation(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    impact = next(
+        item
+        for item in result["why"]
+        if (
+            item["metadata"].get(
+                "explanation_type"
+            )
+            == "impact"
+        )
+    )
+
+    assert (
+        impact["metadata"]
+        ["affected_count"]
+        >= 0
+    )
+
+
+def test_decision_explanation_missing_node_returns_404() -> None:
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            knowledge_graph
+            .knowledge_graph_decision_explanation(
+                "device:missing",
+                max_depth=10,
+            )
+        )
+
+    assert exc.value.status_code == 404
+
+    assert (
+        "Graph node not found"
+        in str(exc.value.detail)
+    )
+
+
+def test_decision_explanation_route_is_registered() -> None:
+    paths = {
+        route.path
+        for route in api_router.routes
+    }
+
+    assert (
+        "/api/v1/knowledge-graph/"
+        "nodes/{node_id}/decision/explanation"
+        in paths
+    )
+
