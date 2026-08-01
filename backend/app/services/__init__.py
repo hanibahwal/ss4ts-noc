@@ -90,3 +90,8 @@ from app.services.execution_heartbeat_store import (
 from app.services.execution_recovery import (
     ExecutionRecoveryService,
 )
+
+from app.services.execution_recovery_scheduler_store import (
+    DEFAULT_RECOVERY_SCHEDULER_ID,
+    ExecutionRecoverySchedulerStore,
+)
