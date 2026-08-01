@@ -783,3 +783,155 @@ def test_decision_explanation_route_is_registered() -> None:
         "nodes/{node_id}/decision/explanation"
         in paths
     )
+
+
+def test_decision_trace_endpoint() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_decision_trace(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    assert result["trace_id"]
+    assert result["decision_id"]
+
+    assert (
+        result["source_node_id"]
+        == "device:10.0.0.1"
+    )
+
+    assert (
+        result["statistics"]
+        ["stage_count"]
+        == 8
+    )
+
+    assert (
+        result["safety"]["read_only"]
+        is True
+    )
+
+    assert (
+        result["safety"]
+        ["network_io_performed"]
+        is False
+    )
+
+    assert (
+        result["safety"]
+        ["device_command_executed"]
+        is False
+    )
+
+
+def test_decision_trace_stage_order() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_decision_trace(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    assert [
+        stage["type"]
+        for stage in result["stages"]
+    ] == [
+        "telemetry",
+        "graph_context",
+        "root_cause",
+        "impact",
+        "resilience",
+        "decision_fusion",
+        "explanation",
+        "execution_plan",
+    ]
+
+
+def test_decision_trace_primary_cause_matches_metadata() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_decision_trace(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    root_stage = next(
+        stage
+        for stage in result["stages"]
+        if stage["type"] == "root_cause"
+    )
+
+    assert (
+        root_stage["metadata"]
+        ["primary_cause_id"]
+        == result["metadata"]
+        ["primary_cause_id"]
+    )
+
+    assert root_stage["selected"] is True
+
+
+def test_decision_trace_execution_plan_is_safe() -> None:
+    result = run(
+        knowledge_graph
+        .knowledge_graph_decision_trace(
+            "device:10.0.0.1",
+            max_depth=10,
+        )
+    )
+
+    execution_plan = next(
+        stage
+        for stage in result["stages"]
+        if stage["type"] == "execution_plan"
+    )
+
+    assert (
+        execution_plan["metadata"]
+        ["dry_run_only"]
+        is True
+    )
+
+    assert (
+        execution_plan["metadata"]
+        ["execution_enabled"]
+        is False
+    )
+
+
+def test_decision_trace_missing_node_returns_404() -> None:
+    with pytest.raises(
+        HTTPException,
+    ) as exc:
+        run(
+            knowledge_graph
+            .knowledge_graph_decision_trace(
+                "device:missing",
+                max_depth=10,
+            )
+        )
+
+    assert exc.value.status_code == 404
+
+    assert (
+        "Graph node not found"
+        in str(exc.value.detail)
+    )
+
+
+def test_decision_trace_route_is_registered() -> None:
+    paths = {
+        route.path
+        for route in api_router.routes
+    }
+
+    assert (
+        "/api/v1/knowledge-graph/"
+        "nodes/{node_id}/decision/trace"
+        in paths
+    )
+

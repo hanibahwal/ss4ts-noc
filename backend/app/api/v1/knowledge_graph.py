@@ -21,6 +21,9 @@ from app.services.decision_explanation import (
 from app.services.decision_timeline import (
     build_decision_timeline,
 )
+from app.services.decision_trace import (
+    build_decision_trace,
+)
 from app.services.execution_planner import (
     build_execution_plan,
 )
@@ -915,3 +918,63 @@ async def knowledge_graph_decision_explanation(
     }
 
     return response
+
+
+@router.get(
+    "/nodes/{node_id}/decision/trace"
+)
+async def knowledge_graph_decision_trace(
+    node_id: str,
+    max_depth: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+        ),
+    ] = 10,
+    refresh: bool = False,
+) -> dict:
+    """
+    Build a read-only audit trace for an engineering decision.
+
+    The trace records telemetry, graph context, ranked causes, impact,
+    resilience, fusion, explanation and the safe execution plan.
+    """
+
+    graph = await build_runtime_graph(
+        refresh=refresh
+    )
+
+    query = _query(graph)
+
+    _node_or_404(
+        query,
+        node_id,
+    )
+
+    try:
+        trace = build_decision_trace(
+            graph,
+            node_id,
+            max_depth=max_depth,
+        )
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Graph node not found: "
+                f"{node_id}"
+            ),
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+
+    return trace.to_dict()
