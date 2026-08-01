@@ -86,3 +86,7 @@ from app.services.execution_lease_store import (
 from app.services.execution_heartbeat_store import (
     ExecutionHeartbeatStore,
 )
+
+from app.services.execution_recovery import (
+    ExecutionRecoveryService,
+)
