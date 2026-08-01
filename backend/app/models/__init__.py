@@ -81,6 +81,15 @@ from app.models.execution_concurrency import (
     calculate_request_fingerprint,
     canonical_mutation_json,
 )
+from app.models.execution_heartbeat import (
+    DEFAULT_HEARTBEAT_INTERVAL_SECONDS,
+    DEFAULT_HEARTBEAT_TIMEOUT_SECONDS,
+    ExecutionWorkerHeartbeat,
+    WorkerHeartbeatError,
+    WorkerHeartbeatOwnerMismatch,
+    WorkerHeartbeatStatus,
+    WorkerHeartbeatVersionConflict,
+)
 from app.models.execution_lease import (
     ExecutionLease,
     ExecutionLeaseError,
@@ -133,6 +142,13 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "WorkerHeartbeatVersionConflict",
+    "WorkerHeartbeatStatus",
+    "WorkerHeartbeatOwnerMismatch",
+    "WorkerHeartbeatError",
+    "ExecutionWorkerHeartbeat",
+    "DEFAULT_HEARTBEAT_TIMEOUT_SECONDS",
+    "DEFAULT_HEARTBEAT_INTERVAL_SECONDS",
     "LeaseVersionConflict",
     "LeaseTokenMismatch",
     "LeaseConflict",
