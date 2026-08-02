@@ -1937,6 +1937,375 @@ class NotificationStore:
             for row in rows
         ]
 
+    def find_latest_delivery(
+        self,
+        *,
+        incident_id: str,
+        policy_id: str | None = None,
+        notification_type: NotificationType
+        | str
+        | None = None,
+        statuses: tuple[
+            NotificationDeliveryStatus | str,
+            ...,
+        ] = (
+            NotificationDeliveryStatus.SENT,
+        ),
+    ) -> NotificationDelivery | None:
+        conditions = [
+            "incident_id = ?",
+        ]
+
+        parameters: list[Any] = [
+            incident_id,
+        ]
+
+        if policy_id is None:
+            conditions.append(
+                "policy_id IS NULL"
+            )
+        else:
+            conditions.append(
+                "policy_id = ?"
+            )
+            parameters.append(policy_id)
+
+        if notification_type is not None:
+            type_value = (
+                notification_type.value
+                if isinstance(
+                    notification_type,
+                    NotificationType,
+                )
+                else str(notification_type)
+            )
+
+            conditions.append(
+                "notification_type = ?"
+            )
+            parameters.append(type_value)
+
+        normalized_statuses = tuple(
+            item.value
+            if isinstance(
+                item,
+                NotificationDeliveryStatus,
+            )
+            else str(item)
+            for item in statuses
+        )
+
+        if normalized_statuses:
+            placeholders = ", ".join(
+                "?"
+                for _ in normalized_statuses
+            )
+
+            conditions.append(
+                f"status IN ({placeholders})"
+            )
+
+            parameters.extend(
+                normalized_statuses
+            )
+
+        where_clause = " AND ".join(
+            conditions
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            row = connection.execute(
+                f"""
+                SELECT *
+                FROM notification_deliveries
+                WHERE {where_clause}
+                ORDER BY
+                    COALESCE(
+                        sent_at,
+                        scheduled_at,
+                        updated_at,
+                        created_at
+                    ) DESC,
+                    created_at DESC,
+                    delivery_id DESC
+                LIMIT 1
+                """,
+                tuple(parameters),
+            ).fetchone()
+
+        if row is None:
+            return None
+
+        return self._delivery_from_row(row)
+
+    def has_active_delivery(
+        self,
+        *,
+        incident_id: str,
+        policy_id: str | None,
+        notification_type: NotificationType
+        | str,
+    ) -> bool:
+        delivery = self.find_latest_delivery(
+            incident_id=incident_id,
+            policy_id=policy_id,
+            notification_type=notification_type,
+            statuses=(
+                NotificationDeliveryStatus.PENDING,
+                NotificationDeliveryStatus.SENDING,
+            ),
+        )
+
+        return delivery is not None
+
+    def find_latest_delivery(
+        self,
+        *,
+        incident_id: str,
+        policy_id: str | None = None,
+        notification_type: NotificationType
+        | str
+        | None = None,
+        statuses: tuple[
+            NotificationDeliveryStatus | str,
+            ...,
+        ] = (
+            NotificationDeliveryStatus.SENT,
+        ),
+    ) -> NotificationDelivery | None:
+        conditions = [
+            "incident_id = ?",
+        ]
+
+        parameters: list[Any] = [
+            incident_id,
+        ]
+
+        if policy_id is None:
+            conditions.append(
+                "policy_id IS NULL"
+            )
+        else:
+            conditions.append(
+                "policy_id = ?"
+            )
+            parameters.append(policy_id)
+
+        if notification_type is not None:
+            type_value = (
+                notification_type.value
+                if isinstance(
+                    notification_type,
+                    NotificationType,
+                )
+                else str(notification_type)
+            )
+
+            conditions.append(
+                "notification_type = ?"
+            )
+            parameters.append(type_value)
+
+        normalized_statuses = tuple(
+            item.value
+            if isinstance(
+                item,
+                NotificationDeliveryStatus,
+            )
+            else str(item)
+            for item in statuses
+        )
+
+        if normalized_statuses:
+            placeholders = ", ".join(
+                "?"
+                for _ in normalized_statuses
+            )
+
+            conditions.append(
+                f"status IN ({placeholders})"
+            )
+
+            parameters.extend(
+                normalized_statuses
+            )
+
+        where_clause = " AND ".join(
+            conditions
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            row = connection.execute(
+                f"""
+                SELECT *
+                FROM notification_deliveries
+                WHERE {where_clause}
+                ORDER BY
+                    COALESCE(
+                        sent_at,
+                        scheduled_at,
+                        updated_at,
+                        created_at
+                    ) DESC,
+                    created_at DESC,
+                    delivery_id DESC
+                LIMIT 1
+                """,
+                tuple(parameters),
+            ).fetchone()
+
+        if row is None:
+            return None
+
+        return self._delivery_from_row(row)
+
+    def has_active_delivery(
+        self,
+        *,
+        incident_id: str,
+        policy_id: str | None,
+        notification_type: NotificationType
+        | str,
+    ) -> bool:
+        delivery = self.find_latest_delivery(
+            incident_id=incident_id,
+            policy_id=policy_id,
+            notification_type=notification_type,
+            statuses=(
+                NotificationDeliveryStatus.PENDING,
+                NotificationDeliveryStatus.SENDING,
+            ),
+        )
+
+        return delivery is not None
+
+    def find_latest_delivery(
+        self,
+        *,
+        incident_id: str,
+        policy_id: str | None = None,
+        notification_type: NotificationType
+        | str
+        | None = None,
+        statuses: tuple[
+            NotificationDeliveryStatus | str,
+            ...,
+        ] = (
+            NotificationDeliveryStatus.SENT,
+        ),
+    ) -> NotificationDelivery | None:
+        conditions = [
+            "incident_id = ?",
+        ]
+
+        parameters: list[Any] = [
+            incident_id,
+        ]
+
+        if policy_id is None:
+            conditions.append(
+                "policy_id IS NULL"
+            )
+        else:
+            conditions.append(
+                "policy_id = ?"
+            )
+            parameters.append(policy_id)
+
+        if notification_type is not None:
+            type_value = (
+                notification_type.value
+                if isinstance(
+                    notification_type,
+                    NotificationType,
+                )
+                else str(notification_type)
+            )
+
+            conditions.append(
+                "notification_type = ?"
+            )
+            parameters.append(type_value)
+
+        normalized_statuses = tuple(
+            item.value
+            if isinstance(
+                item,
+                NotificationDeliveryStatus,
+            )
+            else str(item)
+            for item in statuses
+        )
+
+        if normalized_statuses:
+            placeholders = ", ".join(
+                "?"
+                for _ in normalized_statuses
+            )
+
+            conditions.append(
+                f"status IN ({placeholders})"
+            )
+
+            parameters.extend(
+                normalized_statuses
+            )
+
+        where_clause = " AND ".join(
+            conditions
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            row = connection.execute(
+                f"""
+                SELECT *
+                FROM notification_deliveries
+                WHERE {where_clause}
+                ORDER BY
+                    COALESCE(
+                        sent_at,
+                        scheduled_at,
+                        updated_at,
+                        created_at
+                    ) DESC,
+                    created_at DESC,
+                    delivery_id DESC
+                LIMIT 1
+                """,
+                tuple(parameters),
+            ).fetchone()
+
+        if row is None:
+            return None
+
+        return self._delivery_from_row(row)
+
+    def has_active_delivery(
+        self,
+        *,
+        incident_id: str,
+        policy_id: str | None,
+        notification_type: NotificationType
+        | str,
+    ) -> bool:
+        delivery = self.find_latest_delivery(
+            incident_id=incident_id,
+            policy_id=policy_id,
+            notification_type=notification_type,
+            statuses=(
+                NotificationDeliveryStatus.PENDING,
+                NotificationDeliveryStatus.SENDING,
+            ),
+        )
+
+        return delivery is not None
+
     def history_count(
         self,
         *,

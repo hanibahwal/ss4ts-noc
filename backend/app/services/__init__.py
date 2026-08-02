@@ -141,3 +141,27 @@ from app.services.notification_incident_lifecycle import (
     NotificationIncidentLifecycle,
     calculate_incident_downtime_seconds,
 )
+
+from app.services.notification_deduplication import (
+    NotificationDeduplicationEngine,
+    evaluate_notification_deduplication,
+)
+
+from app.services.notification_deduplication import (
+    NotificationDeduplicationEngine,
+    evaluate_notification_deduplication,
+)
+
+from app.services.notification_deduplication import (
+    NotificationDeduplicationEngine,
+    evaluate_notification_deduplication,
+)
+
+from app.services.notification_delivery_history import (
+    NotificationDeliveryHistory,
+)
+
+from app.services.notification_deduplication import (
+    NotificationDeduplicationEngine,
+    evaluate_notification_deduplication,
+)
