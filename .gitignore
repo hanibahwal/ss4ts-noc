@@ -70,3 +70,5 @@ redis-data/
 *~
 *.before-*
 frontend/src-backup-*/
+
+.h23-backups/

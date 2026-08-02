@@ -349,3 +349,10 @@ from app.models.notification_deduplication import (
     DeduplicationDecision,
     DeduplicationDecisionCode,
 )
+
+from app.models.notification_dispatch import (
+    NotificationDispatchRequest,
+    NotificationDispatchResult,
+    NotificationDispatchStatus,
+    NotificationTransport,
+)

@@ -165,3 +165,13 @@ from app.services.notification_deduplication import (
     NotificationDeduplicationEngine,
     evaluate_notification_deduplication,
 )
+
+from app.services.notification_dispatcher import (
+    InvalidNotificationTransportResult,
+    NotificationDispatcher,
+    NotificationDispatcherError,
+    NotificationTransportAlreadyRegistered,
+    NotificationTransportExecutionError,
+    NotificationTransportNotRegistered,
+    dispatch_notification,
+)
