@@ -130,3 +130,9 @@ from app.services.prometheus_runtime_metrics import (
     PROMETHEUS_CONTENT_TYPE,
     render_runtime_prometheus_metrics,
 )
+
+from app.services.notification_condition_matcher import (
+    ConditionEvaluationError,
+    NotificationConditionMatcher,
+    match_notification_policy,
+)
