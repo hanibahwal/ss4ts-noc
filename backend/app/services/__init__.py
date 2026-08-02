@@ -136,3 +136,8 @@ from app.services.notification_condition_matcher import (
     NotificationConditionMatcher,
     match_notification_policy,
 )
+
+from app.services.notification_incident_lifecycle import (
+    NotificationIncidentLifecycle,
+    calculate_incident_downtime_seconds,
+)
