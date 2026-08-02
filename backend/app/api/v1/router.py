@@ -49,6 +49,9 @@ from app.api.v1.health import (
 from app.api.v1.knowledge_graph import (
     router as knowledge_graph_router,
 )
+from app.api.v1.notification import (
+    router as notification_router,
+)
 from app.api.v1.routeros import (
     router as routeros_router,
 )
@@ -134,4 +137,9 @@ api_router.include_router(
 
 api_router.include_router(
     knowledge_graph_router
+)
+
+
+api_router.include_router(
+    notification_router
 )
