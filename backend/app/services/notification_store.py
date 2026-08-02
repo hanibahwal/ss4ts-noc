@@ -1826,6 +1826,271 @@ class NotificationStore:
 
         return updated
 
+    def begin_delivery_attempt(
+        self,
+        delivery_id: str,
+    ) -> NotificationDelivery:
+        current = self.get_delivery(
+            delivery_id
+        )
+
+        if current is None:
+            raise NotificationNotFound(
+                f"Delivery not found: {delivery_id}"
+            )
+
+        allowed_statuses = {
+            NotificationDeliveryStatus.PENDING,
+            NotificationDeliveryStatus.FAILED,
+        }
+
+        if current.status not in allowed_statuses:
+            raise NotificationStoreError(
+                "Delivery attempt cannot start "
+                f"from status: {current.status.value}"
+            )
+
+        now = _utc_now()
+
+        updated = replace(
+            current,
+            status=(
+                NotificationDeliveryStatus.SENDING
+            ),
+            attempt_count=(
+                current.attempt_count + 1
+            ),
+            provider_message_id=None,
+            error_message=None,
+            updated_at=now,
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            cursor = connection.execute(
+                """
+                UPDATE notification_deliveries
+                SET
+                    status = ?,
+                    attempt_count = ?,
+                    provider_message_id = NULL,
+                    error_message = NULL,
+                    updated_at = ?
+                WHERE
+                    delivery_id = ?
+                    AND status = ?
+                    AND attempt_count = ?
+                """,
+                (
+                    updated.status.value,
+                    updated.attempt_count,
+                    _datetime_text(
+                        updated.updated_at
+                    ),
+                    updated.delivery_id,
+                    current.status.value,
+                    current.attempt_count,
+                ),
+            )
+
+            if cursor.rowcount != 1:
+                raise NotificationStoreError(
+                    "Delivery attempt could not "
+                    "be started because the "
+                    "delivery changed concurrently"
+                )
+
+            connection.commit()
+
+        return updated
+
+    def complete_delivery_attempt(
+        self,
+        delivery_id: str,
+        *,
+        status: NotificationDeliveryStatus,
+        provider_message_id: str | None = None,
+        error_message: str | None = None,
+    ) -> NotificationDelivery:
+        if status not in {
+            NotificationDeliveryStatus.SENT,
+            NotificationDeliveryStatus.FAILED,
+        }:
+            raise ValueError(
+                "Completed delivery status must "
+                "be sent or failed"
+            )
+
+        current = self.get_delivery(
+            delivery_id
+        )
+
+        if current is None:
+            raise NotificationNotFound(
+                f"Delivery not found: {delivery_id}"
+            )
+
+        if (
+            current.status
+            is not NotificationDeliveryStatus.SENDING
+        ):
+            raise NotificationStoreError(
+                "Delivery attempt can only be "
+                "completed from sending status"
+            )
+
+        if (
+            status
+            is NotificationDeliveryStatus.FAILED
+            and not (
+                error_message
+                and error_message.strip()
+            )
+        ):
+            raise ValueError(
+                "Failed delivery requires an "
+                "error message"
+            )
+
+        now = _utc_now()
+
+        updated = replace(
+            current,
+            status=status,
+            provider_message_id=(
+                provider_message_id
+            ),
+            error_message=error_message,
+            sent_at=(
+                now
+                if status
+                is NotificationDeliveryStatus.SENT
+                else current.sent_at
+            ),
+            updated_at=now,
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            cursor = connection.execute(
+                """
+                UPDATE notification_deliveries
+                SET
+                    status = ?,
+                    provider_message_id = ?,
+                    error_message = ?,
+                    sent_at = ?,
+                    updated_at = ?
+                WHERE
+                    delivery_id = ?
+                    AND status = ?
+                    AND attempt_count = ?
+                """,
+                (
+                    updated.status.value,
+                    updated.provider_message_id,
+                    updated.error_message,
+                    _datetime_text(
+                        updated.sent_at
+                    ),
+                    _datetime_text(
+                        updated.updated_at
+                    ),
+                    updated.delivery_id,
+                    (
+                        NotificationDeliveryStatus
+                        .SENDING.value
+                    ),
+                    current.attempt_count,
+                ),
+            )
+
+            if cursor.rowcount != 1:
+                raise NotificationStoreError(
+                    "Delivery attempt could not "
+                    "be completed because the "
+                    "delivery changed concurrently"
+                )
+
+            connection.commit()
+
+        return updated
+
+    def cancel_delivery(
+        self,
+        delivery_id: str,
+        *,
+        reason: str | None = None,
+    ) -> NotificationDelivery:
+        current = self.get_delivery(
+            delivery_id
+        )
+
+        if current is None:
+            raise NotificationNotFound(
+                f"Delivery not found: {delivery_id}"
+            )
+
+        if current.status in {
+            NotificationDeliveryStatus.SENT,
+            NotificationDeliveryStatus.CANCELLED,
+        }:
+            raise NotificationStoreError(
+                "Completed delivery cannot be "
+                "cancelled"
+            )
+
+        now = _utc_now()
+
+        updated = replace(
+            current,
+            status=(
+                NotificationDeliveryStatus.CANCELLED
+            ),
+            error_message=reason,
+            updated_at=now,
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            cursor = connection.execute(
+                """
+                UPDATE notification_deliveries
+                SET
+                    status = ?,
+                    error_message = ?,
+                    updated_at = ?
+                WHERE
+                    delivery_id = ?
+                    AND status = ?
+                    AND attempt_count = ?
+                """,
+                (
+                    updated.status.value,
+                    updated.error_message,
+                    _datetime_text(
+                        updated.updated_at
+                    ),
+                    updated.delivery_id,
+                    current.status.value,
+                    current.attempt_count,
+                ),
+            )
+
+            if cursor.rowcount != 1:
+                raise NotificationStoreError(
+                    "Delivery could not be "
+                    "cancelled because it changed "
+                    "concurrently"
+                )
+
+            connection.commit()
+
+        return updated
+
     def create_suppression(
         self,
         suppression: NotificationSuppression,
