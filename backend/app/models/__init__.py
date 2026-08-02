@@ -380,3 +380,9 @@ from app.models.notification_suppression_engine import (
     NotificationSuppressionDecisionCode,
     QuietHoursWindow,
 )
+
+from app.models.notification_pipeline import (
+    NotificationPipelineRequest,
+    NotificationPipelineResult,
+    NotificationPipelineStatus,
+)

@@ -213,3 +213,8 @@ from app.services.notification_suppression import (
     NotificationSuppressionEngine,
     evaluate_notification_suppression,
 )
+
+from app.services.notification_pipeline import (
+    NotificationPipeline,
+    execute_notification_pipeline,
+)
