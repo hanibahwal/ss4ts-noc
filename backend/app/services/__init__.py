@@ -208,3 +208,8 @@ from app.services.notification_escalation import (
     NotificationEscalationEngine,
     evaluate_notification_escalation,
 )
+
+from app.services.notification_suppression import (
+    NotificationSuppressionEngine,
+    evaluate_notification_suppression,
+)
