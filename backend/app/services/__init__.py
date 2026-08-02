@@ -185,3 +185,21 @@ from app.services.notification_retry import (
     NotificationRetryEngine,
     calculate_retry_delay_seconds,
 )
+
+from app.services.notification_transports import (
+    DashboardNotificationAdapter,
+    DashboardPublisher,
+    EmailClient,
+    EmailNotificationAdapter,
+    NotificationChannelAdapter,
+    NotificationProviderError,
+    PermanentNotificationProviderError,
+    ProviderResponse,
+    TelegramClient,
+    TelegramNotificationAdapter,
+    TemporaryNotificationProviderError,
+    WebhookClient,
+    WebhookNotificationAdapter,
+    WhatsAppClient,
+    WhatsAppNotificationAdapter,
+)
