@@ -2091,6 +2091,148 @@ class NotificationStore:
 
         return updated
 
+    def schedule_delivery_retry(
+        self,
+        delivery_id: str,
+        *,
+        scheduled_at: datetime,
+    ) -> NotificationDelivery:
+        current = self.get_delivery(
+            delivery_id
+        )
+
+        if current is None:
+            raise NotificationNotFound(
+                f"Delivery not found: {delivery_id}"
+            )
+
+        if (
+            current.status
+            is not NotificationDeliveryStatus.FAILED
+        ):
+            raise NotificationStoreError(
+                "Only failed deliveries can be "
+                "scheduled for retry"
+            )
+
+        retry_time = scheduled_at
+
+        if retry_time.tzinfo is None:
+            raise ValueError(
+                "Retry scheduled time must be "
+                "timezone-aware"
+            )
+
+        now = _utc_now()
+
+        updated = replace(
+            current,
+            status=(
+                NotificationDeliveryStatus.PENDING
+            ),
+            scheduled_at=retry_time,
+            provider_message_id=None,
+            updated_at=now,
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            cursor = connection.execute(
+                """
+                UPDATE notification_deliveries
+                SET
+                    status = ?,
+                    scheduled_at = ?,
+                    provider_message_id = NULL,
+                    updated_at = ?
+                WHERE
+                    delivery_id = ?
+                    AND status = ?
+                    AND attempt_count = ?
+                """,
+                (
+                    updated.status.value,
+                    _datetime_text(
+                        updated.scheduled_at
+                    ),
+                    _datetime_text(
+                        updated.updated_at
+                    ),
+                    updated.delivery_id,
+                    (
+                        NotificationDeliveryStatus
+                        .FAILED.value
+                    ),
+                    current.attempt_count,
+                ),
+            )
+
+            if cursor.rowcount != 1:
+                raise NotificationStoreError(
+                    "Delivery retry could not be "
+                    "scheduled because the "
+                    "delivery changed concurrently"
+                )
+
+            connection.commit()
+
+        return updated
+
+    def list_due_deliveries(
+        self,
+        *,
+        at: datetime | None = None,
+        limit: int = 100,
+    ) -> list[NotificationDelivery]:
+        if limit < 1:
+            raise ValueError(
+                "Due delivery limit must be "
+                "positive"
+            )
+
+        check_time = at or _utc_now()
+
+        if check_time.tzinfo is None:
+            raise ValueError(
+                "Due delivery check time must be "
+                "timezone-aware"
+            )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            rows = connection.execute(
+                """
+                SELECT *
+                FROM notification_deliveries
+                WHERE
+                    status = ?
+                    AND (
+                        scheduled_at IS NULL
+                        OR scheduled_at <= ?
+                    )
+                ORDER BY
+                    scheduled_at ASC,
+                    created_at ASC,
+                    delivery_id ASC
+                LIMIT ?
+                """,
+                (
+                    (
+                        NotificationDeliveryStatus
+                        .PENDING.value
+                    ),
+                    _datetime_text(check_time),
+                    limit,
+                ),
+            ).fetchall()
+
+        return [
+            self._delivery_from_row(row)
+            for row in rows
+        ]
+
     def create_suppression(
         self,
         suppression: NotificationSuppression,
