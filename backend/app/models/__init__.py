@@ -295,3 +295,18 @@ from app.models.execution_simulation import (
     SimulatedStepResult,
     SimulationStatus,
 )
+
+from app.models.notification import (
+    NotificationChannel,
+    NotificationDelivery,
+    NotificationDeliveryStatus,
+    NotificationEscalationStep,
+    NotificationIncident,
+    NotificationIncidentStatus,
+    NotificationPolicy,
+    NotificationRecipient,
+    NotificationSuppression,
+    NotificationSuppressionKind,
+    NotificationType,
+    new_notification_id,
+)
