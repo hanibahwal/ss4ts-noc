@@ -386,3 +386,15 @@ from app.models.notification_pipeline import (
     NotificationPipelineResult,
     NotificationPipelineStatus,
 )
+
+from app.models.notification_identity import (
+    NotificationIdentity,
+)
+
+from app.models.notification_permission import (
+    NotificationPermission,
+    NotificationPermissionGrant,
+    ROLE_PERMISSIONS,
+    has_permission,
+    permissions_for_role,
+)

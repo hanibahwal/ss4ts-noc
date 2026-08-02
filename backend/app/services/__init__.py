@@ -218,3 +218,11 @@ from app.services.notification_pipeline import (
     NotificationPipeline,
     execute_notification_pipeline,
 )
+
+from app.services.notification_authorization import (
+    AuthorizationDecision,
+    NotificationAuthorizationError,
+    NotificationAuthorizationService,
+    NotificationInactiveIdentity,
+    NotificationPermissionDenied,
+)

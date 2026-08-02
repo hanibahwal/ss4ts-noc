@@ -2356,6 +2356,28 @@ class NotificationStore:
 
         return updated
 
+
+    def list_deliveries(
+        self,
+    ) -> list:
+
+        with closing(
+            self._connect()
+        ) as connection:
+
+            rows = connection.execute(
+                """
+                SELECT *
+                FROM notification_deliveries
+                ORDER BY created_at DESC
+                """
+            ).fetchall()
+
+        return [
+            self._delivery_from_row(row)
+            for row in rows
+        ]
+
     def list_due_deliveries(
         self,
         *,
