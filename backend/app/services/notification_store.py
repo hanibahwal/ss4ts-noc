@@ -1651,6 +1651,183 @@ class NotificationStore:
 
             connection.commit()
 
+    def update_incident_escalation_level(
+        self,
+        incident_id: str,
+        *,
+        escalation_level: int,
+        expected_version: int,
+    ) -> NotificationIncident:
+        if escalation_level < 0:
+            raise ValueError(
+                "Escalation level must be "
+                "non-negative"
+            )
+
+        current = self.get_incident(
+            incident_id
+        )
+
+        if current is None:
+            raise NotificationNotFound(
+                f"Incident not found: {incident_id}"
+            )
+
+        if (
+            current.record_version
+            != expected_version
+        ):
+            raise NotificationVersionConflict(
+                entity_type="incident",
+                entity_id=incident_id,
+                expected_version=expected_version,
+                actual_version=(
+                    current.record_version
+                ),
+            )
+
+        if (
+            escalation_level
+            < current.current_escalation_level
+        ):
+            raise ValueError(
+                "Incident escalation level "
+                "cannot decrease"
+            )
+
+        now = _utc_now()
+
+        updated = replace(
+            current,
+            current_escalation_level=(
+                escalation_level
+            ),
+            record_version=(
+                current.record_version + 1
+            ),
+            updated_at=now,
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            cursor = connection.execute(
+                """
+                UPDATE notification_incidents
+                SET
+                    current_escalation_level = ?,
+                    record_version = ?,
+                    updated_at = ?
+                WHERE
+                    incident_id = ?
+                    AND record_version = ?
+                    AND current_escalation_level = ?
+                """,
+                (
+                    updated.current_escalation_level,
+                    updated.record_version,
+                    _datetime_text(
+                        updated.updated_at
+                    ),
+                    updated.incident_id,
+                    expected_version,
+                    (
+                        current
+                        .current_escalation_level
+                    ),
+                ),
+            )
+
+            if cursor.rowcount != 1:
+                actual = self.get_incident(
+                    incident_id
+                )
+
+                raise NotificationVersionConflict(
+                    entity_type="incident",
+                    entity_id=incident_id,
+                    expected_version=(
+                        expected_version
+                    ),
+                    actual_version=(
+                        actual.record_version
+                        if actual is not None
+                        else -1
+                    ),
+                )
+
+            self._record_history(
+                connection,
+                entity_type="incident",
+                entity_id=incident_id,
+                action="escalated",
+                record_version=(
+                    updated.record_version
+                ),
+                snapshot={
+                    "incident_id": incident_id,
+                    "status": (
+                        updated.status.value
+                    ),
+                    "current_escalation_level": (
+                        updated
+                        .current_escalation_level
+                    ),
+                    "record_version": (
+                        updated.record_version
+                    ),
+                },
+            )
+
+            connection.commit()
+
+        return updated
+
+    def find_escalation_delivery(
+        self,
+        *,
+        incident_id: str,
+        policy_id: str,
+        escalation_step_id: str,
+    ) -> NotificationDelivery | None:
+        with closing(
+            self._connect()
+        ) as connection:
+            rows = connection.execute(
+                """
+                SELECT *
+                FROM notification_deliveries
+                WHERE
+                    incident_id = ?
+                    AND policy_id = ?
+                    AND notification_type = ?
+                ORDER BY created_at DESC
+                """,
+                (
+                    incident_id,
+                    policy_id,
+                    (
+                        NotificationType
+                        .ESCALATION.value
+                    ),
+                ),
+            ).fetchall()
+
+        for row in rows:
+            delivery = self._delivery_from_row(
+                row
+            )
+
+            if (
+                delivery.metadata.get(
+                    "escalation_step_id"
+                )
+                == escalation_step_id
+            ):
+                return delivery
+
+        return None
+
     def create_delivery(
         self,
         delivery: NotificationDelivery,

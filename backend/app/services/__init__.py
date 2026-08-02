@@ -203,3 +203,8 @@ from app.services.notification_transports import (
     WhatsAppClient,
     WhatsAppNotificationAdapter,
 )
+
+from app.services.notification_escalation import (
+    NotificationEscalationEngine,
+    evaluate_notification_escalation,
+)

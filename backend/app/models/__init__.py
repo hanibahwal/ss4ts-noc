@@ -367,3 +367,9 @@ from app.models.notification_retry import (
     NotificationRetryDecisionCode,
     NotificationRetryPolicy,
 )
+
+from app.models.notification_escalation import (
+    NotificationEscalationDecision,
+    NotificationEscalationDecisionCode,
+    NotificationEscalationExecution,
+)
