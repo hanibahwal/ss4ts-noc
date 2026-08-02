@@ -72,3 +72,4 @@ redis-data/
 frontend/src-backup-*/
 
 .h23-backups/
+notifications.sqlite3
