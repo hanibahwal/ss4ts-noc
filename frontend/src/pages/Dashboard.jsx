@@ -1,9 +1,13 @@
-import { 
+import {
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
+
+
+import ApprovalDashboard from "../components/approval/ApprovalDashboard"
+
 
 
 import {
@@ -18,29 +22,40 @@ import {
 } from 'lucide-react'
 
 
+
 import Header from '../components/layout/Header'
+
 
 import RecentEvents from '../components/dashboard/RecentEvents'
 
+
 import NotificationAuditIntelligenceCard from '../components/dashboard/NotificationAuditIntelligenceCard'
+
 
 import NotificationAuditDecisionCard from '../components/dashboard/NotificationAuditDecisionCard'
 
+
 import StatCard from '../components/dashboard/StatCard'
 
+
 import TopCpuDevices from '../components/dashboard/TopCpuDevices'
+
 
 import TrafficChart from '../components/dashboard/TrafficChart'
 
 
 import { api } from '../services/api'
 
+
 import { formatPercentage } from '../utils/formatters'
+
+
 
 
 
 const EVENT_STORAGE_KEY =
   'ss4ts-noc-events'
+
 
 
 const TRAFFIC_STORAGE_KEY =
@@ -72,6 +87,8 @@ function readStoredArray(key) {
   }
 
 }
+
+
 
 
 
@@ -200,8 +217,6 @@ export default function Dashboard() {
 
 
 
-
-
   function addEvents(newEvents) {
 
 
@@ -236,8 +251,6 @@ export default function Dashboard() {
 
 
   }
-
-
 
 
 
@@ -289,8 +302,6 @@ export default function Dashboard() {
 
 
 
-
-
         if(
           previousStatus &&
           previousStatus !== currentStatus
@@ -331,7 +342,6 @@ export default function Dashboard() {
 
 
 
-
         if(
           Number(deviceMetrics.cpu_usage)
           >= 90
@@ -362,7 +372,6 @@ export default function Dashboard() {
 
 
         }
-
 
 
 
@@ -419,16 +428,6 @@ export default function Dashboard() {
       detected,
     )
 
-
-  }
-
-
-
-
-
-
-
-
   function appendTraffic(metricMap){
 
 
@@ -463,8 +462,10 @@ export default function Dashboard() {
 
     const point = {
 
+
       timestamp:
         Date.now(),
+
 
 
       time:
@@ -474,8 +475,10 @@ export default function Dashboard() {
         ),
 
 
+
       rx_bps:
         rxBps,
+
 
 
       tx_bps:
@@ -523,58 +526,112 @@ export default function Dashboard() {
 
 
 
-async function loadData(
-  isRefresh=false,
-){
+  async function loadData(
+    isRefresh=false,
+  ){
 
 
-  try {
+    try {
 
 
-    setError('')
-
-
-
-    if(isRefresh)
-      setRefreshing(true)
-    else
-      setLoading(true)
+      setError('')
 
 
 
+      if(isRefresh)
 
+        setRefreshing(true)
 
-    const deviceList =
-      await api.devices()
+      else
+
+        setLoading(true)
 
 
 
 
 
-
-    const results =
-      await Promise.allSettled(
-
-        deviceList.map(
-          async(device)=>{
+      const deviceList =
+        await api.devices()
 
 
-            const data =
-              await api.metrics(
+
+
+
+
+      const results =
+        await Promise.allSettled(
+
+
+          deviceList.map(
+            async(device)=>{
+
+
+              const data =
+                await api.metrics(
+                  device.ip,
+                )
+
+
+
+              return [
                 device.ip,
-              )
+                data,
+              ]
+
+
+            },
+          ),
+
+        )
 
 
 
-            return [
-              device.ip,
+
+
+
+
+      const metricMap = {}
+
+
+
+      results.forEach(
+        result=>{
+
+
+          if(
+            result.status ===
+            'fulfilled'
+          ){
+
+
+            const [
+              ip,
               data,
-            ]
+            ] =
+              result.value
 
 
-          },
-        ),
 
+            metricMap[ip]=data
+
+
+          }
+
+
+        },
+      )
+
+
+
+
+
+      setDevices(
+        deviceList,
+      )
+
+
+      setMetrics(
+        metricMap,
       )
 
 
@@ -582,147 +639,125 @@ async function loadData(
 
 
 
-    const metricMap = {}
+      // =====================================================
+      // H23.4.5.5.12.20.5
+      // Notification Audit Intelligence
+      // =====================================================
+
+
+      const intelligence =
+        await api.notificationAuditIntelligence()
 
 
 
-    results.forEach(
-      result=>{
-
-
-        if(
-          result.status ===
-          'fulfilled'
-        ){
-
-
-          const [
-            ip,
-            data,
-          ] =
-            result.value
-
-
-
-          metricMap[ip]=data
-
-
-        }
-
-
-      },
-    )
+      setAuditIntelligence(
+        intelligence,
+      )
 
 
 
 
 
-    setDevices(
-      deviceList,
-    )
+
+      // =====================================================
+      // H23.4.5.5.12.21.7.3
+      // Notification Audit Decision Engine
+      // =====================================================
 
 
-    setMetrics(
-      metricMap,
-    )
-
-
-
-
-
-    // =====================================================
-    // Notification Audit Intelligence
-    // =====================================================
-
-    const intelligence =
-      await api.notificationAuditIntelligence()
+      const decision =
+        await api.notificationAuditDecisionLatest()
 
 
 
-    setAuditIntelligence(
-      intelligence,
-    )
+      setAuditDecision(
+        decision,
+      )
 
 
 
 
 
-    // =====================================================
-    // Notification Audit Decision
-    // =====================================================
 
-    const decision =
-      await api.notificationAuditDecisionLatest()
+      setLastUpdated(
+        new Date(),
+      )
 
 
 
-    setAuditDecision(
-      decision,
-    )
+      appendTraffic(
+        metricMap,
+      )
 
 
 
-
-
-    setLastUpdated(
-      new Date(),
-    )
-
-
-
-    appendTraffic(
-      metricMap,
-    )
+      detectEvents(
+        deviceList,
+        metricMap,
+      )
 
 
 
-    detectEvents(
-      deviceList,
-      metricMap,
-    )
+    }
+
+
+    catch(error){
+
+
+      console.error(error)
 
 
 
-  }
-  catch(error){
+      setError(
+
+        error.message ||
+
+        'تعذر تحميل بيانات لوحة التحكم',
+
+      )
 
 
-    console.error(error)
+    }
 
 
-    setError(
-      error.message ||
-      'تعذر تحميل بيانات لوحة التحكم',
-    )
+    finally{
 
 
-  }
-  finally{
+      setLoading(false)
 
 
-    setLoading(false)
+      setRefreshing(false)
 
 
-    setRefreshing(false)
+    }
 
 
   }
 
 
-}
+
+
+
 
 
 
   useEffect(()=>{
 
+
     loadData()
 
 
+
     const interval =
+
       setInterval(
+
         ()=>loadData(true),
+
         30000,
+
       )
+
 
 
     return ()=>clearInterval(interval)
@@ -735,71 +770,119 @@ async function loadData(
 
 
 
+  }
+
 
   const summary =
     useMemo(()=>{
 
 
       const online =
+
         devices.filter(
+
           d=>d.status==='online',
+
         ).length
 
 
 
       const offline =
+
         devices.length - online
 
 
 
 
 
+
       const values =
+
         Object.values(metrics)
 
 
 
 
 
+
       const averageCpu =
+
         values.length
+
         ?
+
         Math.round(
+
           values.reduce(
+
             (a,b)=>
+
               a +
+
               Number(
+
                 b.cpu_usage || 0,
+
               ),
+
             0,
+
           )
+
           /
+
           values.length,
+
         )
+
         :
+
         0
+
+
+
 
 
 
 
 
       const averageMemory =
+
+
         values.length
+
         ?
+
         Math.round(
+
           values.reduce(
+
             (a,b)=>
+
               a +
+
               Number(
+
                 b.memory_usage || 0,
+
               ),
+
             0,
+
           )
+
           /
+
           values.length,
+
         )
+
         :
+
         0
+
+
+
 
 
 
@@ -807,17 +890,23 @@ async function loadData(
 
       return {
 
+
         total:
+
           devices.length,
+
 
 
         online,
 
 
+
         offline,
 
 
+
         averageCpu,
+
 
 
         averageMemory,
@@ -825,27 +914,47 @@ async function loadData(
 
 
         health:
+
+
           devices.length
+
           ?
+
           Math.round(
+
             (
+
               online /
+
               devices.length
+
             )
+
             *
+
             100,
+
           )
+
           :
+
           0,
+
 
       }
 
 
 
     },[
+
       devices,
+
       metrics,
+
     ])
+
+
+
 
 
 
@@ -856,46 +965,58 @@ async function loadData(
 
 
   const topCpuDevices =
+
     useMemo(()=>{
 
 
       return devices
 
+
       .map(
+
         device=>({
+
 
           ...device,
 
 
           cpu:
+
+
             Number(
+
               metrics[
+
                 device.ip
+
               ]?.cpu_usage || 0,
+
             ),
 
+
         }),
+
       )
 
 
       .sort(
+
         (a,b)=>
+
           b.cpu - a.cpu,
+
       )
 
 
 
     },[
+
       devices,
+
       metrics,
-    ])
 
-
-
-
-
-
-
+    ])  
+  
 
 
 return (
@@ -904,29 +1025,29 @@ return (
 
 <Header
 
- title="لوحة التحكم"
+  title="لوحة التحكم"
 
- subtitle="ملخص شامل لحالة الشبكة والأجهزة والخدمات"
+  subtitle="ملخص شامل لحالة الشبكة والأجهزة والخدمات"
 
- onRefresh={
-   ()=>loadData(true)
- }
+  onRefresh={
+    ()=>loadData(true)
+  }
 
- refreshing={
-   refreshing
- }
+  refreshing={
+    refreshing
+  }
 
- searchValue={
-   search
- }
+  searchValue={
+    search
+  }
 
- onSearchChange={
-   setSearch
- }
+  onSearchChange={
+    setSearch
+  }
 
- lastUpdated={
-   lastUpdated
- }
+  lastUpdated={
+    lastUpdated
+  }
 
 />
 
@@ -935,12 +1056,13 @@ return (
 
 
 {
-error &&
-<div className="error-banner">
+  error &&
 
-{error}
+  <div className="error-banner">
 
-</div>
+    {error}
+
+  </div>
 }
 
 
@@ -954,153 +1076,138 @@ error &&
 
 <StatCard
 
-title="إجمالي الأجهزة"
+ title="إجمالي الأجهزة"
 
-value={
- summary.total
-}
+ value={
+   summary.total
+ }
 
-icon={
- Router
-}
-
-/>
-
-
-
-
-<StatCard
-
-title="الأجهزة المتصلة"
-
-value={
- summary.online
-}
-
-icon={
- Wifi
-}
-
-tone="green"
+ icon={
+   Router
+ }
 
 />
 
 
 
-
-
 <StatCard
 
-title="الأجهزة المتوقفة"
+ title="الأجهزة المتصلة"
 
-value={
- summary.offline
-}
+ value={
+   summary.online
+ }
 
-icon={
- AlertTriangle
-}
+ icon={
+   Wifi
+ }
 
-tone="red"
+ tone="green"
 
 />
 
 
 
-
-
 <StatCard
 
-title="صحة الشبكة"
+ title="الأجهزة المتوقفة"
 
-value={
- `${summary.health}%`
-}
+ value={
+   summary.offline
+ }
 
-icon={
- Activity
-}
+ icon={
+   AlertTriangle
+ }
+
+ tone="red"
 
 />
 
 
 
-
-
 <StatCard
 
-title="متوسط CPU"
+ title="صحة الشبكة"
 
-value={
- formatPercentage(
-   summary.averageCpu
- )
-}
+ value={
+   `${summary.health}%`
+ }
 
-icon={
- Cpu
-}
+ icon={
+   Activity
+ }
 
 />
 
 
 
-
-
 <StatCard
 
-title="متوسط الذاكرة"
+ title="متوسط CPU"
 
-value={
- formatPercentage(
-   summary.averageMemory
- )
-}
+ value={
+   formatPercentage(
+     summary.averageCpu
+   )
+ }
 
-icon={
- MemoryStick
-}
+ icon={
+   Cpu
+ }
 
 />
 
 
 
-
-
 <StatCard
 
-title="LTE و 5G"
+ title="متوسط الذاكرة"
 
-value={
- devices.length
-}
+ value={
+   formatPercentage(
+     summary.averageMemory
+   )
+ }
 
-icon={
- RadioTower
-}
+ icon={
+   MemoryStick
+ }
 
 />
 
 
 
+<StatCard
+
+ title="LTE و 5G"
+
+ value={
+   devices.length
+ }
+
+ icon={
+   RadioTower
+ }
+
+/>
+
 
 
 <StatCard
 
-title="الخدمات"
+ title="الخدمات"
 
-value="4/4"
+ value="4/4"
 
-icon={
- Server
-}
+ icon={
+   Server
+ }
 
 />
 
 
 </section>
-
-
 
 
 
@@ -1114,16 +1221,13 @@ icon={
 
 
 
-
 <TrafficChart
 
-data={
- trafficHistory
-}
+ data={
+   trafficHistory
+ }
 
 />
-
-
 
 
 
@@ -1131,14 +1235,11 @@ data={
 
 <TopCpuDevices
 
-devices={
- topCpuDevices
-}
+ devices={
+   topCpuDevices
+ }
 
 />
-
-
-
 
 
 
@@ -1146,13 +1247,11 @@ devices={
 
 <RecentEvents
 
-events={
- events
-}
+ events={
+   events
+ }
 
 />
-
-
 
 
 
@@ -1166,17 +1265,13 @@ events={
 ===================================================== */}
 
 
-
 <NotificationAuditIntelligenceCard
 
-data={
- auditIntelligence
-}
+ data={
+   auditIntelligence
+ }
 
 />
-
-
-
 
 
 
@@ -1190,17 +1285,13 @@ data={
 ===================================================== */}
 
 
-
 <NotificationAuditDecisionCard
 
-data={
- auditDecision
-}
+ data={
+   auditDecision
+ }
 
 />
-
-
-
 
 
 
@@ -1212,38 +1303,55 @@ data={
 
 
 
+{/* =====================================================
+    H23.4.5.5.12.22.10
+    Approval Dashboard UI
+===================================================== */}
+
+
+
+<section className="dashboard-grid">
+
+  <ApprovalDashboard />
+
+</section>
+
+
+
+
+
+
 
 
 {
-loading &&
+ loading &&
 
-<div className="loading-overlay">
+ <div className="loading-overlay">
 
 
-<Activity
+  <Activity
 
-className="spin"
+   className="spin"
 
-size={
- 34
+   size={
+    34
+   }
+
+  />
+
+
+
+  <span>
+
+    جاري تحميل بيانات الشبكة...
+
+  </span>
+
+
+
+ </div>
+
 }
-
-/>
-
-
-
-<span>
-
-جاري تحميل بيانات الشبكة...
-
-</span>
-
-
-
-</div>
-
-}
-
 
 
 
@@ -1252,4 +1360,8 @@ size={
 
 )
 
-}
+}  
+
+
+
+  
