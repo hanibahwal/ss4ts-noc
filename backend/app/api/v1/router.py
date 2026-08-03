@@ -159,6 +159,17 @@ from app.api.v1.notification_response import (
 
 
 
+# =====================================================
+# H23.4.5.5.12.22.6.4
+# Autonomous Response Approval API Layer
+# =====================================================
+
+from app.api.v1.notification_response_approval import (
+    router as notification_response_approval_router,
+)
+
+
+
 from app.api.v1.routeros import (
     router as routeros_router,
 )
@@ -167,10 +178,6 @@ from app.api.v1.routeros import (
 from app.api.v1.traffic import (
     router as traffic_router,
 )
-
-
-
-
 
 api_router = APIRouter(
     prefix="/api/v1"
@@ -344,4 +351,25 @@ api_router.include_router(
 
 api_router.include_router(
     notification_response_router
+)
+
+
+
+# =====================================================
+# H23.4.5.5.12.22.6.4
+# Autonomous Response Approval API Layer
+# =====================================================
+
+api_router.include_router(
+    notification_response_approval_router
+)
+
+
+# =====================================================
+# H23.4.5.5.12.22.6.4
+# Autonomous Response Approval API Layer
+# =====================================================
+
+api_router.include_router(
+    notification_response_approval_router
 )
