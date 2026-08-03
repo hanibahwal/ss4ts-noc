@@ -370,6 +370,4 @@ api_router.include_router(
 # Autonomous Response Approval API Layer
 # =====================================================
 
-api_router.include_router(
-    notification_response_approval_router
-)
+
