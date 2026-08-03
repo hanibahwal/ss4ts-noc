@@ -16,6 +16,9 @@ from app.services.notification_response_approval import (
     NotificationResponseApprovalStore,
 )
 
+from app.services.notification_response_approval_runtime import (
+    NotificationResponseApprovalRuntime,
+)
 
 
 router = APIRouter(
@@ -94,9 +97,44 @@ def latest():
         )
     ],
 )
+@router.post(
+    "/{approval_id}/approve",
+    dependencies=[
+        Depends(
+            require_notification_permission(
+                NotificationPermission.READ
+            )
+        )
+    ],
+)
 def approve(
     approval_id: str,
 ):
+
+
+    runtime = (
+        NotificationResponseApprovalRuntime(
+            Path(
+                "notifications.sqlite3"
+            )
+        )
+    )
+
+
+    result = (
+        runtime.approve_and_execute(
+
+            approval_id=approval_id,
+
+            action_id=approval_id,
+
+            approved_by="administrator",
+
+        )
+    )
+
+
+    return result
 
     store = get_store()
 
