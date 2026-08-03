@@ -2,81 +2,125 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || ''
 
 
+
 async function request(
   endpoint,
   options = {},
 ) {
+
   const controller =
     new AbortController()
 
-  const timeout = globalThis.setTimeout(
-    () => controller.abort(),
-    10000,
-  )
 
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}${endpoint}`,
-      {
-        ...options,
-
-        headers: {
-          'Content-Type':
-            'application/json',
-
-          ...options.headers,
-        },
-
-        signal: controller.signal,
-      },
+  const timeout =
+    globalThis.setTimeout(
+      () => controller.abort(),
+      10000,
     )
 
+
+  try {
+
+    const response =
+      await fetch(
+        `${API_BASE_URL}${endpoint}`,
+        {
+          ...options,
+
+          headers: {
+            'Content-Type':
+              'application/json',
+
+            ...options.headers,
+          },
+
+          signal:
+            controller.signal,
+        },
+      )
+
+
     if (!response.ok) {
+
       let errorMessage =
         `API error: HTTP ${response.status}`
 
+
       try {
+
         const errorBody =
           await response.json()
 
+
         if (errorBody?.detail) {
-          errorMessage = String(
-            errorBody.detail,
-          )
+
+          errorMessage =
+            String(
+              errorBody.detail,
+            )
+
         }
+
+
       } catch {
-        // Keep the default HTTP error
+
+        // Keep default HTTP error
+
       }
 
-      throw new Error(errorMessage)
+
+      throw new Error(
+        errorMessage,
+      )
+
     }
+
 
     return await response.json()
 
+
+
   } catch (error) {
 
-    if (error.name === 'AbortError') {
+
+    if (
+      error.name === 'AbortError'
+    ) {
+
       throw new Error(
         'انتهت مهلة الاتصال بخادم API',
       )
+
     }
+
 
     throw error
 
+
+
   } finally {
 
-    globalThis.clearTimeout(timeout)
+
+    globalThis.clearTimeout(
+      timeout,
+    )
+
 
   }
+
 }
 
 
 
-function normalizeDevice(device) {
+
+function normalizeDevice(
+  device,
+) {
 
   return {
 
     ...device,
+
 
     ip:
       device.ip ||
@@ -111,7 +155,11 @@ function normalizeDevice(device) {
 
 
 
+
+
+
 export const api = {
+
 
 
   health() {
@@ -123,6 +171,7 @@ export const api = {
   },
 
 
+
   systemStatus() {
 
     return request(
@@ -132,17 +181,21 @@ export const api = {
   },
 
 
+
   async devices() {
 
-    const result = await request(
-      '/api/devices',
-    )
+
+    const result =
+      await request(
+        '/api/devices',
+      )
 
 
     const devices =
       Array.isArray(result)
         ? result
         : result.devices || []
+
 
 
     return devices.map(
@@ -153,24 +206,38 @@ export const api = {
 
 
 
-  async device(ip) {
 
-    const result = await request(
-      `/api/devices/${encodeURIComponent(ip)}`,
+
+  async device(
+    ip,
+  ) {
+
+
+    const result =
+      await request(
+        `/api/devices/${encodeURIComponent(ip)}`,
+      )
+
+
+    return normalizeDevice(
+      result,
     )
-
-
-    return normalizeDevice(result)
 
   },
 
 
 
-  async metrics(ip) {
 
-    const result = await request(
-      `/api/metrics/${encodeURIComponent(ip)}`,
-    )
+
+  async metrics(
+    ip,
+  ) {
+
+
+    const result =
+      await request(
+        `/api/metrics/${encodeURIComponent(ip)}`,
+      )
 
 
     return result.metrics || result
@@ -179,11 +246,17 @@ export const api = {
 
 
 
-  async lte(ip) {
 
-    const result = await request(
-      `/api/lte/${encodeURIComponent(ip)}`,
-    )
+
+  async lte(
+    ip,
+  ) {
+
+
+    const result =
+      await request(
+        `/api/lte/${encodeURIComponent(ip)}`,
+      )
 
 
     return result.lte || result
@@ -192,7 +265,11 @@ export const api = {
 
 
 
-  routeros(ip) {
+
+
+  routeros(
+    ip,
+  ) {
 
     return request(
       `/api/v1/devices/${encodeURIComponent(ip)}/routeros`,
@@ -202,13 +279,22 @@ export const api = {
 
 
 
-  traffic(ip) {
+
+
+  traffic(
+    ip,
+  ) {
+
 
     return request(
       `/api/v1/devices/${encodeURIComponent(ip)}/traffic`,
     )
 
   },
+
+
+
+
 
 
 
@@ -221,11 +307,18 @@ export const api = {
     } = {},
   ) {
 
+
     const searchParams =
-      new URLSearchParams({
-        minutes: String(minutes),
-        window: String(window),
-      })
+      new URLSearchParams(
+        {
+          minutes:
+            String(minutes),
+
+          window:
+            String(window),
+        },
+      )
+
 
 
     if (interfaceName) {
@@ -238,6 +331,7 @@ export const api = {
     }
 
 
+
     return request(
       `/api/v1/devices/${encodeURIComponent(ip)}/traffic/history?${searchParams.toString()}`,
     )
@@ -246,15 +340,24 @@ export const api = {
 
 
 
+
+
+
+
   interfaces(
     ip,
     minutes = 15,
   ) {
 
+
     const searchParams =
-      new URLSearchParams({
-        minutes: String(minutes),
-      })
+      new URLSearchParams(
+        {
+          minutes:
+            String(minutes),
+        },
+      )
+
 
 
     return request(
@@ -265,13 +368,19 @@ export const api = {
 
 
 
+
+
+
+
   // =====================================================
   // H23.4.5.5.12.19
   // Notification Audit Dashboard Integration
   // =====================================================
 
 
+
   notificationAuditStats() {
+
 
     return request(
       '/api/v1/notifications/audit/stats',
@@ -281,9 +390,12 @@ export const api = {
 
 
 
+
+
   notificationAuditTimeline(
     period = 'hour',
   ) {
+
 
     return request(
       `/api/v1/notifications/audit/timeline?period=${period}`,
@@ -293,16 +405,23 @@ export const api = {
 
 
 
+
+
   notificationAuditSearch(
     params = {},
   ) {
+
 
     const searchParams =
       new URLSearchParams()
 
 
-    Object.entries(params).forEach(
+
+    Object.entries(
+      params,
+    ).forEach(
       ([key, value]) => {
+
 
         if (
           value !== undefined &&
@@ -310,15 +429,19 @@ export const api = {
           value !== ''
         ) {
 
+
           searchParams.set(
             key,
             value,
           )
 
+
         }
+
 
       },
     )
+
 
 
     return request(
@@ -328,8 +451,34 @@ export const api = {
   },
 
 
+
+
+
+
+  // =====================================================
+  // H23.4.5.5.12.20.4
+  // Notification Audit Intelligence Dashboard Card
+  // =====================================================
+
+
+
+  notificationAuditIntelligence() {
+
+
+    return request(
+      '/api/v1/notifications/audit/intelligence',
+    )
+
+  },
+
+
 }
 
 
 
-export { API_BASE_URL }
+
+
+
+export {
+  API_BASE_URL,
+}
