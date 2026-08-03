@@ -398,3 +398,7 @@ from app.models.notification_permission import (
     has_permission,
     permissions_for_role,
 )
+
+from app.models.notification_audit_query import (
+    NotificationAuditQuery,
+)
