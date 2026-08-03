@@ -55,7 +55,7 @@ def test_get_audit_authorized():
     record = create_test_audit()
 
     response = client.get(
-        f"/api/v1/notifications/audit/{record.audit_id}"
+        f"/api/v1/notifications/audit/id/{record.audit_id}"
     )
 
     assert response.status_code == 200
