@@ -81,6 +81,7 @@ from app.api.v1.notification_audit import (
 )
 
 
+
 # =====================================================
 # H23.4.5.5.12.16
 # Notification Audit Query & Filtering Engine
@@ -110,6 +111,28 @@ from app.api.v1.notification_audit_stats import (
 
 from app.api.v1.notification_audit_timeline import (
     router as notification_audit_timeline_router,
+)
+
+
+
+# =====================================================
+# H23.4.5.5.12.20
+# Notification Audit Intelligence API
+# =====================================================
+
+from app.api.v1.notification_audit_intelligence import (
+    router as notification_audit_intelligence_router,
+)
+
+
+
+# =====================================================
+# H23.4.5.5.12.21.3
+# Notification Audit Decision API
+# =====================================================
+
+from app.api.v1.notification_audit_decision import (
+    router as notification_audit_decision_router,
 )
 
 
@@ -255,4 +278,26 @@ api_router.include_router(
 
 api_router.include_router(
     notification_audit_timeline_router
+)
+
+
+
+# =====================================================
+# H23.4.5.5.12.20
+# Notification Audit Intelligence API
+# =====================================================
+
+api_router.include_router(
+    notification_audit_intelligence_router
+)
+
+
+
+# =====================================================
+# H23.4.5.5.12.21.3
+# Notification Audit Decision API
+# =====================================================
+
+api_router.include_router(
+    notification_audit_decision_router
 )

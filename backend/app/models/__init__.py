@@ -406,3 +406,13 @@ from app.models.notification_audit_query import (
 from app.models.notification_audit_stats import (
     NotificationAuditStats,
 )
+
+from app.models.notification_audit_intelligence import (
+    AuditRiskLevel,
+    NotificationAuditRisk,
+)
+
+from app.models.notification_audit_decision import (
+    NotificationDecisionType,
+    NotificationAuditDecision,
+)
