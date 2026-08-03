@@ -205,12 +205,12 @@ export const api = {
     )
 
   },
-
-
-
-
-
-  async device(
+  
+  
+  
+  
+  
+    async device(
     ip,
   ) {
 
@@ -451,15 +451,9 @@ export const api = {
     )
 
   },
-
-
-
-
-
-
-
-
-  // =====================================================
+  
+  
+    // =====================================================
   // H23.4.5.5.12.20.4
   // Notification Audit Intelligence
   // =====================================================
@@ -542,8 +536,122 @@ export const api = {
   },
 
 
-}
 
+
+
+
+
+
+  // =====================================================
+  // H23.4.5.5.12.22.10
+  // Approval Dashboard Integration
+  // =====================================================
+
+
+
+  approvalDashboardSummary() {
+
+
+    return request(
+      '/api/v1/notifications/audit/response/approval/dashboard/summary',
+    )
+
+  },
+
+
+
+
+
+  approvalDashboardPending() {
+
+
+    return request(
+      '/api/v1/notifications/audit/response/approval/dashboard/pending',
+    )
+
+  },
+
+
+
+
+
+  approvalDashboardTimeline(
+    approvalId,
+  ) {
+
+
+    return request(
+      `/api/v1/notifications/audit/response/approval/dashboard/${encodeURIComponent(approvalId)}/timeline`,
+    )
+
+  },
+
+
+
+
+
+
+
+
+  // =====================================================
+  // H23.4.5.5.12.22.11
+  // Approval Action Control Layer
+  // =====================================================
+
+
+
+  approvalDashboardApprove(
+    approvalId,
+  ) {
+
+
+    return request(
+      `/api/v1/notifications/audit/response/approval/${encodeURIComponent(approvalId)}/approve`,
+      {
+        method:
+          'POST',
+      },
+    )
+
+  },
+
+
+
+
+
+  approvalDashboardReject(
+    approvalId,
+    reason = '',
+  ) {
+
+
+    return request(
+      `/api/v1/notifications/audit/response/approval/${encodeURIComponent(approvalId)}/reject`,
+      {
+        method:
+          'POST',
+
+        body:
+          JSON.stringify(
+            {
+              reason,
+            },
+          ),
+
+      },
+    )
+
+  },
+  
+  
+  
+    // =====================================================
+  // END
+  // =====================================================
+
+
+}
+ 
 
 
 
