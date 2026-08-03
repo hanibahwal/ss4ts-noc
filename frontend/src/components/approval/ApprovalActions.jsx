@@ -1,14 +1,61 @@
-import { useState } from "react"
+import {
+  useState,
+} from "react"
 
 
-export default function ApprovalActions({
-  approval,
-  onApproved,
-  onRejected,
-}) {
+
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+} from "lucide-react"
 
 
-  const [loading, setLoading] = useState(false)
+
+import {
+  api,
+} from "../../services/api"
+
+
+
+import ApprovalExecutionFeedback from "./ApprovalExecutionFeedback"
+
+
+
+
+
+export default function ApprovalActions(
+  {
+    approval,
+    onApproved,
+    onRejected,
+    onCompleted,
+  }
+) {
+
+
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(false)
+
+
+
+  const [
+    error,
+    setError,
+  ] = useState("")
+
+
+
+  const [
+    execution,
+    setExecution,
+  ] = useState(null)
+
+
+
 
 
   if (!approval) {
@@ -27,48 +74,82 @@ export default function ApprovalActions({
 
 
 
+
+
+
+
   async function approve() {
-
-
-    setLoading(true)
 
 
     try {
 
 
-      const response = await fetch(
+      setLoading(true)
 
-        `/api/v1/notifications/audit/response/approval/${approval.approval_id}/approve`,
+      setError("")
 
-        {
-          method:
-            "POST",
-        }
-
-      )
 
 
       const data =
-        await response.json()
+        await api.approvalDashboardApprove(
+          approval.approval_id
+        )
+
+
+
+      setExecution(
+        data.execution ||
+        null
+      )
 
 
 
       if (onApproved) {
 
-        onApproved(data)
+        onApproved(
+          data
+        )
 
       }
 
 
-    }
 
+      if (onCompleted) {
+
+        onCompleted()
+
+      }
+
+
+
+    }
+    catch(error) {
+
+
+      console.error(
+        error
+      )
+
+
+      setError(
+        error.message ||
+        "Approve failed"
+      )
+
+
+    }
     finally {
+
 
       setLoading(false)
 
+
     }
 
+
   }
+
+
 
 
 
@@ -77,43 +158,72 @@ export default function ApprovalActions({
   async function reject() {
 
 
-    setLoading(true)
-
-
     try {
 
 
-      const response = await fetch(
+      setLoading(true)
 
-        `/api/v1/notifications/audit/response/approval/${approval.approval_id}/reject`,
+      setError("")
 
-        {
-          method:
-            "POST",
-        }
-
-      )
 
 
       const data =
-        await response.json()
+        await api.approvalDashboardReject(
+          approval.approval_id,
+          "Rejected by administrator"
+        )
+
+
+
+      setExecution(
+        data.execution ||
+        null
+      )
 
 
 
       if (onRejected) {
 
-        onRejected(data)
+        onRejected(
+          data
+        )
 
       }
 
 
-    }
 
+      if (onCompleted) {
+
+        onCompleted()
+
+      }
+
+
+
+    }
+    catch(error) {
+
+
+      console.error(
+        error
+      )
+
+
+      setError(
+        error.message ||
+        "Reject failed"
+      )
+
+
+    }
     finally {
+
 
       setLoading(false)
 
+
     }
+
 
   }
 
@@ -121,9 +231,12 @@ export default function ApprovalActions({
 
 
 
+
+
+
   return (
 
-    <div className="panel">
+    <section className="panel">
 
 
       <h3>
@@ -131,6 +244,26 @@ export default function ApprovalActions({
         Approval Actions
 
       </h3>
+
+
+
+
+
+      {
+        error &&
+
+
+        <div className="panel error-banner">
+
+          {error}
+
+        </div>
+
+      }
+
+
+
+
 
 
 
@@ -146,6 +279,8 @@ export default function ApprovalActions({
 
 
 
+
+
       <p>
 
         Status:
@@ -158,35 +293,112 @@ export default function ApprovalActions({
 
 
 
-      <button
-
-        disabled={loading}
-
-        onClick={approve}
-
-      >
-
-        ✅ Approve
-
-      </button>
 
 
 
-      <button
 
-        disabled={loading}
 
-        onClick={reject}
-
-      >
-
-        ❌ Reject
-
-      </button>
+      <div className="approval-actions">
 
 
 
-    </div>
+        <button
+
+          disabled={loading}
+
+          onClick={approve}
+
+        >
+
+
+          {
+
+            loading ?
+
+            <Loader2 size={18}/>
+
+            :
+
+            <CheckCircle size={18}/>
+
+          }
+
+
+          {" "}
+
+          Approve
+
+
+        </button>
+
+
+
+
+
+
+
+        <button
+
+          disabled={loading}
+
+          onClick={reject}
+
+        >
+
+
+          {
+
+            loading ?
+
+            <Loader2 size={18}/>
+
+            :
+
+            <XCircle size={18}/>
+
+          }
+
+
+          {" "}
+
+          Reject
+
+
+        </button>
+
+
+
+      </div>
+
+
+
+
+
+
+
+
+
+      {
+        execution &&
+
+
+        <ApprovalExecutionFeedback
+
+          execution={
+            execution
+          }
+
+        />
+
+
+      }
+
+
+
+
+
+
+    </section>
 
   )
 
