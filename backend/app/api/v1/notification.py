@@ -185,7 +185,7 @@ def list_deliveries() -> list[dict]:
     store = get_store()
 
     return [
-        item.to_dict()
+        asdict(item)
         for item in store.list_deliveries()
     ]
 
@@ -234,6 +234,6 @@ def list_suppressions() -> list[dict]:
     store = get_store()
 
     return [
-        item.to_dict()
+        asdict(item)
         for item in store.list_active_suppressions()
     ]
