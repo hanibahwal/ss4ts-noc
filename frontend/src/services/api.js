@@ -113,6 +113,7 @@ async function request(
 
 
 
+
 function normalizeDevice(
   device,
 ) {
@@ -152,6 +153,7 @@ function normalizeDevice(
   }
 
 }
+
 
 
 
@@ -420,7 +422,7 @@ export const api = {
     Object.entries(
       params,
     ).forEach(
-      ([key, value]) => {
+      ([key,value]) => {
 
 
         if (
@@ -455,9 +457,11 @@ export const api = {
 
 
 
+
+
   // =====================================================
   // H23.4.5.5.12.20.4
-  // Notification Audit Intelligence Dashboard Card
+  // Notification Audit Intelligence
   // =====================================================
 
 
@@ -472,7 +476,34 @@ export const api = {
   },
 
 
+
+
+
+
+
+
+  // =====================================================
+  // H23.4.5.5.12.21.4
+  // Notification Audit Decision Engine
+  // =====================================================
+
+
+
+  notificationAuditDecision() {
+
+
+    return request(
+      '/api/v1/notifications/audit/decision',
+    )
+
+  },
+
+
+
+
+
 }
+
 
 
 
