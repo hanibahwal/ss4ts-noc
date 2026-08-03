@@ -56,8 +56,26 @@ def list_audit_records() -> list[dict]:
     ]
 
 
+
+# =====================================================
+# H23.4.5.5.12.16
+# Notification Audit Query & Filtering Engine
+#
+# Single Audit Record Lookup
+#
+# Old:
+# /notifications/audit/{audit_id}
+#
+# New:
+# /notifications/audit/id/{audit_id}
+#
+# To avoid conflict with:
+# /notifications/audit/search
+# =====================================================
+
+
 @router.get(
-    "/{audit_id}",
+    "/id/{audit_id}",
     dependencies=[
         Depends(
             require_notification_permission(
@@ -77,6 +95,7 @@ def get_audit_record(
     )
 
     if record is None:
+
         raise HTTPException(
             status_code=404,
             detail="Audit record not found",
