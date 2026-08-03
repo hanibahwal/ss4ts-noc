@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { 
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+
+
 import {
   Activity,
   AlertTriangle,
@@ -10,43 +17,67 @@ import {
   Wifi,
 } from 'lucide-react'
 
-import { useNavigate } from 'react-router-dom'
 
 import Header from '../components/layout/Header'
+
 import RecentEvents from '../components/dashboard/RecentEvents'
+
 import NotificationAuditIntelligenceCard from '../components/dashboard/NotificationAuditIntelligenceCard'
+
+import NotificationAuditDecisionCard from '../components/dashboard/NotificationAuditDecisionCard'
+
 import StatCard from '../components/dashboard/StatCard'
+
 import TopCpuDevices from '../components/dashboard/TopCpuDevices'
+
 import TrafficChart from '../components/dashboard/TrafficChart'
 
+
 import { api } from '../services/api'
+
 import { formatPercentage } from '../utils/formatters'
 
 
-const EVENT_STORAGE_KEY = 'ss4ts-noc-events'
-const TRAFFIC_STORAGE_KEY = 'ss4ts-noc-traffic'
+
+const EVENT_STORAGE_KEY =
+  'ss4ts-noc-events'
+
+
+const TRAFFIC_STORAGE_KEY =
+  'ss4ts-noc-traffic'
+
+
+
 
 
 function readStoredArray(key) {
+
   try {
-    const value = JSON.parse(
-      localStorage.getItem(key),
-    )
+
+    const value =
+      JSON.parse(
+        localStorage.getItem(key),
+      )
+
 
     return Array.isArray(value)
       ? value
       : []
 
+
   } catch {
+
     return []
+
   }
+
 }
 
 
 
-export default function Dashboard() {
 
-  const navigate = useNavigate()
+
+export default function Dashboard() {
 
 
   const [
@@ -55,15 +86,40 @@ export default function Dashboard() {
   ] = useState([])
 
 
+
   const [
     metrics,
     setMetrics,
   ] = useState({})
-  
+
+
+
+  // =====================================================
+  // H23.4.5.5.12.20.5
+  // Notification Audit Intelligence
+  // =====================================================
+
   const [
-  auditIntelligence,
-  setAuditIntelligence,
-] = useState(null)
+    auditIntelligence,
+    setAuditIntelligence,
+  ] = useState(null)
+
+
+
+
+
+  // =====================================================
+  // H23.4.5.5.12.21.7.3
+  // Notification Audit Decision
+  // =====================================================
+
+  const [
+    auditDecision,
+    setAuditDecision,
+  ] = useState(null)
+
+
+
 
 
   const [
@@ -76,14 +132,20 @@ export default function Dashboard() {
   )
 
 
+
+
+
   const [
     events,
     setEvents,
   ] = useState(() =>
     readStoredArray(
       EVENT_STORAGE_KEY,
-    ).slice(0, 50),
+    ).slice(0,50),
   )
+
+
+
 
 
   const [
@@ -92,10 +154,16 @@ export default function Dashboard() {
   ] = useState('')
 
 
+
+
+
   const [
     loading,
     setLoading,
   ] = useState(true)
+
+
+
 
 
   const [
@@ -104,10 +172,16 @@ export default function Dashboard() {
   ] = useState(false)
 
 
+
+
+
   const [
     error,
     setError,
   ] = useState('')
+
+
+
 
 
   const [
@@ -116,36 +190,57 @@ export default function Dashboard() {
   ] = useState(null)
 
 
-  const previousStatusRef = useRef({})
+
+
+
+  const previousStatusRef =
+    useRef({})
+
+
+
+
 
 
 
   function addEvents(newEvents) {
 
-    if (newEvents.length === 0)
+
+    if(newEvents.length === 0)
       return
 
 
-    setEvents((current) => {
 
-      const next =
+    setEvents(
+      current => {
+
+
+        const next =
         [
           ...newEvents,
           ...current,
         ].slice(0,50)
 
 
-      localStorage.setItem(
-        EVENT_STORAGE_KEY,
-        JSON.stringify(next),
-      )
+
+        localStorage.setItem(
+          EVENT_STORAGE_KEY,
+          JSON.stringify(next),
+        )
 
 
-      return next
 
-    })
+        return next
+
+      },
+    )
+
 
   }
+
+
+
+
+
 
 
 
@@ -155,9 +250,14 @@ export default function Dashboard() {
     metricMap,
   ) {
 
+
     const detected = []
 
-    const now = new Date()
+
+    const now =
+      new Date()
+
+
 
     const readableTime =
       now.toLocaleTimeString(
@@ -167,7 +267,8 @@ export default function Dashboard() {
 
 
     deviceList.forEach(
-      (device) => {
+      device => {
+
 
         const previousStatus =
           previousStatusRef.current[
@@ -175,19 +276,26 @@ export default function Dashboard() {
           ]
 
 
+
         const currentStatus =
           device.status
 
 
+
         const deviceMetrics =
-          metricMap[device.ip] || {}
+          metricMap[
+            device.ip
+          ] || {}
 
 
 
-        if (
+
+
+        if(
           previousStatus &&
           previousStatus !== currentStatus
-        ) {
+        ){
+
 
           detected.push({
 
@@ -196,30 +304,39 @@ export default function Dashboard() {
 
             type:
               currentStatus === 'online'
-                ? 'recovered'
-                : 'offline',
+              ? 'recovered'
+              : 'offline',
+
 
             title:
               currentStatus === 'online'
-                ? 'تمت استعادة الجهاز'
-                : 'الجهاز متوقف',
+              ? 'تمت استعادة الجهاز'
+              : 'الجهاز متوقف',
+
 
             message:
               `${device.name} — ${device.ip}`,
+
 
             time:
               readableTime,
 
           })
 
+
         }
 
 
 
-        if (
+
+
+
+
+        if(
           Number(deviceMetrics.cpu_usage)
           >= 90
-        ) {
+        ){
+
 
           detected.push({
 
@@ -229,57 +346,79 @@ export default function Dashboard() {
             type:
               'cpu',
 
+
             title:
               'ارتفاع استخدام المعالج',
 
+
             message:
               `${device.name}: CPU ${deviceMetrics.cpu_usage}%`,
+
 
             time:
               readableTime,
 
           })
 
+
         }
 
 
 
-        if (
+
+
+
+        if(
           Number(deviceMetrics.temperature)
-          >= 70
-        ) {
+          >=70
+        ){
+
 
           detected.push({
 
             id:
               `${Date.now()}-${device.ip}-temp`,
 
+
             type:
               'temperature',
+
 
             title:
               'ارتفاع درجة الحرارة',
 
+
             message:
               `${device.name}: ${deviceMetrics.temperature}°C`,
+
 
             time:
               readableTime,
 
           })
 
+
         }
+
+
+
 
 
         previousStatusRef.current[
           device.ip
-        ] = currentStatus
+        ] =
+          currentStatus
+
 
       },
     )
 
 
-    addEvents(detected)
+
+    addEvents(
+      detected,
+    )
+
 
   }
 
@@ -287,10 +426,15 @@ export default function Dashboard() {
 
 
 
-  function appendTraffic(metricMap) {
+
+
+
+  function appendTraffic(metricMap){
+
 
     const values =
       Object.values(metricMap)
+
 
 
     const rxBps =
@@ -302,6 +446,7 @@ export default function Dashboard() {
           ),
         0,
       )
+
 
 
     const txBps =
@@ -321,14 +466,17 @@ export default function Dashboard() {
       timestamp:
         Date.now(),
 
+
       time:
         new Date()
         .toLocaleTimeString(
           'ar-SA',
         ),
 
+
       rx_bps:
         rxBps,
+
 
       tx_bps:
         txBps,
@@ -337,14 +485,18 @@ export default function Dashboard() {
 
 
 
+
+
     setTrafficHistory(
-      (current)=>{
+      current => {
+
 
         const next =
-          [
-            ...current,
-            point,
-          ].slice(-30)
+        [
+          ...current,
+          point,
+        ].slice(-30)
+
 
 
         localStorage.setItem(
@@ -353,138 +505,211 @@ export default function Dashboard() {
         )
 
 
+
         return next
+
 
       },
     )
 
+
   }
 
 
 
 
 
-  async function loadData(
-    isRefresh=false,
-  ){
-
-    try {
-
-      setError('')
-
-
-      if(isRefresh)
-        setRefreshing(true)
-      else
-        setLoading(true)
 
 
 
-      const deviceList =
-        await api.devices()
+
+async function loadData(
+  isRefresh=false,
+){
+
+
+  try {
+
+
+    setError('')
 
 
 
-      const results =
-        await Promise.allSettled(
-
-          deviceList.map(
-            async(device)=>{
-
-              const data =
-                await api.metrics(
-                  device.ip,
-                )
+    if(isRefresh)
+      setRefreshing(true)
+    else
+      setLoading(true)
 
 
-              return [
+
+
+
+    const deviceList =
+      await api.devices()
+
+
+
+
+
+
+    const results =
+      await Promise.allSettled(
+
+        deviceList.map(
+          async(device)=>{
+
+
+            const data =
+              await api.metrics(
                 device.ip,
-                data,
-              ]
-
-            },
-          ),
-
-        )
+              )
 
 
 
-      const metricMap = {}
-
-
-
-      results.forEach(
-        (result)=>{
-
-          if(
-            result.status ===
-            'fulfilled'
-          ){
-
-            const [
-              ip,
+            return [
+              device.ip,
               data,
-            ] =
-              result.value
+            ]
 
 
-            metricMap[ip]=data
+          },
+        ),
 
-          }
-
-        },
       )
 
 
 
-setDevices(deviceList)
-
-setMetrics(metricMap)
 
 
-const intelligence =
-  await api.notificationAuditIntelligence()
+
+    const metricMap = {}
 
 
-setAuditIntelligence(
-  intelligence,
-)
+
+    results.forEach(
+      result=>{
 
 
-setLastUpdated(
-  new Date(),
-)
+        if(
+          result.status ===
+          'fulfilled'
+        ){
 
 
-      appendTraffic(metricMap)
+          const [
+            ip,
+            data,
+          ] =
+            result.value
 
-      detectEvents(
-        deviceList,
-        metricMap,
-      )
 
 
-    } catch(error) {
+          metricMap[ip]=data
 
-      console.error(error)
 
-      setError(
-        error.message ||
-        'تعذر تحميل بيانات لوحة التحكم',
-      )
+        }
 
-    }
-    finally {
 
-      setLoading(false)
+      },
+    )
 
-      setRefreshing(false)
 
-    }
+
+
+
+    setDevices(
+      deviceList,
+    )
+
+
+    setMetrics(
+      metricMap,
+    )
+
+
+
+
+
+    // =====================================================
+    // Notification Audit Intelligence
+    // =====================================================
+
+    const intelligence =
+      await api.notificationAuditIntelligence()
+
+
+
+    setAuditIntelligence(
+      intelligence,
+    )
+
+
+
+
+
+    // =====================================================
+    // Notification Audit Decision
+    // =====================================================
+
+    const decision =
+      await api.notificationAuditDecisionLatest()
+
+
+
+    setAuditDecision(
+      decision,
+    )
+
+
+
+
+
+    setLastUpdated(
+      new Date(),
+    )
+
+
+
+    appendTraffic(
+      metricMap,
+    )
+
+
+
+    detectEvents(
+      deviceList,
+      metricMap,
+    )
+
+
+
+  }
+  catch(error){
+
+
+    console.error(error)
+
+
+    setError(
+      error.message ||
+      'تعذر تحميل بيانات لوحة التحكم',
+    )
+
+
+  }
+  finally{
+
+
+    setLoading(false)
+
+
+    setRefreshing(false)
+
 
   }
 
 
+}
 
 
 
@@ -509,8 +734,11 @@ setLastUpdated(
 
 
 
+
+
   const summary =
     useMemo(()=>{
+
 
       const online =
         devices.filter(
@@ -518,13 +746,18 @@ setLastUpdated(
         ).length
 
 
+
       const offline =
-        devices.length-online
+        devices.length - online
+
+
 
 
 
       const values =
         Object.values(metrics)
+
+
 
 
 
@@ -534,9 +767,9 @@ setLastUpdated(
         Math.round(
           values.reduce(
             (a,b)=>
-              a+
+              a +
               Number(
-                b.cpu_usage||0,
+                b.cpu_usage || 0,
               ),
             0,
           )
@@ -545,6 +778,8 @@ setLastUpdated(
         )
         :
         0
+
+
 
 
 
@@ -554,9 +789,9 @@ setLastUpdated(
         Math.round(
           values.reduce(
             (a,b)=>
-              a+
+              a +
               Number(
-                b.memory_usage||0,
+                b.memory_usage || 0,
               ),
             0,
           )
@@ -568,31 +803,43 @@ setLastUpdated(
 
 
 
+
+
       return {
 
         total:
           devices.length,
 
+
         online,
+
 
         offline,
 
+
         averageCpu,
 
+
         averageMemory,
+
+
 
         health:
           devices.length
           ?
           Math.round(
-            online /
-            devices.length *
+            (
+              online /
+              devices.length
+            )
+            *
             100,
           )
           :
           0,
 
       }
+
 
 
     },[
@@ -604,13 +851,21 @@ setLastUpdated(
 
 
 
+
+
+
+
   const topCpuDevices =
-    useMemo(
-      ()=>devices
+    useMemo(()=>{
+
+
+      return devices
+
       .map(
         device=>({
 
           ...device,
+
 
           cpu:
             Number(
@@ -621,154 +876,376 @@ setLastUpdated(
 
         }),
       )
+
+
       .sort(
         (a,b)=>
-          b.cpu-a.cpu,
-      ),
-      [
-        devices,
-        metrics,
-      ],
-    )
+          b.cpu - a.cpu,
+      )
+
+
+
+    },[
+      devices,
+      metrics,
+    ])
 
 
 
 
 
-  return (
+
+
+
+
+return (
 
 <>
+
 <Header
+
  title="لوحة التحكم"
+
  subtitle="ملخص شامل لحالة الشبكة والأجهزة والخدمات"
- onRefresh={()=>loadData(true)}
- refreshing={refreshing}
- searchValue={search}
- onSearchChange={setSearch}
- lastUpdated={lastUpdated}
+
+ onRefresh={
+   ()=>loadData(true)
+ }
+
+ refreshing={
+   refreshing
+ }
+
+ searchValue={
+   search
+ }
+
+ onSearchChange={
+   setSearch
+ }
+
+ lastUpdated={
+   lastUpdated
+ }
+
 />
+
+
+
 
 
 {
 error &&
 <div className="error-banner">
+
 {error}
+
 </div>
 }
 
 
 
+
+
+
+
 <section className="stats-grid">
 
+
 <StatCard
+
 title="إجمالي الأجهزة"
-value={summary.total}
-icon={Router}
+
+value={
+ summary.total
+}
+
+icon={
+ Router
+}
+
 />
 
 
+
+
 <StatCard
+
 title="الأجهزة المتصلة"
-value={summary.online}
-icon={Wifi}
+
+value={
+ summary.online
+}
+
+icon={
+ Wifi
+}
+
 tone="green"
+
 />
 
 
+
+
+
 <StatCard
+
 title="الأجهزة المتوقفة"
-value={summary.offline}
-icon={AlertTriangle}
+
+value={
+ summary.offline
+}
+
+icon={
+ AlertTriangle
+}
+
 tone="red"
+
 />
 
 
+
+
+
 <StatCard
+
 title="صحة الشبكة"
-value={`${summary.health}%`}
-icon={Activity}
+
+value={
+ `${summary.health}%`
+}
+
+icon={
+ Activity
+}
+
 />
 
 
+
+
+
 <StatCard
+
 title="متوسط CPU"
-value={formatPercentage(summary.averageCpu)}
-icon={Cpu}
+
+value={
+ formatPercentage(
+   summary.averageCpu
+ )
+}
+
+icon={
+ Cpu
+}
+
 />
 
 
+
+
+
 <StatCard
+
 title="متوسط الذاكرة"
-value={formatPercentage(summary.averageMemory)}
-icon={MemoryStick}
+
+value={
+ formatPercentage(
+   summary.averageMemory
+ )
+}
+
+icon={
+ MemoryStick
+}
+
 />
 
 
+
+
+
 <StatCard
+
 title="LTE و 5G"
-value={devices.length}
-icon={RadioTower}
+
+value={
+ devices.length
+}
+
+icon={
+ RadioTower
+}
+
 />
 
 
+
+
+
 <StatCard
+
 title="الخدمات"
+
 value="4/4"
-icon={Server}
+
+icon={
+ Server
+}
+
 />
 
 
 </section>
+
+
+
+
+
+
 
 
 
 <section className="dashboard-grid">
 
 
+
+
+
+
 <TrafficChart
-data={trafficHistory}
+
+data={
+ trafficHistory
+}
+
 />
+
+
+
+
 
 
 
 <TopCpuDevices
-devices={topCpuDevices}
+
+devices={
+ topCpuDevices
+}
+
 />
+
+
+
+
+
 
 
 
 <RecentEvents
-events={events}
+
+events={
+ events
+}
+
 />
 
 
 
-{/* H23.4.5.5.12.20.5 */}
+
+
+
+
+
+
+{/* =====================================================
+    H23.4.5.5.12.20.5
+    Notification Audit Intelligence
+===================================================== */}
+
+
 
 <NotificationAuditIntelligenceCard
-  data={auditIntelligence}
+
+data={
+ auditIntelligence
+}
+
 />
+
+
+
+
+
+
+
+
+
+
+{/* =====================================================
+    H23.4.5.5.12.21.7.3
+    Notification Audit Decision Engine
+===================================================== */}
+
+
+
+<NotificationAuditDecisionCard
+
+data={
+ auditDecision
+}
+
+/>
+
+
+
+
 
 
 </section>
 
 
 
+
+
+
+
+
+
 {
 loading &&
+
 <div className="loading-overlay">
 
+
 <Activity
+
 className="spin"
-size={34}
+
+size={
+ 34
+}
+
 />
 
+
+
 <span>
+
 جاري تحميل بيانات الشبكة...
+
 </span>
 
+
+
 </div>
+
 }
+
+
+
 
 
 </>
