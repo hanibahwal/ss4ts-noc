@@ -148,6 +148,17 @@ from app.api.v1.notification_audit_decision_history import (
 
 
 
+# =====================================================
+# H23.4.5.5.12.22.5
+# Autonomous Response API Layer
+# =====================================================
+
+from app.api.v1.notification_response import (
+    router as notification_response_router,
+)
+
+
+
 from app.api.v1.routeros import (
     router as routeros_router,
 )
@@ -322,4 +333,15 @@ api_router.include_router(
 
 api_router.include_router(
     notification_audit_decision_history_router
+)
+
+
+
+# =====================================================
+# H23.4.5.5.12.22.5
+# Autonomous Response API Layer
+# =====================================================
+
+api_router.include_router(
+    notification_response_router
 )
