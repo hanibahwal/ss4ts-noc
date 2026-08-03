@@ -402,3 +402,7 @@ from app.models.notification_permission import (
 from app.models.notification_audit_query import (
     NotificationAuditQuery,
 )
+
+from app.models.notification_audit_stats import (
+    NotificationAuditStats,
+)

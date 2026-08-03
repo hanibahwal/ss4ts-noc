@@ -81,11 +81,23 @@ from app.api.v1.notification_audit import (
 )
 
 
+# =====================================================
 # H23.4.5.5.12.16
 # Notification Audit Query & Filtering Engine
+# =====================================================
 
 from app.api.v1.notification_audit_search import (
     router as notification_audit_search_router,
+)
+
+
+# =====================================================
+# H23.4.5.5.12.17
+# Notification Audit Dashboard Statistics
+# =====================================================
+
+from app.api.v1.notification_audit_stats import (
+    router as notification_audit_stats_router,
 )
 
 
@@ -203,4 +215,14 @@ api_router.include_router(
 
 api_router.include_router(
     notification_audit_search_router
+)
+
+
+# =====================================================
+# H23.4.5.5.12.17
+# Notification Audit Dashboard Statistics
+# =====================================================
+
+api_router.include_router(
+    notification_audit_stats_router
 )
