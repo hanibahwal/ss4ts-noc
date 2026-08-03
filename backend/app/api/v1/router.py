@@ -91,6 +91,7 @@ from app.api.v1.notification_audit_search import (
 )
 
 
+
 # =====================================================
 # H23.4.5.5.12.17
 # Notification Audit Dashboard Statistics
@@ -99,6 +100,18 @@ from app.api.v1.notification_audit_search import (
 from app.api.v1.notification_audit_stats import (
     router as notification_audit_stats_router,
 )
+
+
+
+# =====================================================
+# H23.4.5.5.12.18.3
+# Notification Audit Timeline API
+# =====================================================
+
+from app.api.v1.notification_audit_timeline import (
+    router as notification_audit_timeline_router,
+)
+
 
 
 from app.api.v1.routeros import (
@@ -112,9 +125,13 @@ from app.api.v1.traffic import (
 
 
 
+
+
 api_router = APIRouter(
     prefix="/api/v1"
 )
+
+
 
 
 
@@ -208,6 +225,7 @@ api_router.include_router(
 )
 
 
+
 # =====================================================
 # H23.4.5.5.12.16
 # Notification Audit Query & Filtering Engine
@@ -218,6 +236,7 @@ api_router.include_router(
 )
 
 
+
 # =====================================================
 # H23.4.5.5.12.17
 # Notification Audit Dashboard Statistics
@@ -225,4 +244,15 @@ api_router.include_router(
 
 api_router.include_router(
     notification_audit_stats_router
+)
+
+
+
+# =====================================================
+# H23.4.5.5.12.18.3
+# Notification Audit Timeline API
+# =====================================================
+
+api_router.include_router(
+    notification_audit_timeline_router
 )
