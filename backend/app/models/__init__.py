@@ -420,3 +420,17 @@ from app.models.notification_audit_decision import (
 from app.models.notification_audit_decision_history import (
     NotificationDecisionHistory,
 )
+
+from app.models.notification_response_action import (
+    NotificationResponseAction,
+    NotificationResponseActionType,
+)
+
+from app.models.notification_response_execution_history import (
+    NotificationResponseExecutionHistory,
+)
+
+from app.models.notification_response_approval import (
+    NotificationResponseApproval,
+    ApprovalStatus,
+)
