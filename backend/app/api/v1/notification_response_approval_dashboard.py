@@ -25,6 +25,17 @@ from app.services.notification_response_approval_binding import (
 )
 
 
+from app.services.notification_response_execution_history import (
+    NotificationResponseExecutionHistoryStore,
+)
+
+
+
+DATABASE = Path(
+    "notifications.sqlite3"
+)
+
+
 
 router = APIRouter(
     prefix="/notifications/audit/response/approval/dashboard",
@@ -38,9 +49,7 @@ router = APIRouter(
 def get_approval_store():
 
     return NotificationResponseApprovalStore(
-        Path(
-            "notifications.sqlite3"
-        )
+        DATABASE
     )
 
 
@@ -48,9 +57,15 @@ def get_approval_store():
 def get_binding_store():
 
     return NotificationResponseApprovalBindingStore(
-        Path(
-            "notifications.sqlite3"
-        )
+        DATABASE
+    )
+
+
+
+def get_execution_history_store():
+
+    return NotificationResponseExecutionHistoryStore(
+        DATABASE
     )
 
 
@@ -144,15 +159,66 @@ def timeline(
 ):
 
 
-    store = get_binding_store()
+    binding_store = get_binding_store()
+
+    execution_store = get_execution_history_store()
 
 
     events = []
 
 
-    for item in store.list_history(100):
 
-        if item.approval_id == approval_id:
+    bindings = binding_store.list_history(
+        100
+    )
+
+
+
+    for item in bindings:
+
+
+        if item.approval_id != approval_id:
+
+            continue
+
+
+
+        timestamp = (
+            item.created_at.isoformat()
+        )
+
+
+
+        #
+        # Approval Requested
+        #
+
+        events.append(
+
+            {
+
+                "type":
+                    "approval",
+
+
+                "status":
+                    "requested",
+
+
+                "timestamp":
+                    timestamp,
+
+            }
+
+        )
+
+
+
+        #
+        # Approval Completed
+        #
+
+        if item.status.value == "completed":
 
 
             events.append(
@@ -164,15 +230,108 @@ def timeline(
 
 
                     "status":
-                        item.status.value,
+                        "approved",
 
 
                     "timestamp":
-                        item.created_at.isoformat(),
+                        timestamp,
 
                 }
 
             )
+
+
+
+        #
+        # Execution Lifecycle
+        #
+
+        if item.execution_id:
+
+
+            executions = (
+                execution_store.list_history(
+                    100
+                )
+            )
+
+
+
+            for execution in executions:
+
+
+                data = (
+                    execution.to_dict()
+                )
+
+
+                if (
+                    data.get(
+                        "execution_id"
+                    )
+                    != item.execution_id
+                ):
+
+                    continue
+
+
+
+                execution_timestamp = (
+                    data.get(
+                        "created_at"
+                    )
+                )
+
+
+
+                events.append(
+
+                    {
+
+                        "type":
+                            "execution",
+
+
+                        "status":
+                            "started",
+
+
+                        "execution_id":
+                            item.execution_id,
+
+
+                        "timestamp":
+                            execution_timestamp,
+
+                    }
+
+                )
+
+
+
+                events.append(
+
+                    {
+
+                        "type":
+                            "execution",
+
+
+                        "status":
+                            "completed",
+
+
+                        "execution_id":
+                            item.execution_id,
+
+
+                        "timestamp":
+                            execution_timestamp,
+
+                    }
+
+                )
+
 
 
     return {
