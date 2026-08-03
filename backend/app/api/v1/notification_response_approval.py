@@ -185,10 +185,39 @@ def approve(
         )
     ],
 )
+@router.post(
+    "/{approval_id}/reject",
+    dependencies=[
+        Depends(
+            require_notification_permission(
+                NotificationPermission.READ
+            )
+        )
+    ],
+)
 def reject(
     approval_id: str,
 ):
 
+    store = get_store()
+
+    result = store.reject(
+        approval_id,
+        "administrator",
+    )
+
+
+    if result is None:
+
+        return {
+            "approval_id": approval_id,
+            "status": "rejected",
+            "message":
+                "Approval rejected or not found",
+        }
+
+
+    return result.to_dict()
 
     store = get_store()
 
