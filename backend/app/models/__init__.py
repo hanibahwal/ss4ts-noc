@@ -416,3 +416,7 @@ from app.models.notification_audit_decision import (
     NotificationDecisionType,
     NotificationAuditDecision,
 )
+
+from app.models.notification_audit_decision_history import (
+    NotificationDecisionHistory,
+)

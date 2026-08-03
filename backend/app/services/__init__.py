@@ -226,3 +226,7 @@ from app.services.notification_authorization import (
     NotificationInactiveIdentity,
     NotificationPermissionDenied,
 )
+
+from app.services.notification_audit_decision_history import (
+    NotificationDecisionHistoryStore,
+)
