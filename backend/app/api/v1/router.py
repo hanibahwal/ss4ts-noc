@@ -113,8 +113,6 @@ from app.api.v1.notification_audit_timeline import (
     router as notification_audit_timeline_router,
 )
 
-
-
 # =====================================================
 # H23.4.5.5.12.20
 # Notification Audit Intelligence API
@@ -170,113 +168,33 @@ from app.api.v1.notification_response_approval import (
 
 
 
+# =====================================================
+# H23.4.5.5.12.22.9.2
+# Autonomous Response Approval Dashboard API
+# =====================================================
+
+from app.api.v1.notification_response_approval_dashboard import (
+    router as notification_response_approval_dashboard_router,
+)
+
+
+
 from app.api.v1.routeros import (
     router as routeros_router,
 )
+
 
 
 from app.api.v1.traffic import (
     router as traffic_router,
 )
 
+
+
+
 api_router = APIRouter(
     prefix="/api/v1"
 )
-
-
-
-
-
-api_router.include_router(
-    health_router
-)
-
-
-api_router.include_router(
-    dashboard_router
-)
-
-
-api_router.include_router(
-    traffic_router
-)
-
-
-api_router.include_router(
-    routeros_router
-)
-
-
-api_router.include_router(
-    ai_router
-)
-
-
-api_router.include_router(
-    decision_intelligence_router
-)
-
-
-api_router.include_router(
-    decision_audits_router
-)
-
-
-api_router.include_router(
-    execution_authorizations_router
-)
-
-
-api_router.include_router(
-    execution_leases_router
-)
-
-
-api_router.include_router(
-    execution_heartbeats_router
-)
-
-
-api_router.include_router(
-    execution_recovery_router
-)
-
-
-api_router.include_router(
-    execution_recovery_scheduler_router
-)
-
-
-api_router.include_router(
-    execution_recovery_runtime_router
-)
-
-
-api_router.include_router(
-    execution_runtime_observability_router
-)
-
-
-api_router.include_router(
-    execution_runtime_prometheus_router
-)
-
-
-api_router.include_router(
-    knowledge_graph_router
-)
-
-
-api_router.include_router(
-    notification_router
-)
-
-
-api_router.include_router(
-    notification_audit_router
-)
-
-
 
 # =====================================================
 # H23.4.5.5.12.16
@@ -343,7 +261,6 @@ api_router.include_router(
 )
 
 
-
 # =====================================================
 # H23.4.5.5.12.22.5
 # Autonomous Response API Layer
@@ -365,9 +282,18 @@ api_router.include_router(
 )
 
 
+
 # =====================================================
-# H23.4.5.5.12.22.6.4
-# Autonomous Response Approval API Layer
+# H23.4.5.5.12.22.9.2
+# Autonomous Response Approval Dashboard API
 # =====================================================
+
+api_router.include_router(
+    notification_response_approval_dashboard_router
+)
+
+
+
+
 
 
