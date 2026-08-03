@@ -488,7 +488,6 @@ export const api = {
   // =====================================================
 
 
-
   notificationAuditDecision() {
 
 
@@ -500,12 +499,50 @@ export const api = {
 
 
 
+  // =====================================================
+  // H23.4.5.5.12.21.7.2
+  // Notification Audit Decision History API
+  // =====================================================
+
+
+  notificationAuditDecisionLatest() {
+
+
+    return request(
+      '/api/v1/notifications/audit/decision/latest',
+    )
+
+  },
+
+
+
+  notificationAuditDecisionHistory(
+    limit = 50,
+  ) {
+
+
+    return request(
+      `/api/v1/notifications/audit/decision/history?limit=${limit}`,
+    )
+
+  },
+
+
+
+  notificationAuditDecisionRun() {
+
+
+    return request(
+      '/api/v1/notifications/audit/decision/run',
+      {
+        method: 'POST',
+      },
+    )
+
+  },
 
 
 }
-
-
-
 
 
 
