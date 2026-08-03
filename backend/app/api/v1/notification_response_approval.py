@@ -185,16 +185,7 @@ def approve(
         )
     ],
 )
-@router.post(
-    "/{approval_id}/reject",
-    dependencies=[
-        Depends(
-            require_notification_permission(
-                NotificationPermission.READ
-            )
-        )
-    ],
-)
+
 def reject(
     approval_id: str,
 ):
