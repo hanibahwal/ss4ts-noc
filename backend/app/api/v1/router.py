@@ -137,6 +137,17 @@ from app.api.v1.notification_audit_decision import (
 
 
 
+# =====================================================
+# H23.4.5.5.12.21.6
+# Notification Audit Decision History API
+# =====================================================
+
+from app.api.v1.notification_audit_decision_history import (
+    router as notification_audit_decision_history_router,
+)
+
+
+
 from app.api.v1.routeros import (
     router as routeros_router,
 )
@@ -300,4 +311,15 @@ api_router.include_router(
 
 api_router.include_router(
     notification_audit_decision_router
+)
+
+
+
+# =====================================================
+# H23.4.5.5.12.21.6
+# Notification Audit Decision History API
+# =====================================================
+
+api_router.include_router(
+    notification_audit_decision_history_router
 )
