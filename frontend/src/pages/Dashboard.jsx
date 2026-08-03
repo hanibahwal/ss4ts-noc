@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom'
 
 import Header from '../components/layout/Header'
 import RecentEvents from '../components/dashboard/RecentEvents'
-import NotificationAuditDashboard from '../components/dashboard/NotificationAuditDashboard'
+import NotificationAuditIntelligenceCard from '../components/dashboard/NotificationAuditIntelligenceCard'
 import StatCard from '../components/dashboard/StatCard'
 import TopCpuDevices from '../components/dashboard/TopCpuDevices'
 import TrafficChart from '../components/dashboard/TrafficChart'
@@ -59,6 +59,11 @@ export default function Dashboard() {
     metrics,
     setMetrics,
   ] = useState({})
+  
+  const [
+  auditIntelligence,
+  setAuditIntelligence,
+] = useState(null)
 
 
   const [
@@ -432,13 +437,23 @@ export default function Dashboard() {
 
 
 
-      setDevices(deviceList)
+setDevices(deviceList)
 
-      setMetrics(metricMap)
+setMetrics(metricMap)
 
-      setLastUpdated(
-        new Date(),
-      )
+
+const intelligence =
+  await api.notificationAuditIntelligence()
+
+
+setAuditIntelligence(
+  intelligence,
+)
+
+
+setLastUpdated(
+  new Date(),
+)
 
 
       appendTraffic(metricMap)
@@ -728,8 +743,11 @@ events={events}
 
 
 
-{/* H23.4.5.5.12.19 */}
-<NotificationAuditDashboard />
+{/* H23.4.5.5.12.20.5 */}
+
+<NotificationAuditIntelligenceCard
+  data={auditIntelligence}
+/>
 
 
 </section>
