@@ -46,14 +46,15 @@ async function request(
         }
       } catch {
         // Keep the default HTTP error
-        // when the response is not JSON.
       }
 
       throw new Error(errorMessage)
     }
 
     return await response.json()
+
   } catch (error) {
+
     if (error.name === 'AbortError') {
       throw new Error(
         'انتهت مهلة الاتصال بخادم API',
@@ -61,24 +62,32 @@ async function request(
     }
 
     throw error
+
   } finally {
+
     globalThis.clearTimeout(timeout)
+
   }
 }
 
 
+
 function normalizeDevice(device) {
+
   return {
+
     ...device,
 
     ip:
       device.ip ||
       device.ip_address,
 
+
     name:
       device.name ||
       device.identity ||
       'MikroTik Router',
+
 
     type:
       device.type ||
@@ -86,76 +95,122 @@ function normalizeDevice(device) {
       device.model ||
       'MikroTik RouterOS',
 
+
     site:
       device.site ||
       'غير محدد',
 
+
     status:
       device.status ||
       'unknown',
+
   }
+
 }
 
 
+
 export const api = {
+
+
   health() {
-    return request('/api/v1/health')
+
+    return request(
+      '/api/v1/health',
+    )
+
   },
+
 
   systemStatus() {
-    return request('/api/system/status')
+
+    return request(
+      '/api/system/status',
+    )
+
   },
 
+
   async devices() {
+
     const result = await request(
       '/api/devices',
     )
+
 
     const devices =
       Array.isArray(result)
         ? result
         : result.devices || []
 
+
     return devices.map(
       normalizeDevice,
     )
+
   },
 
+
+
   async device(ip) {
+
     const result = await request(
       `/api/devices/${encodeURIComponent(ip)}`,
     )
 
+
     return normalizeDevice(result)
+
   },
 
+
+
   async metrics(ip) {
+
     const result = await request(
       `/api/metrics/${encodeURIComponent(ip)}`,
     )
 
+
     return result.metrics || result
+
   },
 
+
+
   async lte(ip) {
+
     const result = await request(
       `/api/lte/${encodeURIComponent(ip)}`,
     )
 
+
     return result.lte || result
+
   },
 
+
+
   routeros(ip) {
+
     return request(
       `/api/v1/devices/${encodeURIComponent(ip)}/routeros`,
     )
+
   },
 
+
+
   traffic(ip) {
+
     return request(
       `/api/v1/devices/${encodeURIComponent(ip)}/traffic`,
     )
+
   },
+
+
 
   trafficHistory(
     ip,
@@ -165,38 +220,116 @@ export const api = {
       window = 10,
     } = {},
   ) {
+
     const searchParams =
       new URLSearchParams({
         minutes: String(minutes),
         window: String(window),
       })
 
+
     if (interfaceName) {
+
       searchParams.set(
         'interface',
         interfaceName,
       )
+
     }
+
 
     return request(
       `/api/v1/devices/${encodeURIComponent(ip)}/traffic/history?${searchParams.toString()}`,
     )
+
   },
+
+
 
   interfaces(
     ip,
     minutes = 15,
   ) {
+
     const searchParams =
       new URLSearchParams({
         minutes: String(minutes),
       })
 
+
     return request(
       `/api/v1/devices/${encodeURIComponent(ip)}/interfaces?${searchParams.toString()}`,
     )
+
   },
+
+
+
+  // =====================================================
+  // H23.4.5.5.12.19
+  // Notification Audit Dashboard Integration
+  // =====================================================
+
+
+  notificationAuditStats() {
+
+    return request(
+      '/api/v1/notifications/audit/stats',
+    )
+
+  },
+
+
+
+  notificationAuditTimeline(
+    period = 'hour',
+  ) {
+
+    return request(
+      `/api/v1/notifications/audit/timeline?period=${period}`,
+    )
+
+  },
+
+
+
+  notificationAuditSearch(
+    params = {},
+  ) {
+
+    const searchParams =
+      new URLSearchParams()
+
+
+    Object.entries(params).forEach(
+      ([key, value]) => {
+
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== ''
+        ) {
+
+          searchParams.set(
+            key,
+            value,
+          )
+
+        }
+
+      },
+    )
+
+
+    return request(
+      `/api/v1/notifications/audit/search?${searchParams.toString()}`,
+    )
+
+  },
+
+
 }
+
 
 
 export { API_BASE_URL }
