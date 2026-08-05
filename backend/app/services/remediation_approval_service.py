@@ -17,8 +17,25 @@ ENGINE_VERSION = (
 )
 
 
-DB_PATH = Path(
-    "/app/data/approval_workflow.db"
+import os
+from pathlib import Path
+
+
+SS4TS_DATA_DIR = os.getenv(
+    "SS4TS_DATA_DIR",
+    "./data",
+)
+
+
+DB_PATH = (
+    Path(SS4TS_DATA_DIR)
+    / "remediation_approval.db"
+)
+
+
+DB_PATH.parent.mkdir(
+    parents=True,
+    exist_ok=True,
 )
 
 

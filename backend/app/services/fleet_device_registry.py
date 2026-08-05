@@ -8,10 +8,28 @@ import uuid
 import os
 
 
+# ==========================================================
+# SS4TS Enterprise Fleet Device Registry
+# H23.4.5.5.12.X.4.8
+# Persistent Fleet Inventory Database
+# ==========================================================
+
+
+DEFAULT_DATA_DIR = Path(
+    os.getenv(
+        "SS4TS_DATA_DIR",
+        "./data",
+    )
+)
+
+
 DB_PATH = Path(
     os.getenv(
         "SS4TS_FLEET_DB",
-        "/var/lib/ss4ts-noc/fleet-registry.db",
+        str(
+            DEFAULT_DATA_DIR
+            / "fleet-registry.db"
+        ),
     )
 )
 
@@ -20,11 +38,15 @@ ENGINE_NAME = (
     "SS4TS Enterprise Fleet Device Registry"
 )
 
+
 ENGINE_VERSION = (
     "1.0.0-production"
 )
 
 
+# ==========================================================
+# Time Helper
+# ==========================================================
 
 def _now():
 
@@ -33,6 +55,9 @@ def _now():
     ).isoformat()
 
 
+# ==========================================================
+# Database Initialization
+# ==========================================================
 
 def _init_db():
 
@@ -73,6 +98,7 @@ def _init_db():
             """
         )
 
+
         conn.commit()
 
 
@@ -80,6 +106,10 @@ def _init_db():
 _init_db()
 
 
+
+# ==========================================================
+# Register Device
+# ==========================================================
 
 def register_device(
     *,
@@ -130,6 +160,9 @@ def register_device(
 
 
 
+# ==========================================================
+# Update Device Health
+# ==========================================================
 
 def update_device_health(
     router_ip: str,
@@ -169,6 +202,10 @@ def update_device_health(
         conn.commit()
 
 
+
+# ==========================================================
+# Get Device
+# ==========================================================
 
 def get_device(
     router_ip: str
@@ -213,7 +250,12 @@ def get_device(
 
 
 
+# ==========================================================
+# List Devices
+# ==========================================================
+
 def list_devices():
+
 
     with sqlite3.connect(DB_PATH) as conn:
 
@@ -231,16 +273,16 @@ def list_devices():
 
         {
 
-        "device_id": r[0],
-        "hostname": r[1],
-        "router_ip": r[2],
-        "site": r[3],
-        "model": r[4],
-        "role": r[5],
-        "status": r[6],
-        "health_score": r[7],
-        "last_seen": r[8],
-        "created_at": r[9],
+            "device_id": r[0],
+            "hostname": r[1],
+            "router_ip": r[2],
+            "site": r[3],
+            "model": r[4],
+            "role": r[5],
+            "status": r[6],
+            "health_score": r[7],
+            "last_seen": r[8],
+            "created_at": r[9],
 
         }
 

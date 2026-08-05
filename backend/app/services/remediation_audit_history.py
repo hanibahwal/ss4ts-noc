@@ -8,10 +8,26 @@ import uuid
 import os
 
 
+# ==========================================================
+# SS4TS Remediation Audit History Database
+# H23.4.5.5.12.X.4.8
+# Autonomous Remediation Audit Timeline
+# ==========================================================
+
+
+SS4TS_DATA_DIR = os.getenv(
+    "SS4TS_DATA_DIR",
+    "./data",
+)
+
+
 DB_PATH = Path(
     os.getenv(
         "SS4TS_REMEDIATION_AUDIT_DB",
-        "/var/lib/ss4ts-noc/remediation-audit.db",
+        str(
+            Path(SS4TS_DATA_DIR)
+            / "remediation-audit.db"
+        ),
     )
 )
 
@@ -20,16 +36,26 @@ ENGINE_NAME = (
     "SS4TS Remediation Audit Timeline Engine"
 )
 
+
 ENGINE_VERSION = (
     "1.1.0-production-volume"
 )
 
 
+# ==========================================================
+# Time Helper
+# ==========================================================
+
 def _now() -> str:
+
     return datetime.now(
         timezone.utc
     ).isoformat()
 
+
+# ==========================================================
+# Database Initialization
+# ==========================================================
 
 def _init_db():
 
@@ -37,6 +63,7 @@ def _init_db():
         parents=True,
         exist_ok=True,
     )
+
 
     with sqlite3.connect(DB_PATH) as conn:
 
@@ -65,6 +92,10 @@ def _init_db():
 _init_db()
 
 
+# ==========================================================
+# Save Remediation History
+# ==========================================================
+
 def save_remediation_history(
     *,
     router_ip: str,
@@ -78,9 +109,11 @@ def save_remediation_history(
     recommendation: str,
 ) -> str:
 
+
     record_id = str(
         uuid.uuid4()
     )
+
 
     with sqlite3.connect(DB_PATH) as conn:
 
@@ -104,12 +137,19 @@ def save_remediation_history(
             ),
         )
 
+
         conn.commit()
+
 
     return record_id
 
 
+# ==========================================================
+# Read Remediation History
+# ==========================================================
+
 def get_remediation_history() -> list[dict[str, Any]]:
+
 
     with sqlite3.connect(DB_PATH) as conn:
 
@@ -121,7 +161,9 @@ def get_remediation_history() -> list[dict[str, Any]]:
             """
         ).fetchall()
 
+
     return [
+
         {
             "id": row[0],
             "router_ip": row[1],
@@ -135,5 +177,7 @@ def get_remediation_history() -> list[dict[str, Any]]:
             "recommendation": row[9],
             "created_at": row[10],
         }
+
         for row in rows
+
     ]

@@ -3,11 +3,43 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from app.database import SessionLocal
+from app.database import (
+    SessionLocal,
+    init_database,
+)
+
 from app.models.prediction_memory import (
     PredictionMemory,
 )
 
+
+# ==========================================================
+# SS4TS AI Prediction Memory Store
+# H23.4.5.5.12.X.4.3
+# AI Prediction Memory Loop
+# ==========================================================
+
+
+SERVICE_NAME = (
+    "SS4TS Prediction Memory Store"
+)
+
+
+SERVICE_VERSION = (
+    "1.1.0-production"
+)
+
+
+# ==========================================================
+# Ensure Database Schema Exists
+# ==========================================================
+
+init_database()
+
+
+# ==========================================================
+# Save Prediction Memory
+# ==========================================================
 
 def save_prediction_memory(
     *,
@@ -17,21 +49,41 @@ def save_prediction_memory(
     """
     Store AI prediction history.
 
+    Flow:
+
+    Network Intelligence
+            |
+            v
+    Prediction Engine
+            |
+            v
+    Prediction Memory
+            |
+            v
+    Learning Loop
+
+
     H23.4.5.5.12.X.4.3
     AI Prediction Memory Loop
     """
+
 
     events = prediction.get(
         "events",
         [],
     )
 
+
     if not events:
+
         events = [
             {
                 "code": "NO_EVENT",
+
                 "metric": None,
+
                 "value": None,
+
                 "confidence_percent":
                     prediction.get(
                         "confidence_percent",
@@ -40,15 +92,23 @@ def save_prediction_memory(
             }
         ]
 
+
+
     db = SessionLocal()
+
 
     try:
 
         for event in events:
 
+
             record = PredictionMemory()
 
-            record.router_ip = router_ip
+
+            record.router_ip = (
+                router_ip
+            )
+
 
             record.prediction_status = (
                 prediction.get(
@@ -57,6 +117,7 @@ def save_prediction_memory(
                 )
             )
 
+
             record.risk_level = (
                 prediction.get(
                     "risk_level",
@@ -64,23 +125,27 @@ def save_prediction_memory(
                 )
             )
 
+
             record.event_code = (
                 event.get(
                     "code"
                 )
             )
 
+
             record.confidence_percent = (
                 event.get(
-                    "confidence_percent"
+                    "confidence_percent",
                 )
             )
+
 
             record.metric = (
                 event.get(
                     "metric"
                 )
             )
+
 
             record.metric_value = json.dumps(
                 event.get(
@@ -89,16 +154,22 @@ def save_prediction_memory(
                 default=str,
             )
 
-            db.add(record)
+
+            db.add(
+                record
+            )
 
 
         db.commit()
 
 
+
     except Exception:
 
         db.rollback()
+
         raise
+
 
 
     finally:
