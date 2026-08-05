@@ -73,3 +73,11 @@ frontend/src-backup-*/
 
 .h23-backups/
 notifications.sqlite3
+backend/config/mikrotik.env
+backend/config/influx.env
+backend/config/lte.env
+# Runtime data
+data/
+
+# duplicated frontend workspace
+frontend/frontend/
