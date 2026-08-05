@@ -1497,6 +1497,7 @@ class NotificationStore:
         *,
         resolved_by: str,
         expected_version: int,
+        resolved_at: datetime | None = None,
     ) -> NotificationIncident:
         current = self.get_incident(
             incident_id
@@ -1517,7 +1518,7 @@ class NotificationStore:
                 ),
             )
 
-        now = _utc_now()
+        now = resolved_at or _utc_now()
 
         updated = replace(
             current,
