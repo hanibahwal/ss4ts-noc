@@ -434,3 +434,4 @@ from app.models.notification_response_approval import (
     NotificationResponseApproval,
     ApprovalStatus,
 )
+from app.models.network_prediction import NetworkPrediction

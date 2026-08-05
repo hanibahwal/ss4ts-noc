@@ -2,8 +2,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   AlertTriangle,
-  XCircle,
-  CheckCircle,
 } from 'lucide-react'
 
 

@@ -3,3 +3,6 @@ uvicorn[standard]==0.35.0
 influxdb-client==1.49.0
 pydantic-settings==2.10.1
 httpx==0.28.1
+requests==2.34.2
+RouterOS-api==0.21.0
+SQLAlchemy==2.0.36

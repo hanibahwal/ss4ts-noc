@@ -1,0 +1,164 @@
+.executive-dashboard {
+
+    padding: 35px;
+
+    min-height: 100vh;
+
+    background:
+    linear-gradient(
+        135deg,
+        #07111f,
+        #12243d
+    );
+
+    color:white;
+
+    font-family:
+    Inter,
+    Arial,
+    sans-serif;
+
+}
+
+
+
+.executive-header h1 {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    font-size:38px;
+
+}
+
+
+
+.executive-header p {
+
+    color:#9fb3cc;
+
+}
+
+
+
+.content-grid {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(2,1fr);
+
+    gap:30px;
+
+    margin-top:30px;
+
+}
+
+
+
+.card {
+
+    background:
+
+    rgba(255,255,255,.08);
+
+    border-radius:22px;
+
+    padding:30px;
+
+    border:
+
+    1px solid
+
+    rgba(255,255,255,.15);
+
+    backdrop-filter:
+
+    blur(12px);
+
+}
+
+
+
+.card h2 {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+
+
+.action {
+
+    display:flex;
+
+    gap:15px;
+
+    padding:15px;
+
+    margin-top:15px;
+
+    background:
+
+    rgba(0,0,0,.25);
+
+    border-radius:15px;
+
+}
+
+
+
+.workflow-buttons {
+
+    display:flex;
+
+    gap:20px;
+
+    margin-top:25px;
+
+}
+
+
+
+button {
+
+    padding:14px 30px;
+
+    border:none;
+
+    border-radius:15px;
+
+    color:white;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+
+
+.approve {
+
+    background:#00c896;
+
+}
+
+
+
+.reject {
+
+    background:#ff4d4f;
+
+}

@@ -1,0 +1,376 @@
+.network-intelligence-panel {
+  display: grid;
+  gap: 22px;
+  overflow: hidden;
+}
+
+.network-intelligence-header,
+.network-intelligence-title,
+.network-intelligence-header__actions,
+.network-intelligence-section-title {
+  display: flex;
+  align-items: center;
+}
+
+.network-intelligence-header {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.network-intelligence-title {
+  gap: 14px;
+}
+
+.network-intelligence-title__icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgba(55, 136, 255, 0.28);
+  border-radius: 15px;
+  color: #69a7ff;
+  background: rgba(55, 136, 255, 0.1);
+}
+
+.network-intelligence-title h3,
+.network-intelligence-section-title h4 {
+  margin: 3px 0;
+}
+
+.network-intelligence-title > div > span {
+  color: var(--text-muted, #7f91a8);
+  font-size: 0.88rem;
+}
+
+.network-intelligence-header__actions {
+  gap: 10px;
+}
+
+.network-intelligence-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 11px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.045);
+  cursor: pointer;
+}
+
+.network-intelligence-refresh:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.network-intelligence-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.network-intelligence-error {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 92, 92, 0.25);
+  border-radius: 12px;
+  color: #ff9c9c;
+  background: rgba(255, 64, 64, 0.08);
+}
+
+.network-intelligence-overview {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.75fr) minmax(320px, 1.25fr);
+  gap: 18px;
+}
+
+.network-intelligence-gauges {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(105px, 1fr));
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.network-intelligence-summary,
+.network-intelligence-components {
+  display: grid;
+  gap: 12px;
+}
+
+.network-intelligence-summary {
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+}
+
+.network-intelligence-components {
+  grid-template-columns: repeat(3, minmax(170px, 1fr));
+}
+
+.network-intelligence-metric {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.network-intelligence-metric__icon {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  color: #69a7ff;
+  background: rgba(55, 136, 255, 0.1);
+}
+
+.network-intelligence-metric > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.network-intelligence-metric span,
+.network-intelligence-metric small {
+  color: var(--text-muted, #7f91a8);
+}
+
+.network-intelligence-metric strong {
+  overflow: hidden;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.network-intelligence-section-title {
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.network-intelligence-section-title > span {
+  display: grid;
+  min-width: 31px;
+  height: 31px;
+  place-items: center;
+  border-radius: 10px;
+  color: #8ebaff;
+  background: rgba(55, 136, 255, 0.1);
+}
+
+.network-intelligence-sources-section {
+  padding: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.network-intelligence-sources-section .ss-ui-progress {
+  width: min(260px, 45%);
+}
+
+.network-intelligence-sources {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.network-intelligence-source {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.network-intelligence-source svg {
+  grid-row: 1 / span 2;
+}
+
+.network-intelligence-source strong {
+  font-size: 0.78rem;
+}
+
+.network-intelligence-source.available {
+  color: #54dda7;
+}
+
+.network-intelligence-source.unavailable {
+  color: #ff8585;
+}
+
+.network-intelligence-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.network-intelligence-findings,
+.network-intelligence-recommendations {
+  display: grid;
+  gap: 10px;
+}
+
+.network-intelligence-finding {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.network-intelligence-finding__icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+}
+
+.network-intelligence-finding header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.network-intelligence-finding header span {
+  font-size: 0.78rem;
+}
+
+.network-intelligence-finding p {
+  margin: 7px 0;
+  color: var(--text-secondary, #aebacc);
+}
+
+.network-intelligence-finding small {
+  color: var(--text-muted, #7f91a8);
+}
+
+.network-intelligence-finding.critical {
+  border-color: rgba(255, 75, 75, 0.22);
+}
+
+.network-intelligence-finding.critical
+.network-intelligence-finding__icon {
+  color: #ff7777;
+  background: rgba(255, 75, 75, 0.1);
+}
+
+.network-intelligence-finding.warning,
+.network-intelligence-finding.high {
+  border-color: rgba(255, 181, 71, 0.2);
+}
+
+.network-intelligence-finding.warning
+.network-intelligence-finding__icon,
+.network-intelligence-finding.high
+.network-intelligence-finding__icon {
+  color: #ffc468;
+  background: rgba(255, 181, 71, 0.1);
+}
+
+.network-intelligence-finding.info
+.network-intelligence-finding__icon {
+  color: #72aaff;
+  background: rgba(55, 136, 255, 0.1);
+}
+
+.network-intelligence-recommendations > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid rgba(55, 136, 255, 0.13);
+  border-radius: 14px;
+  background: rgba(55, 136, 255, 0.045);
+}
+
+.network-intelligence-recommendations > div > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  color: #8ebaff;
+  background: rgba(55, 136, 255, 0.12);
+}
+
+.network-intelligence-recommendations p {
+  margin: 3px 0 0;
+  color: var(--text-secondary, #aebacc);
+}
+
+.network-intelligence-empty,
+.network-intelligence-loading {
+  display: flex;
+  min-height: 130px;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  color: var(--text-muted, #7f91a8);
+}
+
+.network-intelligence-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-muted, #7f91a8);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 1100px) {
+  .network-intelligence-overview,
+  .network-intelligence-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .network-intelligence-components {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .network-intelligence-sources {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .network-intelligence-header,
+  .network-intelligence-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .network-intelligence-header__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .network-intelligence-summary,
+  .network-intelligence-components,
+  .network-intelligence-sources {
+    grid-template-columns: 1fr;
+  }
+
+  .network-intelligence-gauges {
+    grid-template-columns: repeat(2, minmax(90px, 1fr));
+  }
+
+  .network-intelligence-sources-section .ss-ui-progress {
+    width: 100%;
+  }
+}

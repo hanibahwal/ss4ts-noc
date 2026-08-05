@@ -25,6 +25,7 @@ import {
 
 import StatCard from '../components/dashboard/StatCard'
 import DeviceHealthCenter from '../components/device/DeviceHealthCenter'
+import NetworkIntelligenceCenter from '../components/device/NetworkIntelligenceCenter'
 import DecisionIntelligenceCenter from '../components/device/DecisionIntelligenceCenter'
 import InterfacesTable from '../components/device/InterfacesTable'
 import LiveTrafficChart from '../components/device/LiveTrafficChart'
@@ -453,6 +454,11 @@ export default function DeviceDetails() {
             interfaces={
               interfacesSnapshot.interfaces
             }
+          />
+
+          <NetworkIntelligenceCenter
+            ip={decodedIp}
+            refreshInterval={30000}
           />
 
           <DecisionIntelligenceCenter

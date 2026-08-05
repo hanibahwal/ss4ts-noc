@@ -1598,3 +1598,6 @@ def analyze_decision_intelligence(
                 selected_speed,
         },
     }
+
+# Integration flag: ready for Executive Notification bridge
+EXECUTIVE_NOTIFICATION_READY = True

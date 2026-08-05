@@ -29,6 +29,9 @@ import Header from '../components/layout/Header'
 import RecentEvents from '../components/dashboard/RecentEvents'
 
 
+import ExecutiveNarrativeCard from '../components/dashboard/ExecutiveNarrativeCard'
+
+
 import NotificationAuditIntelligenceCard from '../components/dashboard/NotificationAuditIntelligenceCard'
 
 
@@ -428,6 +431,8 @@ export default function Dashboard() {
       detected,
     )
 
+  }
+
   function appendTraffic(metricMap){
 
 
@@ -770,7 +775,7 @@ export default function Dashboard() {
 
 
 
-  }
+
 
 
   const summary =
@@ -964,6 +969,26 @@ export default function Dashboard() {
 
 
 
+  const executiveDeviceIp =
+    useMemo(() => {
+      const onlineDevice =
+        devices.find(
+          device =>
+            device.status === 'online',
+        )
+
+      return (
+        onlineDevice?.ip ||
+        devices[0]?.ip ||
+        ''
+      )
+    }, [
+      devices,
+    ])
+
+
+
+
   const topCpuDevices =
 
     useMemo(()=>{
@@ -1015,8 +1040,8 @@ export default function Dashboard() {
 
       metrics,
 
-    ])  
-  
+    ])
+
 
 
 return (
@@ -1221,6 +1246,22 @@ return (
 
 
 
+{/* =====================================================
+    H23.4.5.5.12.X.4.0.4
+    Executive AI Narrative Dashboard Card
+===================================================== */}
+
+<ExecutiveNarrativeCard
+  ip={
+    executiveDeviceIp
+  }
+  refreshInterval={
+    30000
+  }
+/>
+
+
+
 <TrafficChart
 
  data={
@@ -1360,8 +1401,8 @@ return (
 
 )
 
-}  
+}
 
 
 
-  
+
