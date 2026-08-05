@@ -15,8 +15,19 @@ from sqlalchemy.orm import sessionmaker
 # ==========================================================
 
 
+# ==========================================================
+# Database Storage Directory
+# ==========================================================
+
+DEFAULT_DATA_DIR = os.getenv(
+    "SS4TS_DATA_DIR",
+    "./data",
+)
+
+
 DEFAULT_DATABASE_PATH = (
-    "/var/lib/ss4ts-noc/ss4ts.db"
+    Path(DEFAULT_DATA_DIR)
+    / "ss4ts.db"
 )
 
 
@@ -50,6 +61,7 @@ if DATABASE_URL.startswith("sqlite:///"):
         database_path.parent
     )
 
+
     database_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -61,6 +73,7 @@ if DATABASE_URL.startswith("sqlite:///"):
 # ==========================================================
 
 connect_args = {}
+
 
 if DATABASE_URL.startswith(
     "sqlite"
@@ -102,6 +115,7 @@ class Base(
 # ==========================================================
 # Database Initialization
 # ==========================================================
+
 def init_database() -> None:
     """
     Initialize SS4TS database tables.
@@ -109,16 +123,21 @@ def init_database() -> None:
     Loads all AI memory models before creation.
     """
 
-    # Import models to register tables
+    # Register models
+
     from app.models.prediction_memory import (
         PredictionMemory,
     )
 
+
     try:
+
         from app.models.failure_forecast import (
             FailureForecast,
         )
+
     except ImportError:
+
         FailureForecast = None
 
 
