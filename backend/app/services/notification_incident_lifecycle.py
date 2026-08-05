@@ -52,7 +52,7 @@ def calculate_incident_downtime_seconds(
     end_time = (
         incident.resolved_at
         or at
-        or _utc_now()
+        or incident.last_seen_at
     )
 
     seconds = (
@@ -85,8 +85,10 @@ class NotificationIncidentLifecycle:
     def __init__(
         self,
         store: NotificationStore,
+        clock=None,
     ) -> None:
         self.store = store
+        self.clock = clock or _utc_now
 
     @staticmethod
     def _incident_metadata(
@@ -528,6 +530,7 @@ class NotificationIncidentLifecycle:
         *,
         resolved_by: str,
         expected_version: int | None = None,
+        resolved_at: datetime | None = None,
     ) -> IncidentLifecycleResult:
         actor = resolved_by.strip()
 
@@ -584,6 +587,11 @@ class NotificationIncidentLifecycle:
                 incident_id,
                 resolved_by=actor,
                 expected_version=version,
+                resolved_at=(
+                    resolved_at
+                    or incident.last_seen_at
+                    or self.clock()
+                ),
             )
         except NotificationVersionConflict:
             raise
