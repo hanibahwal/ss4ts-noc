@@ -9,6 +9,7 @@ from app.api.v1.ai import router as ai_router
 from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.decision_intelligence import router as decision_intelligence_router
 from app.api.v1.decision_audits import router as decision_audits_router
+from app.api.v1.decision_executions import router as decision_executions_router
 
 from app.api.v1.execution_authorizations import router as execution_authorizations_router
 from app.api.v1.execution_leases import router as execution_leases_router
@@ -70,6 +71,7 @@ for router in [
     dashboard_router,
     decision_intelligence_router,
     decision_audits_router,
+    decision_executions_router,
 
     execution_authorizations_router,
     execution_leases_router,
