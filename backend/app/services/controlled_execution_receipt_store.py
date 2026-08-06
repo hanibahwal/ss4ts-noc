@@ -433,6 +433,93 @@ class ControlledExecutionReceiptStore:
 
         return receipts
 
+    def started_before(
+        self,
+        cutoff_at: str,
+        *,
+        limit: int = 100,
+    ) -> list[ControlledExecutionReceipt]:
+        """
+        Return STARTED receipts older than the recovery cutoff.
+        """
+        safe_limit = max(
+            1,
+            min(
+                int(limit),
+                500,
+            ),
+        )
+
+        normalized_cutoff = str(
+            cutoff_at
+        ).strip()
+
+        if not normalized_cutoff:
+            raise ValueError(
+                "cutoff_at is required"
+            )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            rows = connection.execute(
+                """
+                SELECT *
+                FROM controlled_execution_receipts
+                WHERE status='STARTED'
+                  AND started_at<=?
+                ORDER BY started_at
+                LIMIT ?
+                """,
+                (
+                    normalized_cutoff,
+                    safe_limit,
+                ),
+            ).fetchall()
+
+        receipts = []
+
+        for row in rows:
+            receipt = self._receipt(
+                row
+            )
+
+            if not receipt.verify(
+                row["checksum"]
+            ):
+                raise ValueError(
+                    "Execution receipt checksum mismatch"
+                )
+
+            receipts.append(
+                receipt
+            )
+
+        return receipts
+
+    def has_receipt_for_approval(
+        self,
+        approval_id: str,
+    ) -> bool:
+        with closing(
+            self._connect()
+        ) as connection:
+            row = connection.execute(
+                """
+                SELECT 1
+                FROM controlled_execution_receipts
+                WHERE approval_id=?
+                LIMIT 1
+                """,
+                (
+                    str(
+                        approval_id
+                    ).strip(),
+                ),
+            ).fetchone()
+
+        return row is not None
+
 
 receipt_store = (
     ControlledExecutionReceiptStore()

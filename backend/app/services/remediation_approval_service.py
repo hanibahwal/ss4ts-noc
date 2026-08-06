@@ -808,3 +808,145 @@ def finalize_approval_execution(
     return get_approval_by_id(
         approval_id
     )
+
+
+def get_executing_approvals(
+) -> list[dict[str, Any]]:
+    """
+    Return approvals left in EXECUTING state.
+
+    Used only by controlled-execution recovery reconciliation.
+    """
+    with _connect() as connection:
+        rows = connection.execute(
+            """
+            SELECT *
+            FROM approvals
+            WHERE status='EXECUTING'
+            ORDER BY created_at
+            """
+        ).fetchall()
+
+    return [
+        item
+        for row in rows
+        if (
+            item := _row_to_dict(
+                row
+            )
+        ) is not None
+    ]
+
+
+def recover_executing_approval_as_failed(
+    approval_id: str,
+) -> dict[str, Any] | None:
+    """
+    Atomically recover an orphan EXECUTING approval.
+
+    EXECUTING -> EXECUTION_FAILED
+    """
+    normalized_id = str(
+        approval_id
+    ).strip()
+
+    if not normalized_id:
+        return None
+
+    with _connect() as connection:
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+        cursor = connection.execute(
+            """
+            UPDATE approvals
+            SET status='EXECUTION_FAILED'
+            WHERE approval_id=?
+              AND status='EXECUTING'
+            """,
+            (
+                normalized_id,
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            connection.rollback()
+            return None
+
+        connection.commit()
+
+    return get_approval_by_id(
+        normalized_id
+    )
+
+
+def get_executing_approvals(
+) -> list[dict[str, Any]]:
+    """
+    Return approvals left in EXECUTING state.
+
+    Used only by controlled-execution recovery reconciliation.
+    """
+    with _connect() as connection:
+        rows = connection.execute(
+            """
+            SELECT *
+            FROM approvals
+            WHERE status='EXECUTING'
+            ORDER BY created_at
+            """
+        ).fetchall()
+
+    return [
+        item
+        for row in rows
+        if (
+            item := _row_to_dict(
+                row
+            )
+        ) is not None
+    ]
+
+
+def recover_executing_approval_as_failed(
+    approval_id: str,
+) -> dict[str, Any] | None:
+    """
+    Atomically recover an orphan EXECUTING approval.
+
+    EXECUTING -> EXECUTION_FAILED
+    """
+    normalized_id = str(
+        approval_id
+    ).strip()
+
+    if not normalized_id:
+        return None
+
+    with _connect() as connection:
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+        cursor = connection.execute(
+            """
+            UPDATE approvals
+            SET status='EXECUTION_FAILED'
+            WHERE approval_id=?
+              AND status='EXECUTING'
+            """,
+            (
+                normalized_id,
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            connection.rollback()
+            return None
+
+        connection.commit()
+
+    return get_approval_by_id(
+        normalized_id
+    )

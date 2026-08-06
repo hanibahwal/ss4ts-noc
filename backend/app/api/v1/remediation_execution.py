@@ -16,6 +16,9 @@ from app.services.controlled_execution_gate import (
 from app.services.controlled_execution_receipt_store import (
     receipt_store,
 )
+from app.services.controlled_execution_recovery import (
+    recovery_service,
+)
 
 
 router = APIRouter(
@@ -154,4 +157,23 @@ def approval_execution_receipts(
             for receipt in receipts
         ],
     }
+
+@router.post(
+    "/executions/recovery/reconcile"
+)
+def reconcile_controlled_executions(
+    stale_after_seconds: int = 300,
+    limit: int = 100,
+) -> dict[str, Any]:
+    try:
+        return recovery_service.reconcile(
+            stale_after_seconds=
+                stale_after_seconds,
+            limit=limit,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
 
