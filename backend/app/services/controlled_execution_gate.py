@@ -12,6 +12,9 @@ from app.services.remediation_approval_service import (
     get_approval_by_id,
     validate_execution_intent,
 )
+from app.services.controlled_execution_receipt_store import (
+    receipt_store,
+)
 
 
 SERVICE_NAME = (
@@ -240,6 +243,28 @@ def execute_controlled_remediation(
         uuid.uuid4()
     )
 
+    receipt_store.create_started(
+        execution_id=execution_id,
+        approval_id=approval_id,
+        intent_fingerprint=(
+            intent_validation[
+                "intent"
+            ][
+                "intent_fingerprint"
+            ]
+        ),
+        intent_version=(
+            intent_validation[
+                "intent"
+            ][
+                "intent_version"
+            ]
+        ),
+        router_ip=approved_router_ip,
+        action_type=approved_action_type,
+        approval_status_before="APPROVED",
+    )
+
     try:
         completed = (
             finalize_approval_execution(
@@ -252,6 +277,15 @@ def execute_controlled_remediation(
             raise RuntimeError(
                 "Approval finalization failed"
             )
+
+        receipt = receipt_store.finalize(
+            execution_id,
+            status="SIMULATED_SUCCESS",
+            approval_status_after="EXECUTED",
+            verification_status=(
+                "SIMULATED_VERIFIED"
+            ),
+        )
 
         result = _response(
             status="SIMULATED_SUCCESS",
@@ -285,15 +319,34 @@ def execute_controlled_remediation(
                 "SIMULATED_VERIFIED",
             "approval_consumed":
                 True,
+            "receipt":
+                receipt.to_dict(),
         })
 
         return result
 
     except Exception as exc:
-        finalize_approval_execution(
-            approval_id,
-            succeeded=False,
+        failed_approval = (
+            finalize_approval_execution(
+                approval_id,
+                succeeded=False,
+            )
         )
+
+        try:
+            receipt_store.finalize(
+                execution_id,
+                status="FAILED",
+                approval_status_after=(
+                    "EXECUTION_FAILED"
+                ),
+                verification_status=(
+                    "FAILED"
+                ),
+                failure_reason=str(exc),
+            )
+        except Exception:
+            pass
 
         return _response(
             status="FAILED",

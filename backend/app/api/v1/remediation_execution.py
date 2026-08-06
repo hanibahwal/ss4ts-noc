@@ -13,6 +13,9 @@ from app.services.remediation_approval_service import (
 from app.services.controlled_execution_gate import (
     execute_controlled_remediation,
 )
+from app.services.controlled_execution_receipt_store import (
+    receipt_store,
+)
 
 
 router = APIRouter(
@@ -95,3 +98,60 @@ def execute(
 
 
     return result
+
+@router.get(
+    "/executions/{execution_id}/receipt"
+)
+def execution_receipt(
+    execution_id: str,
+) -> dict[str, Any]:
+    try:
+        receipt = receipt_store.get(
+            execution_id
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=str(exc),
+        ) from exc
+
+    if receipt is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Execution receipt not found",
+        )
+
+    return {
+        "receipt": receipt.to_dict(),
+    }
+
+
+@router.get(
+    "/{approval_id}/execution-receipts"
+)
+def approval_execution_receipts(
+    approval_id: str,
+    limit: int = 50,
+) -> dict[str, Any]:
+    try:
+        receipts = (
+            receipt_store.by_approval(
+                approval_id,
+                limit=limit,
+            )
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=str(exc),
+        ) from exc
+
+    return {
+        "approval_id": approval_id,
+        "count": len(receipts),
+        "receipts": [
+            receipt.to_dict()
+            for receipt in receipts
+        ],
+    }
+
