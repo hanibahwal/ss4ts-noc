@@ -391,7 +391,7 @@ class ExecutionRecoveryService:
             >= timeout_seconds
         )
 
-    def recover_worker(
+    def _recover_worker_atomic(
         self,
         worker_id: str,
     ) -> ExecutionRecovery:
@@ -946,6 +946,54 @@ class ExecutionRecoveryService:
         return self._record_from_row(
             recovery_row
         )
+
+    def recover_worker(
+        self,
+        worker_id: str,
+    ) -> ExecutionRecovery:
+        recovery = (
+            self._recover_worker_atomic(
+                worker_id
+            )
+        )
+
+        try:
+            from app.services.decision_execution_recovery import (
+                reconcile_decision_execution_recovery,
+            )
+
+            reconciliation = (
+                reconcile_decision_execution_recovery(
+                    recovery
+                )
+            )
+
+            recovery.metadata[
+                "decision_runtime_reconciliation"
+            ] = reconciliation.to_dict()
+
+        except Exception as exc:
+            # Lease and heartbeat recovery has already committed.
+            # A secondary Decision Runtime synchronization failure
+            # must not roll back or misreport the primary recovery.
+            recovery.metadata[
+                "decision_runtime_reconciliation"
+            ] = {
+                "reconciled":
+                    False,
+                "reason":
+                    "reconciliation_error",
+                "error_type":
+                    type(exc).__name__,
+                "error":
+                    str(exc),
+                "network_io_performed":
+                    False,
+                "device_command_executed":
+                    False,
+            }
+
+        return recovery
 
     def recover_stale_workers(
         self,
