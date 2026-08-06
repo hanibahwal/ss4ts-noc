@@ -404,6 +404,13 @@ async def simulate_decision_execution(
                 )
             )
 
+            runtime.update(
+                action=item.action,
+                plan=item.plan,
+                authorization_id=
+                    authorization_id,
+            )
+
         lease_store = ExecutionLeaseStore(
             authorization_store
             .database_path
@@ -431,6 +438,13 @@ async def simulate_decision_execution(
             fail_step_ids=(
                 payload.fail_step_ids
             ),
+        )
+
+        runtime.update(
+            action=execution.action,
+            plan=item.plan,
+            authorization_id=
+                authorization_id,
         )
 
         evidence_builder = (

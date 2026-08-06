@@ -48,6 +48,11 @@ def execution_environment(
         / "decision-audit.db"
     )
 
+    runtime_database = (
+        tmp_path
+        / "decision-execution-runtime.db"
+    )
+
     monkeypatch.setenv(
         "SS4TS_EXECUTION_AUTH_DB",
         str(authorization_database),
@@ -58,18 +63,23 @@ def execution_environment(
         str(audit_database),
     )
 
-    runtime._items.clear()
-    runtime.action_service._actions.clear()
+    monkeypatch.setenv(
+        "SS4TS_DECISION_RUNTIME_DB",
+        str(runtime_database),
+    )
+
+    runtime.clear()
 
     yield {
         "authorization_database":
             authorization_database,
         "audit_database":
             audit_database,
+        "runtime_database":
+            runtime_database,
     }
 
-    runtime._items.clear()
-    runtime.action_service._actions.clear()
+    runtime.clear()
 
 
 def prepare_payload():
