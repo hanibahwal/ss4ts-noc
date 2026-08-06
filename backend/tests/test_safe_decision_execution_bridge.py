@@ -26,6 +26,9 @@ from app.services.decision_approval_gateway import (
 from app.services.execution_authorization_store import (
     ExecutionAuthorizationStore,
 )
+from app.services.execution_lease_store import (
+    ExecutionLeaseStore,
+)
 from app.services.safe_decision_execution_bridge import (
     SafeDecisionExecutionBindingError,
     SafeDecisionExecutionBridge,
@@ -100,12 +103,17 @@ def make_services(
         authorization_store=authorization_store,
     )
 
+    lease_store = ExecutionLeaseStore(
+        authorization_store.database_path
+    )
+
     execution_bridge = (
         SafeDecisionExecutionBridge(
             action_service=action_service,
             authorization_store=(
                 authorization_store
             ),
+            lease_store=lease_store,
         )
     )
 
@@ -274,9 +282,15 @@ def test_bridge_performs_dry_run_only(
 
     assert payload["safety"] == {
         "dry_run_only": True,
+        "lease_enforced": True,
         "network_io_performed": False,
         "device_command_executed": False,
     }
+
+    assert payload["lease"]["status"] == "released"
+    assert payload["lease"]["lease_version"] == 2
+    assert payload["lease"]["token_exposed"] is False
+    assert "lease_token" not in payload["lease"]
 
     assert result.simulation.dry_run is True
 
@@ -674,3 +688,200 @@ def test_result_serializes(
         ]
         is False
     )
+
+
+def test_execution_releases_lease(
+    tmp_path,
+) -> None:
+    (
+        _,
+        authorization_store,
+        execution_bridge,
+        action,
+        plan,
+        authorization_id,
+    ) = prepare_approved_execution(
+        tmp_path
+    )
+
+    result = execution_bridge.execute(
+        decision_id=action.decision_id,
+        authorization_id=authorization_id,
+        plan=plan,
+        owner_id="worker:primary",
+    )
+
+    assert result.lease.status.value == "released"
+    assert result.lease.owner_id == "worker:primary"
+    assert result.lease.lease_version == 2
+    assert result.lease.is_active is False
+
+    lease_store = ExecutionLeaseStore(
+        authorization_store.database_path
+    )
+
+    events = lease_store.events(
+        result.lease.lease_id
+    )
+
+    assert [
+        event["event_type"]
+        for event in events
+    ] == [
+        "acquired",
+        "released",
+    ]
+
+
+def test_active_lease_blocks_second_worker(
+    tmp_path,
+) -> None:
+    (
+        _,
+        authorization_store,
+        execution_bridge,
+        action,
+        plan,
+        authorization_id,
+    ) = prepare_approved_execution(
+        tmp_path
+    )
+
+    lease_store = ExecutionLeaseStore(
+        authorization_store.database_path
+    )
+
+    held = lease_store.acquire(
+        authorization_id,
+        owner_id="worker:first",
+        ttl_seconds=60,
+    )
+
+    from app.models.execution_lease import (
+        LeaseConflict,
+    )
+
+    with pytest.raises(
+        LeaseConflict,
+    ) as exc:
+        execution_bridge.execute(
+            decision_id=action.decision_id,
+            authorization_id=authorization_id,
+            plan=plan,
+            owner_id="worker:second",
+        )
+
+    assert exc.value.owner_id == "worker:first"
+
+    stored = authorization_store.get(
+        authorization_id
+    )
+
+    assert stored is not None
+    assert stored.consumed is False
+
+    lease_store.release(
+        held.lease_id,
+        lease_token=held.lease_token,
+        expected_version=held.lease_version,
+    )
+
+
+def test_execution_result_hides_lease_token(
+    tmp_path,
+) -> None:
+    (
+        _,
+        _,
+        execution_bridge,
+        action,
+        plan,
+        authorization_id,
+    ) = prepare_approved_execution(
+        tmp_path
+    )
+
+    result = execution_bridge.execute(
+        decision_id=action.decision_id,
+        authorization_id=authorization_id,
+        plan=plan,
+    )
+
+    payload = result.to_dict()
+
+    assert "lease_token" not in payload["lease"]
+    assert payload["lease"]["token_exposed"] is False
+    assert payload["safety"]["lease_enforced"] is True
+
+
+def test_invalid_lease_owner_is_rejected(
+    tmp_path,
+) -> None:
+    (
+        _,
+        authorization_store,
+        execution_bridge,
+        action,
+        plan,
+        authorization_id,
+    ) = prepare_approved_execution(
+        tmp_path
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="owner_id",
+    ):
+        execution_bridge.execute(
+            decision_id=action.decision_id,
+            authorization_id=authorization_id,
+            plan=plan,
+            owner_id=" ",
+        )
+
+    stored = authorization_store.get(
+        authorization_id
+    )
+
+    assert stored is not None
+    assert stored.consumed is False
+
+
+def test_bridge_requires_shared_database(
+    tmp_path,
+) -> None:
+    authorization_database = (
+        tmp_path / "authorization.db"
+    )
+
+    other_database = (
+        tmp_path / "other.db"
+    )
+
+    action_service = DecisionActionService()
+
+    authorization_store = (
+        ExecutionAuthorizationStore(
+            authorization_database
+        )
+    )
+
+    ExecutionAuthorizationStore(
+        other_database
+    )
+
+    lease_store = ExecutionLeaseStore(
+        other_database
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="same database",
+    ):
+        SafeDecisionExecutionBridge(
+            action_service=action_service,
+            authorization_store=(
+                authorization_store
+            ),
+            lease_store=lease_store,
+        )
