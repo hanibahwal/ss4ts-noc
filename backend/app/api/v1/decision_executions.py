@@ -208,6 +208,34 @@ def _identity(
     )
 
 
+@router.get("/readiness")
+async def decision_execution_readiness(
+) -> dict:
+    """
+    Report Decision Orchestration persistence readiness.
+
+    This endpoint performs local database validation only. It does not
+    execute network commands or contact managed devices.
+    """
+    readiness = runtime.readiness()
+
+    return {
+        "component":
+            "decision-execution-runtime",
+        **readiness,
+        "safety": {
+            "payloads_exposed":
+                False,
+            "lease_tokens_exposed":
+                False,
+            "network_io_performed":
+                False,
+            "device_command_executed":
+                False,
+        },
+    }
+
+
 @router.post("/prepare")
 async def prepare_decision_execution(
     payload: PrepareDecisionExecutionPayload,

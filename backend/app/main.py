@@ -18,6 +18,9 @@ from app.core.config import settings
 from app.main_legacy import app as legacy_app
 
 
+from app.services.decision_execution_runtime import (
+    runtime as decision_execution_runtime,
+)
 from app.services.execution_recovery_scheduler_runtime import (
     get_recovery_scheduler_runtime,
     runtime_enabled_from_environment,
@@ -31,6 +34,12 @@ async def lifespan(
 ):
 
     runtime = None
+
+    decision_execution_runtime.initialize()
+
+    application.state.decision_execution_runtime = (
+        decision_execution_runtime
+    )
 
 
     if runtime_enabled_from_environment():

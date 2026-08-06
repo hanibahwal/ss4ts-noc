@@ -681,6 +681,84 @@ class DecisionExecutionRuntime:
 
         return int(row["total"])
 
+    def readiness(self) -> dict[str, Any]:
+        """
+        Validate persistent runtime availability.
+
+        This performs local SQLite coordination only. It does not load
+        DecisionAction payloads, expose secrets, contact managed devices,
+        or execute network commands.
+        """
+        database_path = self.database_path
+
+        try:
+            self.initialize()
+
+            with closing(
+                self._connect()
+            ) as connection:
+                connection.execute(
+                    "BEGIN IMMEDIATE"
+                )
+
+                row = connection.execute(
+                    """
+                    SELECT COUNT(*) AS total
+                    FROM decision_execution_runtime
+                    """
+                ).fetchone()
+
+                quick_check = connection.execute(
+                    "PRAGMA quick_check"
+                ).fetchone()
+
+                connection.rollback()
+
+            integrity = (
+                str(quick_check[0])
+                if quick_check is not None
+                else "unknown"
+            )
+
+            return {
+                "status": (
+                    "ready"
+                    if integrity == "ok"
+                    else "degraded"
+                ),
+                "initialized": True,
+                "database_reachable": True,
+                "database_writable": True,
+                "integrity": integrity,
+                "record_count": int(
+                    row["total"]
+                ),
+                "database_path": str(
+                    database_path
+                ),
+                "persistent": True,
+                "network_io_performed": False,
+                "device_command_executed": False,
+            }
+
+        except Exception as exc:
+            return {
+                "status": "not_ready",
+                "initialized": False,
+                "database_reachable": False,
+                "database_writable": False,
+                "integrity": "unknown",
+                "record_count": None,
+                "database_path": str(
+                    database_path
+                ),
+                "persistent": True,
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+                "network_io_performed": False,
+                "device_command_executed": False,
+            }
+
     def clear(self) -> int:
         self.initialize()
 
