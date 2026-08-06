@@ -31,6 +31,9 @@ from app.api.v1.controlled_execution_production_readiness import (
 
 from app.api.v1.health import router as health_router
 from app.api.v1.knowledge_graph import router as knowledge_graph_router
+from app.api.v1.autonomous_proposal_binding import (
+    router as autonomous_proposal_binding_router,
+)
 
 from app.api.v1.notification import router as notification_router
 from app.api.v1.notification_audit import router as notification_audit_router
@@ -98,6 +101,7 @@ for router in [
 
     health_router,
     knowledge_graph_router,
+    autonomous_proposal_binding_router,
 
     notification_router,
     notification_audit_router,
