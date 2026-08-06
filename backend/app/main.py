@@ -25,6 +25,10 @@ from app.services.execution_recovery_scheduler_runtime import (
     get_recovery_scheduler_runtime,
     runtime_enabled_from_environment,
 )
+from app.services.controlled_execution_recovery_runtime import (
+    get_controlled_recovery_runtime,
+    runtime_enabled_from_environment as controlled_recovery_runtime_enabled,
+)
 
 
 
@@ -34,6 +38,7 @@ async def lifespan(
 ):
 
     runtime = None
+    controlled_recovery_runtime = None
 
     decision_execution_runtime.initialize()
 
@@ -52,7 +57,16 @@ async def lifespan(
 
         application.state.recovery_scheduler_runtime = runtime
 
+    if controlled_recovery_runtime_enabled():
+        controlled_recovery_runtime = (
+            get_controlled_recovery_runtime()
+        )
 
+        await controlled_recovery_runtime.start()
+
+        application.state.controlled_recovery_runtime = (
+            controlled_recovery_runtime
+        )
 
     try:
 
@@ -62,8 +76,10 @@ async def lifespan(
 
     finally:
 
-        if runtime is not None:
+        if controlled_recovery_runtime is not None:
+            await controlled_recovery_runtime.stop()
 
+        if runtime is not None:
             await runtime.stop()
 
 

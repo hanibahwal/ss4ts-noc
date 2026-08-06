@@ -19,6 +19,9 @@ from app.api.v1.execution_recovery_scheduler import router as execution_recovery
 from app.api.v1.execution_recovery_runtime import router as execution_recovery_runtime_router
 from app.api.v1.execution_runtime_observability import router as execution_runtime_observability_router
 from app.api.v1.execution_runtime_prometheus import router as execution_runtime_prometheus_router
+from app.api.v1.controlled_execution_recovery_runtime import (
+    router as controlled_execution_recovery_runtime_router,
+)
 
 from app.api.v1.health import router as health_router
 from app.api.v1.knowledge_graph import router as knowledge_graph_router
@@ -83,6 +86,7 @@ for router in [
 
     execution_runtime_observability_router,
     execution_runtime_prometheus_router,
+    controlled_execution_recovery_runtime_router,
 
     health_router,
     knowledge_graph_router,
