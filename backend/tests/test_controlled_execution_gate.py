@@ -44,12 +44,16 @@ def _approved_request(
         "approval"
     ]["approval_id"]
 
-    return (
+    approved = (
         remediation_approval_service
         .approve_request(
             approval_id
         )
     )
+
+    assert approved["success"] is True
+
+    return approved["approval"]
 
 
 def test_gate_defaults_to_disabled(

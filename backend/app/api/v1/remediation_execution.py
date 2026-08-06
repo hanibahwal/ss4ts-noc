@@ -83,8 +83,6 @@ def approve(
 )
 def execute(
     approval_id: str,
-    router_ip: str,
-    action_type: str,
 ) -> dict[str, Any]:
     """
     Execute approved remediation.
@@ -93,8 +91,6 @@ def execute(
 
     result = execute_controlled_remediation(
         approval_id=approval_id,
-        requested_router_ip=router_ip,
-        requested_action_type=action_type,
     )
 
 

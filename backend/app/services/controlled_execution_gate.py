@@ -10,6 +10,7 @@ from app.services.remediation_approval_service import (
     claim_approval_for_execution,
     finalize_approval_execution,
     get_approval_by_id,
+    validate_execution_intent,
 )
 
 
@@ -110,6 +111,22 @@ def execute_controlled_remediation(
             status="REJECTED",
             approval_id=approval_id,
             reason="Approval is not executable",
+            approval=approval,
+        )
+
+    intent_validation = (
+        validate_execution_intent(
+            approval_id
+        )
+    )
+
+    if not intent_validation["valid"]:
+        return _response(
+            status="REJECTED",
+            approval_id=approval_id,
+            reason=str(
+                intent_validation["reason"]
+            ),
             approval=approval,
         )
 
@@ -252,6 +269,18 @@ def execute_controlled_remediation(
                 approved_router_ip,
             "action_type":
                 approved_action_type,
+            "intent_fingerprint":
+                intent_validation[
+                    "intent"
+                ][
+                    "intent_fingerprint"
+                ],
+            "intent_version":
+                intent_validation[
+                    "intent"
+                ][
+                    "intent_version"
+                ],
             "verification_status":
                 "SIMULATED_VERIFIED",
             "approval_consumed":
