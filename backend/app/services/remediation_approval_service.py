@@ -560,3 +560,152 @@ def approve_remediation(
         "success": True,
         "approval": approval,
     }
+
+
+def claim_approval_for_execution(
+    approval_id: str,
+) -> dict[str, Any]:
+    """
+    Atomically claim an approved remediation for one execution only.
+
+    APPROVED -> EXECUTING
+
+    The conditional update prevents two workers from consuming the same
+    approval concurrently.
+    """
+    normalized_id = str(
+        approval_id
+    ).strip()
+
+    if not normalized_id:
+        return {
+            "claimed": False,
+            "reason": "approval_id is required",
+            "approval": None,
+        }
+
+    with sqlite3.connect(
+        DB_PATH,
+        timeout=30,
+    ) as conn:
+        conn.execute(
+            "PRAGMA busy_timeout = 30000"
+        )
+
+        conn.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+        row = conn.execute(
+            """
+            SELECT *
+            FROM approvals
+            WHERE approval_id=?
+            """,
+            (
+                normalized_id,
+            ),
+        ).fetchone()
+
+        if row is None:
+            conn.rollback()
+
+            return {
+                "claimed": False,
+                "reason":
+                    "Approval request not found",
+                "approval": None,
+            }
+
+        approval = _row_to_dict(
+            row
+        )
+
+        if approval.get("status") != "APPROVED":
+            conn.rollback()
+
+            return {
+                "claimed": False,
+                "reason":
+                    "Approval is not executable",
+                "approval": approval,
+            }
+
+        cursor = conn.execute(
+            """
+            UPDATE approvals
+            SET status='EXECUTING'
+            WHERE approval_id=?
+              AND status='APPROVED'
+            """,
+            (
+                normalized_id,
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            conn.rollback()
+
+            return {
+                "claimed": False,
+                "reason":
+                    "Approval was already consumed",
+                "approval": approval,
+            }
+
+        conn.commit()
+
+    claimed = get_approval_by_id(
+        normalized_id
+    )
+
+    return {
+        "claimed": True,
+        "reason": "Approval claimed",
+        "approval": claimed,
+    }
+
+
+def finalize_approval_execution(
+    approval_id: str,
+    *,
+    succeeded: bool,
+) -> dict[str, Any] | None:
+    """
+    Finalize an approval that is currently EXECUTING.
+    """
+    final_status = (
+        "EXECUTED"
+        if succeeded
+        else "EXECUTION_FAILED"
+    )
+
+    with sqlite3.connect(
+        DB_PATH,
+        timeout=30,
+    ) as conn:
+        conn.execute(
+            "PRAGMA busy_timeout = 30000"
+        )
+
+        cursor = conn.execute(
+            """
+            UPDATE approvals
+            SET status=?
+            WHERE approval_id=?
+              AND status='EXECUTING'
+            """,
+            (
+                final_status,
+                approval_id,
+            ),
+        )
+
+        conn.commit()
+
+    if cursor.rowcount != 1:
+        return None
+
+    return get_approval_by_id(
+        approval_id
+    )

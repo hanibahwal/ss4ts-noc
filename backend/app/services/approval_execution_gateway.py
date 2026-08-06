@@ -10,8 +10,8 @@ from app.services.remediation_approval_service import (
 )
 
 
-from app.services.autonomous_remediation_controller import (
-    execute_approved_remediation,
+from app.services.controlled_execution_gate import (
+    execute_controlled_remediation,
 )
 
 
@@ -222,8 +222,8 @@ def execute_approved_action(
     #
 
     execution_result = (
-        execute_approved_remediation(
-            approval=approved
+        execute_controlled_remediation(
+            approval_id=approval_id,
         )
     )
 

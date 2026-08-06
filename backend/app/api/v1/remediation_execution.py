@@ -10,8 +10,8 @@ from app.services.remediation_approval_service import (
 )
 
 
-from app.services.autonomous_remediation_controller import (
-    execute_approved_remediation,
+from app.services.controlled_execution_gate import (
+    execute_controlled_remediation,
 )
 
 
@@ -91,10 +91,10 @@ def execute(
     """
 
 
-    result = execute_approved_remediation(
+    result = execute_controlled_remediation(
         approval_id=approval_id,
-        router_ip=router_ip,
-        action_type=action_type,
+        requested_router_ip=router_ip,
+        requested_action_type=action_type,
     )
 
 
