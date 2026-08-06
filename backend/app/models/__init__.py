@@ -1,3 +1,11 @@
+from app.models.autonomous_operation_proposal import (
+    AutonomousOperationMode,
+    AutonomousOperationProposal,
+    AutonomousPolicyStatus,
+    AutonomousProposalRiskLevel,
+    normalize_autonomous_operation_proposal,
+)
+
 from app.models.decision import (
     DecisionIntelligenceResult,
     DecisionPriority,
@@ -163,6 +171,11 @@ from app.models.traffic import (
 
 
 __all__ = [
+    "normalize_autonomous_operation_proposal",
+    "AutonomousProposalRiskLevel",
+    "AutonomousPolicyStatus",
+    "AutonomousOperationProposal",
+    "AutonomousOperationMode",
     "RuntimeHealthStatus",
     "RecoveryRuntimeObservability",
     "RecoverySchedulerVersionConflict",
