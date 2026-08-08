@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.services.historical_intelligence import (
+    build_historical_intelligence
+)
+
 
 SERVICE_NAME = "SS4TS Executive Narrative Engine"
-SERVICE_VERSION = "1.0.0"
+SERVICE_VERSION = "1.0.1"
 
 
 STATUS_CONFIG = {
@@ -212,6 +216,29 @@ def build_executive_narrative(
         intelligence.get("status") or "unknown"
     ).lower()
 
+    # H30 Executive Fix:
+    # When analyzer returns unavailable but a valid health score exists,
+    # derive the operational status from the score.
+    health_score_raw = intelligence.get(
+        "health_score",
+        0,
+    )
+
+    try:
+        health_score_value = int(round(float(health_score_raw)))
+    except (TypeError, ValueError):
+        health_score_value = 0
+
+    if status == "unavailable":
+        if health_score_value >= 90:
+            status = "excellent"
+        elif health_score_value >= 75:
+            status = "healthy"
+        elif health_score_value >= 50:
+            status = "degraded"
+        else:
+            status = "critical"
+
     health_score = int(
         round(
             _safe_number(
@@ -323,12 +350,43 @@ def build_executive_narrative(
         or "الجهاز الرئيسي"
     )
 
-    cpu = _safe_number(
-        device.get("cpu_usage_percent")
+    # H30.12 CPU Source Fix:
+    # Prefer live_metrics CPU value collected directly from RouterOS REST API.
+    # Fallback to normalized device value if live metrics are unavailable.
+    live_metrics = (
+        collector.get("live_metrics")
+        or {}
     )
+
+    # H30.13 CPU Source Priority Fix:
+    # Priority:
+    # 1) live_metrics from RouterOS REST API
+    # 2) normalized device value as fallback
+
+    cpu = _safe_number(
+        live_metrics.get(
+            "cpu_usage_percent"
+        )
+    )
+
+    if cpu <= 0:
+        cpu = _safe_number(
+            device.get(
+                "cpu_usage_percent"
+            )
+        )
 
     memory = _safe_number(
         device.get("memory_usage_percent")
+    )
+
+    # H30.24 CPU Decision Intelligence:
+    # Pass CPU decision data from collector to executive narrative
+    cpu_state = device.get("cpu_state")
+    cpu_action = device.get("cpu_action")
+    cpu_reason = device.get("cpu_reason")
+    cpu_operator_message = device.get(
+        "cpu_operator_message"
     )
 
     latency = _safe_number(
@@ -425,6 +483,9 @@ def build_executive_narrative(
         "sinr_db": lte.get("sinr_db"),
     }
 
+    # H30.27 Historical Intelligence Integration
+    historical_intelligence = build_historical_intelligence()
+
     return {
         "router_ip": intelligence.get(
             "router_ip"
@@ -457,6 +518,10 @@ def build_executive_narrative(
                 selected_interface
             ),
             "cpu_usage_percent": cpu,
+            "cpu_state": cpu_state,
+            "cpu_action": cpu_action,
+            "cpu_reason": cpu_reason,
+            "cpu_operator_message": cpu_operator_message,
             "memory_usage_percent": memory,
             "latency_ms": latency,
             "packet_loss_percent": (
@@ -464,6 +529,7 @@ def build_executive_narrative(
             ),
         },
         "lte_summary": lte_summary,
+        "historical_intelligence": historical_intelligence,
         "engine": {
             "name": SERVICE_NAME,
             "version": SERVICE_VERSION,

@@ -16,10 +16,32 @@ def _to_float(value: Any) -> float | None:
         return None
 
 
+def _safe_cpu_usage(value: Any) -> float | None:
+    """
+    Protect Executive AI from false CPU alerts.
+
+    RouterOS REST API may return unstable CPU values.
+    Normalize the value before sending it to analytics.
+    """
+    cpu = _to_float(value)
+
+    if cpu is None:
+        return None
+
+    if cpu < 0:
+        return None
+
+    if cpu > 100:
+        return 100.0
+
+    return round(cpu, 2)
+
+
 def _first_item(value: Any) -> dict[str, Any]:
     if isinstance(value, list):
         if not value:
             return {}
+
         item = value[0]
         return item if isinstance(item, dict) else {}
 
@@ -95,12 +117,14 @@ def get_system_snapshot(host: str) -> dict[str, Any]:
 
     try:
         raw_health = client.get("system/health")
+
         if isinstance(raw_health, list):
             health_rows = [
                 row
                 for row in raw_health
                 if isinstance(row, dict)
             ]
+
     except httpx.HTTPError:
         health_rows = []
 
@@ -113,6 +137,7 @@ def get_system_snapshot(host: str) -> dict[str, Any]:
     total_memory = _to_float(
         resource.get("total-memory")
     )
+
     free_memory = _to_float(
         resource.get("free-memory")
     )
@@ -137,6 +162,7 @@ def get_system_snapshot(host: str) -> dict[str, Any]:
         "board-temperature",
     ):
         value = _to_float(health.get(key))
+
         if value is not None:
             temperature = value
             break
@@ -152,9 +178,10 @@ def get_system_snapshot(host: str) -> dict[str, Any]:
         "cpu_frequency_mhz": _to_float(
             resource.get("cpu-frequency")
         ),
-        "cpu_usage": _to_float(
+        "cpu_usage": _safe_cpu_usage(
             resource.get("cpu-load")
         ),
+        "cpu_source": "RouterOS system/resource cpu-load",
         "total_memory_bytes": total_memory,
         "free_memory_bytes": free_memory,
         "memory_usage": memory_usage,

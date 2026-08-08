@@ -101,9 +101,9 @@ from(bucket: "{safe_bucket}")
                 else None
             )
 
-            if field == "ifHCInOctets":
+            if field in ("ifHCInOctets", "ifInOctets"):
                 interface["rx_bps"] = max(value, 0.0)
-            elif field == "ifHCOutOctets":
+            elif field in ("ifHCOutOctets", "ifOutOctets"):
                 interface["tx_bps"] = max(value, 0.0)
 
     interfaces: list[dict[str, Any]] = []
@@ -235,9 +235,9 @@ from(bucket: "{safe_bucket}")
                 },
             )
 
-            if field == "ifHCInOctets":
+            if field in ("ifHCInOctets", "ifInOctets"):
                 point["rx_bps"] = round(value, 2)
-            elif field == "ifHCOutOctets":
+            elif field in ("ifHCOutOctets", "ifOutOctets"):
                 point["tx_bps"] = round(value, 2)
 
     points = list(points_by_time.values())

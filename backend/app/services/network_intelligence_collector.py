@@ -12,6 +12,10 @@ from app.services.traffic import (
     get_interface_rates,
 )
 
+from app.services.interface_traffic_collector import (
+    collect_interface_traffic,
+)
+
 from app.services.prediction_memory_snapshot_writer import (
     save_prediction_snapshot,
 )
@@ -26,6 +30,121 @@ from app.services.prediction_engine import (
 
 COLLECTOR_NAME = "SS4TS Network Intelligence Collector"
 COLLECTOR_VERSION = "1.4.0-live-lte-ai-memory"
+
+
+# H30.16 CPU Stabilizer
+# Prevent false CPU critical alerts caused by RouterOS short spikes
+CPU_HISTORY: dict[str, list[float]] = {}
+
+
+def analyze_cpu_behavior(
+    router_ip: str,
+    cpu_value: float | None,
+) -> dict[str, Any]:
+    history = CPU_HISTORY.setdefault(router_ip, [])
+
+    if cpu_value is not None:
+        history.append(float(cpu_value))
+
+    if len(history) > 10:
+        history.pop(0)
+
+    if not history:
+        return {
+            "cpu_average": None,
+            "cpu_state": "UNKNOWN",
+            "cpu_trend": "UNKNOWN",
+            "cpu_severity": "unknown",
+            "cpu_confidence": 0,
+        }
+
+    average = round(sum(history) / len(history), 2)
+
+    if len(history) >= 5:
+        recent = history[-5:]
+        previous = history[:5]
+        if sum(recent) / len(recent) > sum(previous) / len(previous) + 15:
+            trend = "RISING"
+        elif sum(recent) / len(recent) < sum(previous) / len(previous) - 15:
+            trend = "FALLING"
+        else:
+            trend = "STABLE"
+    else:
+        trend = "LEARNING"
+
+    if average >= 90:
+        state = "SUSTAINED_HIGH"
+        severity = "critical"
+    elif max(history) >= 95 and average < 80:
+        state = "SPIKE_DETECTED"
+        severity = "warning"
+    else:
+        state = "NORMAL"
+        severity = "normal"
+
+    return {
+        "cpu_average": average,
+        "cpu_state": state,
+        "cpu_trend": trend,
+        "cpu_severity": severity,
+        "cpu_confidence": min(95, len(history) * 10),
+    }
+
+
+
+
+def decide_cpu_action(
+    cpu_state: str | None,
+    cpu_average: float | None,
+) -> dict[str, Any]:
+
+    if cpu_state == "SUSTAINED_HIGH":
+        return {
+            "cpu_action": "ACTION_REQUIRED",
+            "cpu_reason": "High CPU load sustained over multiple samples",
+            "cpu_operator_message": "Investigate router workload and active services",
+        }
+
+    if cpu_state == "SPIKE_DETECTED":
+        return {
+            "cpu_action": "MONITOR",
+            "cpu_reason": "Temporary CPU burst detected",
+            "cpu_operator_message": "No immediate action required",
+        }
+
+    if cpu_average is not None and cpu_average >= 80:
+        return {
+            "cpu_action": "INVESTIGATE",
+            "cpu_reason": "CPU average is elevated",
+            "cpu_operator_message": "Review traffic and active processes",
+        }
+
+    return {
+        "cpu_action": "NORMAL",
+        "cpu_reason": "CPU operating within normal range",
+        "cpu_operator_message": "No action required",
+    }
+
+
+def stabilize_cpu(
+    router_ip: str,
+    cpu_value: float | None,
+) -> float | None:
+    if cpu_value is None:
+        return None
+
+    history = CPU_HISTORY.setdefault(router_ip, [])
+
+    history.append(float(cpu_value))
+
+    if len(history) > 5:
+        history.pop(0)
+
+    return round(
+        sum(history) / len(history),
+        2,
+    )
+
 
 
 def _utc_now() -> str:
@@ -65,6 +184,7 @@ def _empty_device() -> dict[str, Any]:
         "cpu_count": None,
         "cpu_frequency_mhz": None,
         "cpu_usage_percent": None,
+        "cpu_source": None,
         "total_memory_bytes": None,
         "free_memory_bytes": None,
         "memory_usage_percent": None,
@@ -119,7 +239,18 @@ def _empty_ping() -> dict[str, Any]:
 
 def _normalize_device(
     snapshot: dict[str, Any],
+    router_ip: str,
 ) -> dict[str, Any]:
+    cpu_intelligence = analyze_cpu_behavior(
+        router_ip,
+        snapshot.get("cpu_usage"),
+    )
+
+    cpu_decision = decide_cpu_action(
+        cpu_intelligence.get("cpu_state"),
+        cpu_intelligence.get("cpu_average"),
+    )
+
     return {
         "reachable": True,
         "identity": snapshot.get("identity"),
@@ -132,7 +263,13 @@ def _normalize_device(
         "cpu_frequency_mhz": snapshot.get(
             "cpu_frequency_mhz"
         ),
-        "cpu_usage_percent": snapshot.get("cpu_usage"),
+        "cpu_usage_percent": stabilize_cpu(
+            router_ip,
+            snapshot.get("cpu_usage"),
+        ),
+        **cpu_intelligence,
+        **cpu_decision,
+        "cpu_source": "RouterOS system/resource cpu-load",
         "total_memory_bytes": snapshot.get(
             "total_memory_bytes"
         ),
@@ -248,7 +385,10 @@ def collect_network_intelligence(
         routeros_snapshot = get_system_snapshot(
             validated_ip
         )
-        device = _normalize_device(routeros_snapshot)
+        device = _normalize_device(
+            routeros_snapshot,
+            validated_ip,
+        )
 
         source_states["routeros"] = _source_status(
             available=True
@@ -259,6 +399,16 @@ def collect_network_intelligence(
             available=False,
             error=_error_message(exc),
         )
+
+    # H30.29 Live Traffic Writer
+    # Collect interface counters from MikroTik and store them in InfluxDB
+    # before reading traffic history/rates.
+    try:
+        collect_interface_traffic(
+            validated_ip
+        )
+    except Exception:
+        pass
 
     rates: dict[str, Any] | None = None
 

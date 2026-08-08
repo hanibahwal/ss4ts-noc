@@ -60,6 +60,45 @@ def _analyze_device(
     list[IntelligenceFinding],
 ]:
     device = collector.get("device") or {}
+
+    live_metrics = collector.get(
+        "live_metrics"
+    ) or {}
+
+    # H30.7 Live Metrics Priority
+    # RouterOS REST API live values override cached collector values.
+    if live_metrics.get("available"):
+
+        device["cpu_usage_percent"] = (
+            live_metrics.get(
+                "cpu_usage_percent"
+            )
+        )
+
+        device["memory_usage_percent"] = (
+            live_metrics.get(
+                "memory_usage_percent"
+            )
+        )
+
+        device["identity"] = (
+            live_metrics.get(
+                "identity"
+            )
+        )
+
+        device["board_name"] = (
+            live_metrics.get(
+                "board_name"
+            )
+        )
+
+        device["version"] = (
+            live_metrics.get(
+                "version"
+            )
+        )
+
     findings: list[IntelligenceFinding] = []
 
     if not device.get("reachable"):

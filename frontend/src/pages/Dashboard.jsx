@@ -27,6 +27,7 @@ import Header from '../components/layout/Header'
 
 
 import RecentEvents from '../components/dashboard/RecentEvents'
+import NetworkDiscoveryPanel from '../components/dashboard/NetworkDiscoveryPanel'
 
 
 import ExecutiveNarrativeCard from '../components/dashboard/ExecutiveNarrativeCard'
@@ -1075,6 +1076,9 @@ return (
   }
 
 />
+
+<NetworkDiscoveryPanel />
+
 
 
 

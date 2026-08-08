@@ -240,6 +240,16 @@ export default function ExecutiveNarrativeCard({
     },
   )
 
+  console.log(
+    "EXECUTIVE NARRATIVE DATA:",
+    data,
+  )
+
+  console.log(
+    "HISTORICAL INTELLIGENCE:",
+    data?.historicalIntelligence,
+  )
+
   if (loading && !data) {
     return (
       <article className="panel wide-panel executive-narrative-panel executive-narrative-loading">
@@ -447,6 +457,48 @@ export default function ExecutiveNarrativeCard({
               )}
             />
 
+            <section className="cpu-decision-intelligence">
+              <h4>
+                🧠 CPU Decision Intelligence
+              </h4>
+
+              <div>
+                <strong>
+                  الحالة:
+                </strong>
+                <span>
+                  {data.metrics.cpuState || 'غير متوفر'}
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  القرار:
+                </strong>
+                <span>
+                  {data.metrics.cpuAction || 'غير متوفر'}
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  السبب:
+                </strong>
+                <span>
+                  {data.metrics.cpuReason || 'غير متوفر'}
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  رسالة المشغل:
+                </strong>
+                <span>
+                  {data.metrics.cpuOperatorMessage || 'غير متوفر'}
+                </span>
+              </div>
+            </section>
+
             <Metric
               icon={MemoryStick}
               label="استخدام الذاكرة"
@@ -477,6 +529,83 @@ export default function ExecutiveNarrativeCard({
               )}
             />
           </section>
+<section className="executive-historical-intelligence">
+
+  <div className="executive-narrative-section-title">
+    <h4>
+      🧠 التحليل التاريخي الذكي
+    </h4>
+  </div>
+
+  {data.historicalIntelligence?.cpu?.available ? (
+
+    <div className="historical-grid">
+
+      <Metric
+        label="CPU الحالي"
+        value={
+          formatNumber(
+            data.historicalIntelligence.cpu.current,
+            '%',
+            2
+          )
+        }
+      />
+
+      <Metric
+        label="متوسط CPU"
+        value={
+          formatNumber(
+            data.historicalIntelligence.cpu.average,
+            '%',
+            2
+          )
+        }
+      />
+
+      <Metric
+        label="أعلى CPU"
+        value={
+          formatNumber(
+            data.historicalIntelligence.cpu.maximum,
+            '%',
+            2
+          )
+        }
+      />
+
+      <Metric
+        label="الاتجاه"
+        value={
+          data.historicalIntelligence.cpu.trend
+        }
+      />
+
+      <Metric
+        label="القرار"
+        value={
+          data.historicalIntelligence.cpu.decision
+        }
+      />
+
+      <Metric
+        label="العينات"
+        value={
+          data.historicalIntelligence.cpu.samples
+        }
+      />
+
+    </div>
+
+  ) : (
+
+    <p>
+      لا توجد بيانات تاريخية متاحة
+    </p>
+
+  )}
+
+</section>
 
           <section className="executive-narrative-details">
             <div>
@@ -538,6 +667,9 @@ export default function ExecutiveNarrativeCard({
               </div>
             </div>
           </section>
+
+
+
 
           <footer className="executive-narrative-footer">
             <span>

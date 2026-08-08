@@ -646,6 +646,45 @@ export const api = {
   
   
     // =====================================================
+  // H29 - Autonomous Network Discovery
+  // =====================================================
+
+  discoveryStart(networkRange, name = '') {
+    return request(
+      '/api/v1/discovery/start',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          network_range: networkRange,
+          name: name || null,
+        }),
+      },
+    )
+  },
+
+  discoveryStatus(jobId) {
+    return request(
+      `/api/v1/discovery/jobs/${encodeURIComponent(jobId)}`,
+    )
+  },
+
+  discoveryDevices(jobId) {
+    return request(
+      `/api/v1/discovery/jobs/${encodeURIComponent(jobId)}/devices`,
+    )
+  },
+
+  discoveryCancel(jobId) {
+    return request(
+      `/api/v1/discovery/jobs/${encodeURIComponent(jobId)}/cancel`,
+      {
+        method: 'POST',
+      },
+    )
+  },
+
+
+  // =====================================================
   // END
   // =====================================================
 

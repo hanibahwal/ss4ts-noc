@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from influxdb_client import InfluxDBClient
 from pydantic import BaseModel
 
+from app.services.traffic import get_interface_rates
+
 
 INFLUX_URL = os.getenv("INFLUX_URL", "http://influxdb:8086")
 INFLUX_TOKEN = os.getenv("INFLUX_TOKEN", "")
@@ -422,7 +424,69 @@ async def router_metrics(
             else None
         )
 
+        cpu_raw, cpu_time = get_latest_field(
+            validated_ip,
+            "cpuLoad",
+            "mikrotik",
+        )
+
+        total_memory_raw, total_memory_time = get_latest_field(
+            validated_ip,
+            "totalMemory",
+            "mikrotik",
+        )
+
+        used_memory_raw, used_memory_time = get_latest_field(
+            validated_ip,
+            "usedMemory",
+            "mikrotik",
+        )
+
+        cpu_usage = (
+            round(float(cpu_raw), 2)
+            if cpu_raw is not None
+            else None
+        )
+
+        memory_usage = None
+
+        if (
+            total_memory_raw is not None
+            and used_memory_raw is not None
+        ):
+            total_memory = float(total_memory_raw)
+            used_memory = float(used_memory_raw)
+
+            if total_memory > 0:
+                memory_usage = round(
+                    (used_memory / total_memory) * 100,
+                    2,
+                )
+
         ping = get_ping_metrics(validated_ip)
+
+        # Reuse the canonical Traffic Engine.
+        # Traffic failure must not make all device metrics unavailable.
+        traffic = {}
+
+        try:
+            traffic = get_interface_rates(validated_ip)
+        except Exception:
+            traffic = {}
+
+        traffic_interface = traffic.get("selected_interface")
+
+        rx_bps = (
+            round(float(traffic.get("rx_bps", 0.0)), 2)
+            if traffic_interface
+            else None
+        )
+
+        tx_bps = (
+            round(float(traffic.get("tx_bps", 0.0)), 2)
+            if traffic_interface
+            else None
+        )
 
         return {
             "router_ip": validated_ip,
@@ -431,22 +495,22 @@ async def router_metrics(
             "site": device.site,
             "status": device.status,
             "metrics": {
-                "cpu_usage": None,
-                "memory_usage": None,
+                "cpu_usage": cpu_usage,
+                "memory_usage": memory_usage,
                 "temperature": None,
                 "uptime_seconds": uptime,
-                "rx_bps": None,
-                "tx_bps": None,
+                "rx_bps": rx_bps,
+                "tx_bps": tx_bps,
                 "latency_ms": ping["latency_ms"],
                 "packet_loss": ping["packet_loss"],
             },
             "availability": {
-                "cpu_usage": False,
-                "memory_usage": False,
+                "cpu_usage": cpu_usage is not None,
+                "memory_usage": memory_usage is not None,
                 "temperature": False,
                 "uptime_seconds": uptime is not None,
-                "rx_bps": False,
-                "tx_bps": False,
+                "rx_bps": traffic_interface is not None,
+                "tx_bps": traffic_interface is not None,
                 "latency_ms": ping["latency_ms"] is not None,
                 "packet_loss": ping["packet_loss"] is not None,
             },
@@ -454,6 +518,9 @@ async def router_metrics(
             "is_live": device.status == "online",
             "last_seen": (
                 ping["last_seen"]
+                or cpu_time
+                or used_memory_time
+                or total_memory_time
                 or uptime_time
                 or device.last_seen
             ),
