@@ -1203,3 +1203,45 @@ def analyze_root_causes(
         node_id,
         max_depth=max_depth,
     )
+
+
+def analyze_root_cause_summary(
+    graph: GraphSnapshot,
+    node_id: str,
+) -> dict[str, Any]:
+    """
+    H24.1.2 Public Root Cause Analysis Summary Contract.
+
+    Provides a stable API-friendly response without changing
+    the internal RootCauseAnalysisResult model.
+    """
+
+    result = analyze_root_causes(
+        graph=graph,
+        node_id=node_id,
+    )
+
+    primary = result.primary_root_cause
+
+    return {
+        "node_id": result.source_node_id,
+        "status": "completed",
+        "root_cause_count": len(result.root_causes),
+        "primary_root_cause": (
+            primary.to_dict()
+            if primary
+            else None
+        ),
+        "root_causes": [
+            item.to_dict()
+            for item in result.root_causes
+        ],
+        "spof": result.spof.to_dict(),
+        "confidence": (
+            primary.confidence_percent
+            if primary
+            else 0
+        ),
+        "requires_approval": True,
+        "metadata": dict(result.metadata),
+    }
