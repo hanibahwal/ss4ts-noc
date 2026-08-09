@@ -7,6 +7,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.api.v1 import (
+    autonomous_shadow,
     decision_executions,
 )
 from app.api.v1.router import (
@@ -433,6 +434,184 @@ def test_simulation_creates_shadow_record(
 
     assert record.risk_level == "HIGH"
     assert record.dry_run_only is True
+
+
+def test_shadow_outcome_comparison_end_to_end(
+    execution_environment,
+) -> None:
+    """
+    H32.3 end-to-end validation:
+
+    Decision
+      -> approved dry-run simulation
+      -> automatic shadow capture
+      -> verified execution evidence
+      -> prediction vs observed outcome comparison.
+
+    No managed-device network I/O is performed.
+    """
+    prepared = run(
+        decision_executions
+        .prepare_decision_execution(
+            prepare_payload()
+        )
+    )
+
+    authorization_id = (
+        prepared["authorization"]
+        ["authorization_id"]
+    )
+
+    decision_id = (
+        prepared["runtime"]["action"]
+        ["decision_id"]
+    )
+
+    approve_authorization(
+        authorization_id,
+        execution_environment[
+            "authorization_database"
+        ],
+    )
+
+    simulation_result = run(
+        decision_executions
+        .simulate_decision_execution(
+            authorization_id,
+            simulate_payload(),
+        )
+    )
+
+    assert (
+        simulation_result["execution"]
+        ["action"]["status"]
+        == "completed"
+    )
+
+    assert (
+        simulation_result["execution"]
+        ["simulation"]["status"]
+        == "completed"
+    )
+
+    assert (
+        simulation_result["evidence"]
+        ["verified"]
+        is True
+    )
+
+    assert (
+        simulation_result["shadow"]
+        ["captured"]
+        is True
+    )
+
+    shadow_store = ShadowDecisionStore(
+        execution_environment[
+            "shadow_database"
+        ]
+    )
+
+    shadow_records = (
+        shadow_store.list_recent(
+            limit=10
+        )
+    )
+
+    matching = [
+        record
+        for record in shadow_records
+        if record.decision_id
+        == decision_id
+    ]
+
+    assert len(matching) == 1
+
+    shadow = matching[0]
+
+    comparison = run(
+        autonomous_shadow
+        .get_shadow_outcome_comparison(
+            shadow.shadow_id
+        )
+    )
+
+    assert (
+        comparison["decision_id"]
+        == decision_id
+    )
+
+    assert (
+        comparison["shadow_id"]
+        == shadow.shadow_id
+    )
+
+    assert (
+        comparison["evidence_verified"]
+        is True
+    )
+
+    assert (
+        comparison["overall_match"]
+        is True
+    )
+
+    assert (
+        comparison["matched_fields"]
+        == 6
+    )
+
+    assert (
+        comparison["mismatched_fields"]
+        == 0
+    )
+
+    assert (
+        comparison["accuracy_percent"]
+        == 100.0
+    )
+
+    assert (
+        comparison["observed_outcome"]
+        ["action_status"]
+        == "completed"
+    )
+
+    assert (
+        comparison["observed_outcome"]
+        ["simulation_status"]
+        == "completed"
+    )
+
+    assert (
+        comparison["observed_outcome"]
+        ["lease_status"]
+        == "released"
+    )
+
+    safety = comparison["safety"]
+
+    assert safety["read_only"] is True
+
+    assert (
+        safety["execution_enabled"]
+        is False
+    )
+
+    assert (
+        safety["execution_authority"]
+        is False
+    )
+
+    assert (
+        safety["network_io_performed"]
+        is False
+    )
+
+    assert (
+        safety["device_command_executed"]
+        is False
+    )
 
 
 def test_simulate_pending_authorization_returns_409(

@@ -14,6 +14,12 @@ from app.services.shadow_decision_store import (
     DEFAULT_SHADOW_DATABASE,
     ShadowDecisionStore,
 )
+from app.api.v1.decision_audits import (
+    get_audit_store,
+)
+from app.services.outcome_comparison import (
+    compare_shadow_to_evidence,
+)
 
 
 router = APIRouter(
@@ -110,6 +116,100 @@ async def list_shadow_decisions(
             "device_command_executed": False,
         },
     }
+
+
+@router.get(
+    "/{shadow_id}/outcome-comparison"
+)
+async def get_shadow_outcome_comparison(
+    shadow_id: str,
+) -> dict:
+    """
+    Compare one shadow prediction with the newest
+    verified execution-evidence snapshot for the
+    same decision.
+
+    Read-only local persistence access only.
+    """
+    try:
+        shadow_store = get_shadow_store()
+
+        shadow = shadow_store.get(
+            shadow_id
+        )
+
+        if shadow is None:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    "Shadow decision not found: "
+                    f"{shadow_id}"
+                ),
+            )
+
+        audit_store = get_audit_store()
+
+        candidates = (
+            audit_store.list_records(
+                decision_id=
+                    shadow.decision_id,
+                limit=100,
+                offset=0,
+            )
+        )
+
+        evidence = None
+
+        for candidate in candidates:
+            if not candidate.metadata.get(
+                "evidence_bundle",
+                False,
+            ):
+                continue
+
+            if not audit_store.verify(
+                candidate.audit_id
+            ):
+                continue
+
+            evidence = candidate
+            break
+
+        if evidence is None:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    "Verified execution evidence "
+                    "not found for decision: "
+                    f"{shadow.decision_id}"
+                ),
+            )
+
+        comparison = (
+            compare_shadow_to_evidence(
+                shadow=shadow,
+                audit=evidence,
+            )
+        )
+
+    except HTTPException:
+        raise
+    except (
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        ) from exc
+
+    response = comparison.to_dict()
+
+    response["evidence_verified"] = True
+
+    return response
 
 
 @router.get("/{shadow_id}")

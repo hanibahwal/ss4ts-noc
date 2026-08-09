@@ -13,6 +13,9 @@ from app.services.autonomous_shadow_mode import (
 from app.services.shadow_decision_store import (
     ShadowDecisionStore,
 )
+from app.services.decision_audit_store import (
+    DecisionAuditStore,
+)
 
 
 def run(coroutine):
@@ -40,6 +43,82 @@ def seed_record(store):
             "confidence": 95,
         },
         source_node_id="router-api-1",
+        predicted_outcome={
+            "expected_action_status":
+                "completed",
+            "expected_simulation_status":
+                "completed",
+            "expected_lease_status":
+                "released",
+            "expected_rollback_performed":
+                False,
+            "expected_failed_step_id":
+                None,
+            "proposed_action":
+                "SAFE_OPTIMIZATION",
+            "dry_run_only":
+                True,
+        },
+    )
+
+
+def seed_evidence(
+    store,
+    *,
+    decision_id,
+    source_node_id="router-api-1",
+):
+    return store.create_record(
+        trace={
+            "trace_id":
+                "trace:shadow-outcome",
+            "decision_id":
+                decision_id,
+            "source_node_id":
+                source_node_id,
+            "final_outcome": {
+                "action_status":
+                    "completed",
+                "authorization_status":
+                    "consumed",
+                "simulation_status":
+                    "completed",
+                "lease_status":
+                    "released",
+            },
+        },
+        explanation={
+            "execution_safety": {
+                "dry_run_only": True,
+            },
+        },
+        execution_plan={
+            "decision_id":
+                decision_id,
+            "source_node_id":
+                source_node_id,
+            "dry_run_only":
+                True,
+        },
+        simulation={
+            "verification_summary": {
+                "simulation_completed":
+                    True,
+                "rollback_performed":
+                    False,
+                "failed_step_id":
+                    None,
+                "final_action_status":
+                    "completed",
+                "lease_released":
+                    True,
+            },
+        },
+        metadata={
+            "evidence_bundle": True,
+            "created_by":
+                "h32.3-api-test",
+        },
     )
 
 
@@ -190,3 +269,132 @@ def test_api_has_no_execution_routes():
     }
 
     assert methods == {"GET"}
+
+
+def test_outcome_comparison_endpoint(
+    tmp_path,
+    monkeypatch,
+):
+    shadow_store = build_store(
+        tmp_path
+    )
+
+    shadow = seed_record(
+        shadow_store
+    )
+
+    audit_store = DecisionAuditStore(
+        tmp_path / "outcome-audit.db"
+    )
+
+    seed_evidence(
+        audit_store,
+        decision_id=
+            shadow.decision_id,
+        source_node_id=
+            shadow.source_node_id,
+    )
+
+    monkeypatch.setattr(
+        autonomous_shadow,
+        "get_shadow_store",
+        lambda: shadow_store,
+    )
+
+    monkeypatch.setattr(
+        autonomous_shadow,
+        "get_audit_store",
+        lambda: audit_store,
+    )
+
+    result = run(
+        autonomous_shadow
+        .get_shadow_outcome_comparison(
+            shadow.shadow_id
+        )
+    )
+
+    assert result["evidence_verified"] is True
+    assert result["overall_match"] is True
+    assert result["accuracy_percent"] == 100.0
+
+    assert (
+        result["safety"]["read_only"]
+        is True
+    )
+
+    assert (
+        result["safety"][
+            "execution_authority"
+        ]
+        is False
+    )
+
+    assert (
+        result["safety"][
+            "device_command_executed"
+        ]
+        is False
+    )
+
+
+def test_outcome_comparison_missing_evidence_404(
+    tmp_path,
+    monkeypatch,
+):
+    shadow_store = build_store(
+        tmp_path
+    )
+
+    shadow = seed_record(
+        shadow_store
+    )
+
+    audit_store = DecisionAuditStore(
+        tmp_path / "empty-audit.db"
+    )
+
+    monkeypatch.setattr(
+        autonomous_shadow,
+        "get_shadow_store",
+        lambda: shadow_store,
+    )
+
+    monkeypatch.setattr(
+        autonomous_shadow,
+        "get_audit_store",
+        lambda: audit_store,
+    )
+
+    with pytest.raises(
+        HTTPException
+    ) as exc_info:
+        run(
+            autonomous_shadow
+            .get_shadow_outcome_comparison(
+                shadow.shadow_id
+            )
+        )
+
+    assert (
+        exc_info.value.status_code
+        == 404
+    )
+
+
+def test_shadow_api_remains_get_only():
+    routes = [
+        route
+        for route in api_router.routes
+        if route.path.startswith(
+            "/api/v1/autonomous-shadow"
+        )
+    ]
+
+    assert routes
+
+    for route in routes:
+        assert (
+            route.methods
+            == {"GET"}
+        )

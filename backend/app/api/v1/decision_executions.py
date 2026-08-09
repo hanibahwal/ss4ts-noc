@@ -214,8 +214,64 @@ def _identity(
     )
 
 
+def _build_predicted_outcome(
+    *,
+    action,
+    plan,
+) -> dict[str, Any]:
+    """
+    Build the immutable expected outcome before dry-run
+    simulation begins.
+
+    This is prediction metadata only and grants no
+    execution authority.
+    """
+    return {
+        "expected_action_status":
+            "completed",
+        "expected_simulation_status":
+            "completed",
+        "expected_lease_status":
+            "released",
+        "expected_rollback_performed":
+            False,
+        "expected_failed_step_id":
+            None,
+        "proposed_action":
+            action.command.action_type,
+        "dry_run_only":
+            bool(plan.dry_run_only),
+        "prediction_basis": {
+            "decision_id":
+                action.decision_id,
+            "plan_id":
+                plan.plan_id,
+            "source_node_id":
+                plan.source_node_id,
+            "confidence_percent":
+                action.confidence_percent,
+            "risk_level":
+                action.risk_level.value,
+        },
+        "safety": {
+            "prediction_only":
+                True,
+            "execution_enabled":
+                False,
+            "execution_authority":
+                False,
+            "network_io_performed":
+                False,
+            "device_command_executed":
+                False,
+        },
+    }
+
+
 def _capture_shadow_result(
     execution,
+    *,
+    predicted_outcome: dict[str, Any],
 ) -> dict[str, Any]:
     """
     Persist the completed dry-run result in autonomous
@@ -258,16 +314,8 @@ def _capture_shadow_result(
             },
             source_node_id=
                 source_node_id,
-            predicted_outcome={
-                "simulation":
-                    simulation_payload,
-                "action_status":
-                    action.status.value,
-                "proposed_action":
-                    action.command.action_type,
-                "dry_run_only":
-                    True,
-            },
+            predicted_outcome=
+                predicted_outcome,
         )
 
         return {
@@ -542,6 +590,13 @@ async def simulate_decision_execution(
             lease_store=lease_store,
         )
 
+        predicted_outcome = (
+            _build_predicted_outcome(
+                action=item.action,
+                plan=item.plan,
+            )
+        )
+
         execution = bridge.execute(
             decision_id=
                 item.action.decision_id,
@@ -560,7 +615,9 @@ async def simulate_decision_execution(
 
         shadow_capture = (
             _capture_shadow_result(
-                execution
+                execution,
+                predicted_outcome=
+                    predicted_outcome,
             )
         )
 
