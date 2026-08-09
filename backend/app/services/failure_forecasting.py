@@ -307,6 +307,24 @@ def forecast_failure(
         "dominant_failure_pattern"
     )
 
+    # NO_EVENT means the network is healthy.
+    # It must never be treated as a predicted failure.
+    if not dominant_pattern or dominant_pattern == "NO_EVENT":
+        return {
+            "forecast_available": False,
+            "predicted_failure": "NO_EVENT",
+            "failure_probability_percent": 0,
+            "risk_level": "low",
+            "expected_time_window": "none",
+            "impact": "No abnormal condition detected",
+            "recommended_action": "Continue monitoring.",
+            "generated_at": generated_at,
+            "engine": {
+                "name": ENGINE_NAME,
+                "version": ENGINE_VERSION,
+            },
+        }
+
 
     samples = pattern_analysis.get(
         "samples_analyzed",

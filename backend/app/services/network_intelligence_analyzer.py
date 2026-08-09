@@ -607,6 +607,24 @@ def _analyze_lte(
 
     available = lte.get("available") is True
 
+    # LTE may be intentionally absent on non-LTE routers.
+    # In that case it is not an operational fault.
+    if not available and lte.get("source") == "not_configured":
+        return (
+            ComponentAnalysis(
+                name="lte",
+                available=True,
+                score=100,
+                health=HealthState.EXCELLENT,
+                details={
+                    "applicable": False,
+                    "configured": False,
+                    "source": "not_configured",
+                },
+            ),
+            findings,
+        )
+
     if not available:
         findings.append(
             IntelligenceFinding(

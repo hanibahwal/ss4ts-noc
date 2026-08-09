@@ -155,7 +155,7 @@ function Metric({
   return (
     <div className="executive-narrative-metric">
       <span>
-        <Icon size={17} />
+        {Icon && <Icon size={17} />}
       </span>
 
       <div>

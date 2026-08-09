@@ -346,7 +346,20 @@ async def system_status() -> dict[str, Any]:
 @app.get("/api/devices", response_model=list[Device])
 async def devices() -> list[Device]:
     try:
-        return build_devices()
+        # H24 Single Device Dashboard Validation
+        # Show only the active monitoring device
+        active_device_ip = "192.168.45.99"
+
+        all_devices = build_devices()
+
+        filtered_devices = [
+            device
+            for device in all_devices
+            if device.ip_address == active_device_ip
+        ]
+
+        return filtered_devices
+
     except Exception as exc:
         raise HTTPException(
             status_code=503,

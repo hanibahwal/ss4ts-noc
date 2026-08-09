@@ -51,7 +51,9 @@ from(bucket: "{safe_bucket}")
       r.agent_host == "{safe_ip}" and
       (
         r._field == "ifHCInOctets" or
-        r._field == "ifHCOutOctets"
+        r._field == "ifHCOutOctets" or
+        r._field == "ifInOctets" or
+        r._field == "ifOutOctets"
       )
   )
   |> derivative(unit: 1s, nonNegative: true)
@@ -187,7 +189,9 @@ from(bucket: "{safe_bucket}")
       r.ifDescr == "{safe_interface}" and
       (
         r._field == "ifHCInOctets" or
-        r._field == "ifHCOutOctets"
+        r._field == "ifHCOutOctets" or
+        r._field == "ifInOctets" or
+        r._field == "ifOutOctets"
       )
   )
   |> derivative(unit: 1s, nonNegative: true)

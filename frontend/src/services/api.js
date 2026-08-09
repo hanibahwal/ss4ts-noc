@@ -162,6 +162,13 @@ function normalizeDevice(
 
 export const api = {
 
+  async networkIntelligence(ip) {
+    return request(
+      `/api/v1/devices/${encodeURIComponent(ip)}/network-intelligence`,
+    )
+  },
+
+
 
 
   health() {

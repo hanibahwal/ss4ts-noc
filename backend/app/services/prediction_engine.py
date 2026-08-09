@@ -120,7 +120,7 @@ def predict_lte_risk(
     lte: dict[str, Any],
 ) -> dict[str, Any] | None:
 
-    if not lte:
+    if not lte or lte.get("available") is not True:
         return None
 
 

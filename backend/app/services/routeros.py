@@ -57,7 +57,7 @@ class RouterOSClient:
         verify_ssl: bool = False,
         timeout: float = 10.0,
     ) -> None:
-        self.base_url = f"https://{host}/rest"
+        self.base_url = f"http://{host}/rest"
         self.auth = (username, password)
         self.verify_ssl = verify_ssl
         self.timeout = timeout

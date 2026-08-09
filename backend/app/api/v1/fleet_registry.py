@@ -9,10 +9,9 @@ from app.services.fleet_device_registry import (
 
 
 router = APIRouter(
-    prefix="/fleet",
-    tags=["fleet"],
+    prefix="/api/v1/fleet",
+    tags=["fleet"]
 )
-
 
 
 @router.post("/device/register")

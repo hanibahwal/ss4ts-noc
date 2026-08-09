@@ -23,7 +23,12 @@ DATA_DIR.mkdir(
     exist_ok=True,
 )
 
+
 DB_FILE = DATA_DIR / "network_history.db"
+
+
+# H24 Single Device Validation Mode
+ACTIVE_DEVICE_FILTER = "192.168.45.99"
 
 
 def get_connection():
@@ -39,6 +44,7 @@ def initialize_database():
     """
 
     with get_connection() as conn:
+
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS network_metrics_history (
@@ -112,8 +118,10 @@ def save_metric(
                 signal,
                 status
             )
+
             VALUES
             (?,?,?,?,?,?,?,?,?,?,?,?)
+
             """,
             (
                 device_ip,
@@ -164,6 +172,7 @@ def get_history(
             ),
         ).fetchall()
 
+
         return [
             dict(row)
             for row in rows
@@ -172,7 +181,11 @@ def get_history(
 
 def get_all_devices_summary():
     """
-    Return latest status of all devices
+    Return latest status of all devices.
+
+    H24 Single Device Validation:
+    Only HANI-HOME-OFFICE is exposed
+    to the Dashboard.
     """
 
     with get_connection() as conn:
@@ -182,18 +195,32 @@ def get_all_devices_summary():
         rows = conn.execute(
             """
             SELECT
+
                 device_ip,
+
                 device_name,
+
                 MAX(timestamp) AS last_seen,
+
                 AVG(cpu) AS avg_cpu,
+
                 AVG(traffic_rx) AS avg_rx,
+
                 AVG(traffic_tx) AS avg_tx
+
 
             FROM network_metrics_history
 
+
+            WHERE device_ip = ?
+
+
             GROUP BY device_ip
 
-            """
+            """,
+            (
+                ACTIVE_DEVICE_FILTER,
+            ),
         ).fetchall()
 
 

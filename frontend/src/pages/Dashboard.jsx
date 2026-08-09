@@ -60,6 +60,9 @@ import { formatPercentage } from '../utils/formatters'
 const EVENT_STORAGE_KEY =
   'ss4ts-noc-events'
 
+// H24 Single Device Dashboard Validation
+const ACTIVE_DEVICE_IP = '172.22.1.25'
+
 
 
 const TRAFFIC_STORAGE_KEY =
@@ -162,7 +165,14 @@ export default function Dashboard() {
   ] = useState(() =>
     readStoredArray(
       EVENT_STORAGE_KEY,
-    ).slice(0,50),
+    )
+    .filter(
+      event =>
+        event.ip_address === ACTIVE_DEVICE_IP ||
+        event.router_ip === ACTIVE_DEVICE_IP ||
+        event.message?.includes(ACTIVE_DEVICE_IP)
+    )
+    .slice(0,50),
   )
 
 
@@ -237,7 +247,14 @@ export default function Dashboard() {
         [
           ...newEvents,
           ...current,
-        ].slice(0,50)
+        ]
+        .filter(
+          event =>
+            event.ip_address === ACTIVE_DEVICE_IP ||
+            event.router_ip === ACTIVE_DEVICE_IP ||
+            event.message?.includes(ACTIVE_DEVICE_IP)
+        )
+        .slice(0,50)
 
 
 
@@ -536,217 +553,182 @@ export default function Dashboard() {
     isRefresh=false,
   ){
 
-
     try {
-
 
       setError('')
 
-
-
       if(isRefresh)
-
         setRefreshing(true)
-
       else
-
         setLoading(true)
 
-
-
-
-
-      const deviceList =
-        await api.devices()
-
-
-
-
-
-
-      const results =
-        await Promise.allSettled(
-
-
-          deviceList.map(
-            async(device)=>{
-
-
-              const data =
-                await api.metrics(
-                  device.ip,
-                )
-
-
-
-              return [
-                device.ip,
-                data,
-              ]
-
-
-            },
-          ),
-
+      const networkData =
+        await api.networkIntelligence(
+          ACTIVE_DEVICE_IP,
         )
 
+      const collector =
+        networkData?.collector || {}
 
+      const deviceData =
+        collector?.device || {}
 
+      const traffic =
+        collector?.traffic || {}
 
+      const ping =
+        collector?.ping || {}
 
+      const reachable =
+        deviceData?.reachable === true
 
-
-      const metricMap = {}
-
-
-
-      results.forEach(
-        result=>{
-
-
-          if(
-            result.status ===
-            'fulfilled'
-          ){
-
-
-            const [
-              ip,
-              data,
-            ] =
-              result.value
-
-
-
-            metricMap[ip]=data
-
-
-          }
-
-
+      const deviceList = [
+        {
+          ip: ACTIVE_DEVICE_IP,
+          ip_address: ACTIVE_DEVICE_IP,
+          name:
+            deviceData?.identity ||
+            'MikroTik Router',
+          type:
+            deviceData?.board_name ||
+            'MikroTik RouterOS',
+          site:
+            'JAFURAH',
+          status:
+            reachable
+            ? 'online'
+            : 'offline',
         },
-      )
+      ]
 
+      const metricMap = {
+        [ACTIVE_DEVICE_IP]: {
+          cpu_usage:
+            Number(
+              deviceData?.cpu_usage_percent || 0,
+            ),
 
+          memory_usage:
+            Number(
+              deviceData?.memory_usage_percent || 0,
+            ),
 
+          temperature:
+            Number(
+              deviceData?.temperature_celsius || 0,
+            ),
 
+          rx_bps:
+            Number(
+              traffic?.rx_bps || 0,
+            ),
+
+          tx_bps:
+            Number(
+              traffic?.tx_bps || 0,
+            ),
+
+          total_bps:
+            Number(
+              traffic?.total_bps || 0,
+            ),
+
+          selected_interface:
+            traffic?.selected_interface || null,
+
+          latency_ms:
+            Number(
+              ping?.latency_ms || 0,
+            ),
+
+          packet_loss_percent:
+            Number(
+              ping?.packet_loss_percent || 0,
+            ),
+
+          health_score:
+            Number(
+              networkData?.health_score || 0,
+            ),
+
+          confidence_percent:
+            Number(
+              networkData?.confidence_percent || 0,
+            ),
+
+          overall_status:
+            networkData?.status || 'unknown',
+
+          prediction_status:
+            networkData?.prediction?.prediction_status ||
+            'unknown',
+
+          risk_level:
+            networkData?.prediction?.risk_level ||
+            'unknown',
+        },
+      }
 
       setDevices(
         deviceList,
       )
 
-
       setMetrics(
         metricMap,
       )
 
+      try {
+        const audit =
+          await api.notificationAuditIntelligence()
 
+        setAuditIntelligence(
+          audit,
+        )
+      } catch {
+        setAuditIntelligence(null)
+      }
 
+      try {
+        const decision =
+          await api.notificationAuditDecisionLatest()
 
-
-
-      // =====================================================
-      // H23.4.5.5.12.20.5
-      // Notification Audit Intelligence
-      // =====================================================
-
-
-      const intelligence =
-        await api.notificationAuditIntelligence()
-
-
-
-      setAuditIntelligence(
-        intelligence,
-      )
-
-
-
-
-
-
-      // =====================================================
-      // H23.4.5.5.12.21.7.3
-      // Notification Audit Decision Engine
-      // =====================================================
-
-
-      const decision =
-        await api.notificationAuditDecisionLatest()
-
-
-
-      setAuditDecision(
-        decision,
-      )
-
-
-
-
-
+        setAuditDecision(
+          decision,
+        )
+      } catch {
+        setAuditDecision(null)
+      }
 
       setLastUpdated(
         new Date(),
       )
 
-
-
       appendTraffic(
         metricMap,
       )
-
-
 
       detectEvents(
         deviceList,
         metricMap,
       )
 
-
-
-    }
-
-
-    catch(error){
-
+    } catch(error) {
 
       console.error(error)
 
-
-
       setError(
-
         error.message ||
-
         'تعذر تحميل بيانات لوحة التحكم',
-
       )
 
-
-    }
-
-
-    finally{
-
+    } finally {
 
       setLoading(false)
-
-
       setRefreshing(false)
-
 
     }
 
-
   }
-
-
-
-
-
-
-
-
   useEffect(()=>{
 
 
@@ -920,30 +902,21 @@ export default function Dashboard() {
 
 
         health:
-
-
-          devices.length
-
+          values.length
           ?
-
           Math.round(
-
-            (
-
-              online /
-
-              devices.length
-
+            values.reduce(
+              (a,b) =>
+                a +
+                Number(
+                  b.health_score || 0,
+                ),
+              0,
             )
-
-            *
-
-            100,
-
+            /
+            values.length,
           )
-
           :
-
           0,
 
 
@@ -1208,31 +1181,51 @@ return (
 
 
 <StatCard
-
- title="LTE و 5G"
-
- value={
-   devices.length
- }
-
- icon={
-   RadioTower
- }
-
+  title="درجة الحرارة"
+  value={
+    `${Number(
+      metrics[
+        ACTIVE_DEVICE_IP
+      ]?.temperature || 0
+    ).toFixed(1)}°C`
+  }
+  icon={RadioTower}
 />
 
-
+<StatCard
+  title="زمن الاستجابة"
+  value={
+    `${Number(
+      metrics[
+        ACTIVE_DEVICE_IP
+      ]?.latency_ms || 0
+    ).toFixed(1)} ms`
+  }
+  icon={Activity}
+/>
 
 <StatCard
+  title="فقدان الحزم"
+  value={
+    `${Number(
+      metrics[
+        ACTIVE_DEVICE_IP
+      ]?.packet_loss_percent || 0
+    ).toFixed(1)}%`
+  }
+  icon={Server}
+/>
 
- title="الخدمات"
-
- value="4/4"
-
- icon={
-   Server
- }
-
+<StatCard
+  title="مخاطر AI"
+  value={
+    String(
+      metrics[
+        ACTIVE_DEVICE_IP
+      ]?.risk_level || 'unknown'
+    ).toUpperCase()
+  }
+  icon={AlertTriangle}
 />
 
 
@@ -1406,7 +1399,6 @@ return (
 )
 
 }
-
 
 
 
