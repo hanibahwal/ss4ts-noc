@@ -299,3 +299,39 @@ def test_runtime_singleton(
     assert first is second
 
     reset_controlled_recovery_runtime()
+
+
+@pytest.mark.asyncio
+async def test_api_get_runtime_does_not_return_coroutine(
+    monkeypatch,
+) -> None:
+    from app.api.v1 import (
+        controlled_execution_recovery_runtime as api_module,
+    )
+
+    runtime = ControlledExecutionRecoveryRuntime(
+        recovery=FakeRecovery(),
+        interval_seconds=1,
+    )
+
+    monkeypatch.setattr(
+        api_module,
+        "get_controlled_recovery_runtime_service",
+        lambda: runtime,
+    )
+
+    resolved = api_module.get_runtime()
+
+    assert resolved is runtime
+    assert not asyncio.iscoroutine(resolved)
+
+    response = await (
+        api_module.get_controlled_recovery_runtime()
+    )
+
+    assert response["running"] is False
+    assert response["safety"]["fail_closed"] is True
+    assert (
+        response["safety"]["device_command_executed"]
+        is False
+    )

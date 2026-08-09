@@ -7,7 +7,7 @@ from fastapi import (
 
 from app.services.controlled_execution_recovery_runtime import (
     ControlledExecutionRecoveryRuntime,
-    get_controlled_recovery_runtime,
+    get_controlled_recovery_runtime as get_controlled_recovery_runtime_service,
     runtime_enabled_from_environment,
 )
 
@@ -25,7 +25,7 @@ router = APIRouter(
 
 def get_runtime(
 ) -> ControlledExecutionRecoveryRuntime:
-    return get_controlled_recovery_runtime()
+    return get_controlled_recovery_runtime_service()
 
 
 def _runtime_response(
