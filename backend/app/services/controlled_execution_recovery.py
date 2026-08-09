@@ -7,6 +7,9 @@ from datetime import (
 )
 from typing import Any
 
+from app.models.controlled_rollback_contract import (
+    read_only_rollback_contract,
+)
 from app.services.controlled_execution_receipt_store import (
     ControlledExecutionReceiptStore,
     receipt_store,
@@ -95,23 +98,33 @@ class ControlledExecutionRecovery:
 
         for receipt in stale_receipts:
             rollback_evidence = (
-                {
-                    "rollback_required":
-                        False,
-                    "rollback_performed":
-                        False,
-                    "rollback_status":
-                        "NOT_REQUIRED_READ_ONLY",
-                }
+                read_only_rollback_contract()
+                .to_dict()
                 if receipt.mode
                 == "CANARY_READ_ONLY"
                 else {
+                    "requirement":
+                        "NOT_REQUIRED",
+                    "readiness":
+                        "NOT_APPLICABLE",
+                    "outcome":
+                        "NOT_ATTEMPTED",
                     "rollback_required":
-                        None,
+                        False,
+                    "rollback_ready":
+                        False,
+                    "rollback_attempted":
+                        False,
                     "rollback_performed":
                         False,
                     "rollback_status":
                         "NOT_APPLICABLE",
+                    "read_only":
+                        True,
+                    "live_execution_allowed":
+                        False,
+                    "device_command_executed":
+                        False,
                 }
             )
 
