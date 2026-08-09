@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 from app.models.decision_action import (
@@ -436,6 +438,239 @@ def test_pending_authorization_is_blocked(
 
     assert stored is not None
     assert stored.status == AuthorizationStatus.PENDING
+    assert stored.consumed is False
+
+
+def test_rejected_authorization_is_blocked(
+    tmp_path,
+) -> None:
+    (
+        action_service,
+        authorization_store,
+        approval_gateway,
+        execution_bridge,
+    ) = make_services(tmp_path)
+
+    action = create_pending_action(
+        action_service
+    )
+
+    plan = make_plan()
+    plan.decision_id = action.decision_id
+
+    request = (
+        approval_gateway.request_authorization(
+            action=action,
+            plan=plan,
+            requester=requester(),
+        )
+    )
+
+    authorization_id = (
+        request.authorization
+        .authorization_id
+    )
+
+    action_service.approve(
+        action.decision_id,
+        approved_by="manual:test",
+    )
+
+    authorization_store.reject(
+        authorization_id,
+        approver=senior(),
+        reason="H32.4 rejection test",
+    )
+
+    with pytest.raises(
+        SafeDecisionExecutionNotAllowed,
+        match="authorization must be approved",
+    ):
+        execution_bridge.execute(
+            decision_id=action.decision_id,
+            authorization_id=
+                authorization_id,
+            plan=plan,
+        )
+
+    stored = authorization_store.get(
+        authorization_id
+    )
+
+    assert stored is not None
+    assert (
+        stored.status
+        == AuthorizationStatus.REJECTED
+    )
+    assert stored.consumed is False
+    assert stored.execution_allowed is False
+
+
+def test_revoked_authorization_is_blocked(
+    tmp_path,
+) -> None:
+    (
+        action_service,
+        authorization_store,
+        approval_gateway,
+        execution_bridge,
+    ) = make_services(tmp_path)
+
+    action = create_pending_action(
+        action_service
+    )
+
+    plan = make_plan()
+    plan.decision_id = action.decision_id
+
+    request = (
+        approval_gateway.request_authorization(
+            action=action,
+            plan=plan,
+            requester=requester(),
+        )
+    )
+
+    authorization_id = (
+        request.authorization
+        .authorization_id
+    )
+
+    approval_gateway.approve(
+        authorization_id,
+        approver=senior(),
+        expected_version=(
+            authorization_store
+            .get_record_version(
+                authorization_id
+            )
+        ),
+        idempotency_key=(
+            "h32-4-revoke-approval"
+        ),
+    )
+
+    authorization_store.revoke(
+        authorization_id,
+        actor=senior(),
+        reason="H32.4 revocation test",
+    )
+
+    with pytest.raises(
+        SafeDecisionExecutionNotAllowed,
+        match="authorization must be approved",
+    ):
+        execution_bridge.execute(
+            decision_id=action.decision_id,
+            authorization_id=
+                authorization_id,
+            plan=plan,
+        )
+
+    stored = authorization_store.get(
+        authorization_id
+    )
+
+    assert stored is not None
+    assert (
+        stored.status
+        == AuthorizationStatus.REVOKED
+    )
+    assert stored.consumed is False
+    assert stored.execution_allowed is False
+
+
+def test_expired_authorization_is_blocked(
+    tmp_path,
+) -> None:
+    (
+        _,
+        authorization_store,
+        execution_bridge,
+        action,
+        plan,
+        authorization_id,
+    ) = prepare_approved_execution(
+        tmp_path
+    )
+
+    with authorization_store._connect() as connection:
+        connection.execute(
+            """
+            UPDATE execution_authorizations
+            SET expires_at = ?
+            WHERE authorization_id = ?
+            """,
+            (
+                (
+                    datetime.now(
+                        timezone.utc
+                    )
+                    - timedelta(minutes=1)
+                ).isoformat(),
+                authorization_id,
+            ),
+        )
+        connection.commit()
+
+    stored = authorization_store.get(
+        authorization_id
+    )
+
+    assert stored is not None
+    assert stored.is_expired is True
+
+    with pytest.raises(
+        SafeDecisionExecutionNotAllowed,
+        match="not usable",
+    ):
+        execution_bridge.execute(
+            decision_id=action.decision_id,
+            authorization_id=
+                authorization_id,
+            plan=plan,
+        )
+
+    stored = authorization_store.get(
+        authorization_id
+    )
+
+    assert stored is not None
+    assert stored.consumed is False
+
+
+def test_automatic_execution_plan_is_blocked(
+    tmp_path,
+) -> None:
+    (
+        _,
+        authorization_store,
+        execution_bridge,
+        action,
+        plan,
+        authorization_id,
+    ) = prepare_approved_execution(
+        tmp_path
+    )
+
+    plan.automatic_execution_allowed = True
+
+    with pytest.raises(
+        SafeDecisionExecutionNotAllowed,
+        match="Automatic device execution",
+    ):
+        execution_bridge.execute(
+            decision_id=action.decision_id,
+            authorization_id=
+                authorization_id,
+            plan=plan,
+        )
+
+    stored = authorization_store.get(
+        authorization_id
+    )
+
+    assert stored is not None
     assert stored.consumed is False
 
 
