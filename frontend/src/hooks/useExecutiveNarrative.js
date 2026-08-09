@@ -139,22 +139,6 @@ export default function useExecutiveNarrative(
 
 
 
-          /*
-            H30.28 Debug
-            Check backend payload
-          */
-
-          console.log(
-            'EXECUTIVE RAW RESPONSE',
-            response,
-          )
-
-          console.log(
-            'HISTORICAL INTELLIGENCE',
-            response?.historical_intelligence,
-          )
-
-
 
           if (
             !mountedRef.current ||
@@ -174,23 +158,6 @@ export default function useExecutiveNarrative(
               response,
             )
 
-
-
-          /*
-            H30.28 Debug
-            Check frontend normalized data
-          */
-
-          console.log(
-            'EXECUTIVE NORMALIZED DATA',
-            normalized,
-          )
-
-
-          console.log(
-            'NORMALIZED HISTORICAL',
-            normalized?.historicalIntelligence,
-          )
 
 
 

@@ -911,35 +911,78 @@ def _detect_interface_signals(
                 "is_oper_up"
             ]
         ):
-            signals.append(
-                _create_signal(
-                    signal_id=(
-                        "link-down-"
-                        f"{interface_name}"
-                    ),
-                    category="availability",
-                    title=(
-                        "واجهة مفعلة لكنها متوقفة"
-                    ),
-                    description=(
-                        f"{interface_name} في حالة "
-                        "Admin Up / Oper Down."
-                    ),
-                    risk="medium",
-                    confidence=98,
-                    score=52,
-                    recommendation=(
-                        "تحقق من الكابل والطرف "
-                        "المقابل وPoE وSFP."
-                    ),
-                    interface_name=
-                        interface_name,
-                    evidence={
-                        "admin_up": True,
-                        "oper_up": False,
-                    },
+            normalized_name = (
+                interface_name or ""
+            ).lower()
+
+            total_bps = float(
+                interface.get(
+                    "total_bps",
+                    0,
+                )
+                or 0
+            )
+
+            speed_bps = float(
+                interface.get(
+                    "speed_bps",
+                    0,
+                )
+                or 0
+            )
+
+            looks_important = any(
+                marker in normalized_name
+                for marker in (
+                    "wan",
+                    "uplink",
+                    "backhaul",
+                    "internet",
+                    "isp",
+                    "trunk",
                 )
             )
+
+            should_alert = (
+                total_bps > 0
+                or speed_bps > 0
+                or looks_important
+            )
+
+            if should_alert:
+                signals.append(
+                    _create_signal(
+                        signal_id=(
+                            "link-down-"
+                            f"{interface_name}"
+                        ),
+                        category="availability",
+                        title=(
+                            "واجهة مفعلة لكنها متوقفة"
+                        ),
+                        description=(
+                            f"{interface_name} في حالة "
+                            "Admin Up / Oper Down."
+                        ),
+                        risk="medium",
+                        confidence=92,
+                        score=52,
+                        recommendation=(
+                            "تحقق من الكابل والطرف "
+                            "المقابل وPoE وSFP."
+                        ),
+                        interface_name=
+                            interface_name,
+                        evidence={
+                            "admin_up": True,
+                            "oper_up": False,
+                            "speed_bps": speed_bps,
+                            "total_bps": total_bps,
+                            "important_name":
+                                looks_important,
+                        },
+                    )
+                )
 
     return signals
 

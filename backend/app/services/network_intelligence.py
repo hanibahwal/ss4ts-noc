@@ -93,6 +93,67 @@ def get_network_intelligence(
 
     collector["live_metrics"] = live_metrics
 
+    # H30.11 UNIFIED TRAFFIC SOURCE
+    # RouterOS live metrics provides device/system metrics only.
+    # Current traffic is supplied by the existing traffic collector
+    # (InfluxDB/SNMP). Keep both API views synchronized so consumers
+    # do not receive zero traffic from live_metrics.
+
+    collector_traffic = collector.get(
+        "traffic",
+        {},
+    )
+
+    if isinstance(
+        collector_traffic,
+        dict,
+    ):
+        live_metrics["traffic"] = {
+            "rx_bps": float(
+                collector_traffic.get(
+                    "rx_bps",
+                    0,
+                )
+                or 0
+            ),
+            "tx_bps": float(
+                collector_traffic.get(
+                    "tx_bps",
+                    0,
+                )
+                or 0
+            ),
+            "total_bps": float(
+                collector_traffic.get(
+                    "total_bps",
+                    0,
+                )
+                or 0
+            ),
+            "selected_interface":
+                collector_traffic.get(
+                    "selected_interface"
+                ),
+        }
+
+        interfaces = collector_traffic.get(
+            "interfaces",
+            [],
+        )
+
+        if isinstance(
+            interfaces,
+            list,
+        ):
+            live_metrics["interfaces"] = (
+                interfaces
+            )
+
+        live_metrics["traffic_source"] = (
+            "SS4TS traffic collector "
+            "(InfluxDB/SNMP)"
+        )
+
     # H30.6 LIVE METRICS PRIORITY FIX
     # RouterOS REST API live data has priority over cached collector values.
     # Synchronize device metrics with real-time RouterOS metrics.

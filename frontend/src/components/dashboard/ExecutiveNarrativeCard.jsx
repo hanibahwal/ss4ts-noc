@@ -240,15 +240,7 @@ export default function ExecutiveNarrativeCard({
     },
   )
 
-  console.log(
-    "EXECUTIVE NARRATIVE DATA:",
-    data,
-  )
 
-  console.log(
-    "HISTORICAL INTELLIGENCE:",
-    data?.historicalIntelligence,
-  )
 
   if (loading && !data) {
     return (

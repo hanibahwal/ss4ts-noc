@@ -484,7 +484,32 @@ def build_executive_narrative(
     }
 
     # H30.27 Historical Intelligence Integration
-    historical_intelligence = build_historical_intelligence()
+    # Historical data enriches the executive narrative but must not
+    # make the core narrative unavailable when InfluxDB/history is
+    # temporarily unavailable.
+
+    try:
+        historical_intelligence = (
+            build_historical_intelligence()
+        )
+
+    except Exception as exc:
+        historical_intelligence = {
+            "available": False,
+            "reason": (
+                "Historical intelligence "
+                "temporarily unavailable"
+            ),
+            "error_type": type(exc).__name__,
+            "cpu": {
+                "available": False,
+                "reason": (
+                    "Historical CPU data "
+                    "temporarily unavailable"
+                ),
+                "samples": 0,
+            },
+        }
 
     return {
         "router_ip": intelligence.get(
