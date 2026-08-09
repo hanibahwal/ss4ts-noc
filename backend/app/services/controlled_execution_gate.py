@@ -352,6 +352,10 @@ def execute_controlled_remediation(
             approved_action_type
             == CANARY_READ_ACTION
         ):
+            receipt_store.mark_network_io_attempted(
+                execution_id
+            )
+
             canary_result = (
                 execute_canary_read(
                     router_ip=
@@ -418,6 +422,7 @@ def execute_controlled_remediation(
                         if canary_succeeded
                         else "FAILED"
                     ),
+                    network_io_attempted=True,
                     failure_reason=(
                         None
                         if canary_succeeded

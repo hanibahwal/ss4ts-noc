@@ -375,3 +375,204 @@ def test_recent_started_receipt_is_not_recovered(
         ).status
         == "STARTED"
     )
+
+
+def test_recovers_interrupted_canary_without_fake_rollback(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    store, recovery = _setup(
+        tmp_path,
+        monkeypatch,
+    )
+
+    created = (
+        remediation_approval_service
+        .create_approval_request(
+            router_ip="192.168.88.1",
+            action_type=(
+                "CHECK_SYSTEM_RESOURCE"
+            ),
+            reason=(
+                "Interrupted read-only "
+                "canary recovery"
+            ),
+        )
+    )
+
+    approval_id = (
+        created["approval"][
+            "approval_id"
+        ]
+    )
+
+    approved = (
+        remediation_approval_service
+        .approve_request(
+            approval_id
+        )
+    )
+
+    assert approved["success"] is True
+
+    claimed = (
+        remediation_approval_service
+        .claim_approval_for_execution(
+            approval_id
+        )
+    )
+
+    assert claimed["claimed"] is True
+
+    approval = claimed[
+        "approval"
+    ]
+
+    store.create_started(
+        execution_id="execution-canary-crash",
+        approval_id=approval_id,
+        intent_fingerprint=(
+            approval[
+                "intent_fingerprint"
+            ]
+        ),
+        intent_version=(
+            approval[
+                "intent_version"
+            ]
+        ),
+        router_ip=(
+            approval["router_ip"]
+        ),
+        action_type=(
+            "CHECK_SYSTEM_RESOURCE"
+        ),
+        approval_status_before="APPROVED",
+        mode="CANARY_READ_ONLY",
+    )
+
+    store.mark_network_io_attempted(
+        "execution-canary-crash"
+    )
+
+    with sqlite3.connect(
+        store.database_path
+    ) as connection:
+        connection.execute(
+            """
+            UPDATE controlled_execution_receipts
+            SET started_at=?
+            WHERE execution_id=?
+            """,
+            (
+                _past(),
+                "execution-canary-crash",
+            ),
+        )
+        connection.commit()
+
+    with store._connect() as connection:
+        connection.row_factory = sqlite3.Row
+
+        row = connection.execute(
+            """
+            SELECT *
+            FROM controlled_execution_receipts
+            WHERE execution_id=?
+            """,
+            (
+                "execution-canary-crash",
+            ),
+        ).fetchone()
+
+        rebuilt = store._receipt(
+            row
+        )
+
+        connection.execute(
+            """
+            UPDATE controlled_execution_receipts
+            SET checksum=?
+            WHERE execution_id=?
+            """,
+            (
+                rebuilt.checksum,
+                "execution-canary-crash",
+            ),
+        )
+
+        connection.commit()
+
+    result = recovery.reconcile(
+        stale_after_seconds=60
+    )
+
+    assert (
+        result["recovery"][
+            "recovered_count"
+        ]
+        == 1
+    )
+
+    receipt = store.get(
+        "execution-canary-crash"
+    )
+
+    assert (
+        receipt.status
+        == "RECOVERED_FAILED"
+    )
+
+    assert (
+        receipt.network_io_attempted
+        is True
+    )
+
+    assert (
+        receipt.network_io_performed
+        is False
+    )
+
+    assert (
+        receipt.device_command_executed
+        is False
+    )
+
+    event = (
+        result["recovery"][
+            "events"
+        ][0]
+    )
+
+    assert (
+        event["rollback"][
+            "rollback_required"
+        ]
+        is False
+    )
+
+    assert (
+        event["rollback"][
+            "rollback_performed"
+        ]
+        is False
+    )
+
+    assert (
+        event["rollback"][
+            "rollback_status"
+        ]
+        == "NOT_REQUIRED_READ_ONLY"
+    )
+
+    recovered_approval = (
+        remediation_approval_service
+        .get_approval_by_id(
+            approval_id
+        )
+    )
+
+    assert (
+        recovered_approval["status"]
+        == "EXECUTION_FAILED"
+    )

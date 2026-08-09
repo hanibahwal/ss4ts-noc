@@ -23,7 +23,7 @@ SERVICE_NAME = (
     "Recovery Reconciliation"
 )
 
-SERVICE_VERSION = "1.0.0-fail-closed"
+SERVICE_VERSION = "1.1.0-H32.6.1"
 
 DEFAULT_STALE_AFTER_SECONDS = 300
 DEFAULT_RECOVERY_LIMIT = 100
@@ -94,6 +94,27 @@ class ControlledExecutionRecovery:
         )
 
         for receipt in stale_receipts:
+            rollback_evidence = (
+                {
+                    "rollback_required":
+                        False,
+                    "rollback_performed":
+                        False,
+                    "rollback_status":
+                        "NOT_REQUIRED_READ_ONLY",
+                }
+                if receipt.mode
+                == "CANARY_READ_ONLY"
+                else {
+                    "rollback_required":
+                        None,
+                    "rollback_performed":
+                        False,
+                    "rollback_status":
+                        "NOT_APPLICABLE",
+                }
+            )
+
             approval = get_approval_by_id(
                 receipt.approval_id
             )
@@ -125,6 +146,8 @@ class ControlledExecutionRecovery:
                         "APPROVAL_MISSING",
                     "receipt":
                         finalized.to_dict(),
+                    "rollback":
+                        rollback_evidence,
                 })
 
                 processed_approvals.add(
@@ -164,6 +187,8 @@ class ControlledExecutionRecovery:
                         "APPROVAL_ALREADY_EXECUTED",
                     "receipt":
                         finalized.to_dict(),
+                    "rollback":
+                        rollback_evidence,
                 })
 
             elif approval_status == "EXECUTING":
@@ -201,6 +226,8 @@ class ControlledExecutionRecovery:
                         recovered_approval,
                     "receipt":
                         finalized.to_dict(),
+                    "rollback":
+                        rollback_evidence,
                 })
 
             else:
@@ -231,6 +258,8 @@ class ControlledExecutionRecovery:
                         "STATE_MISMATCH",
                     "receipt":
                         finalized.to_dict(),
+                    "rollback":
+                        rollback_evidence,
                 })
 
             processed_approvals.add(

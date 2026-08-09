@@ -448,3 +448,343 @@ def test_receipt_cannot_claim_device_command_execution(
             network_io_performed=True,
             device_command_executed=True,
         )
+
+
+def test_canary_receipt_durably_marks_network_attempt(
+    tmp_path,
+) -> None:
+    store = _store(
+        tmp_path
+    )
+
+    started = store.create_started(
+        execution_id="execution-attempt",
+        approval_id="approval-attempt",
+        intent_fingerprint="i" * 64,
+        intent_version="1.0",
+        router_ip="192.168.88.1",
+        action_type="CHECK_SYSTEM_RESOURCE",
+        approval_status_before="APPROVED",
+        mode="CANARY_READ_ONLY",
+    )
+
+    assert (
+        started.network_io_attempted
+        is False
+    )
+
+    marked = (
+        store.mark_network_io_attempted(
+            "execution-attempt"
+        )
+    )
+
+    assert (
+        marked.network_io_attempted
+        is True
+    )
+
+    assert (
+        marked.network_io_performed
+        is False
+    )
+
+    loaded = store.get(
+        "execution-attempt"
+    )
+
+    assert (
+        loaded.network_io_attempted
+        is True
+    )
+
+    assert (
+        loaded.network_io_performed
+        is False
+    )
+
+    assert (
+        loaded.status
+        == "STARTED"
+    )
+
+
+def test_simulation_cannot_mark_network_attempt(
+    tmp_path,
+) -> None:
+    store = _store(
+        tmp_path
+    )
+
+    store.create_started(
+        execution_id="execution-no-attempt",
+        approval_id="approval-no-attempt",
+        intent_fingerprint="j" * 64,
+        intent_version="1.0",
+        router_ip="192.168.88.1",
+        action_type="CHECK_CPU_PROCESS",
+        approval_status_before="APPROVED",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="CANARY_READ_ONLY",
+    ):
+        store.mark_network_io_attempted(
+            "execution-no-attempt"
+        )
+
+
+def _create_legacy_receipt_database(
+    database,
+    *,
+    tampered: bool = False,
+) -> None:
+    import hashlib
+    import json
+
+    values = {
+        "execution_id":
+            "legacy-execution-1",
+        "approval_id":
+            "legacy-approval-1",
+        "intent_fingerprint":
+            "k" * 64,
+        "intent_version":
+            "1.0",
+        "router_ip":
+            "192.168.88.1",
+        "action_type":
+            "CHECK_SYSTEM_RESOURCE",
+        "mode":
+            "CANARY_READ_ONLY",
+        "status":
+            "STARTED",
+        "approval_status_before":
+            "APPROVED",
+        "approval_status_after":
+            "EXECUTING",
+        "verification_status":
+            None,
+        "failure_reason":
+            None,
+        "started_at":
+            "2026-08-09T20:00:00+00:00",
+        "completed_at":
+            None,
+        "network_io_performed":
+            False,
+        "device_command_executed":
+            False,
+    }
+
+    canonical = json.dumps(
+        values,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        default=str,
+    )
+
+    checksum = hashlib.sha256(
+        canonical.encode("utf-8")
+    ).hexdigest()
+
+    with sqlite3.connect(
+        database
+    ) as connection:
+        connection.execute(
+            """
+            CREATE TABLE
+            controlled_execution_receipts
+            (
+                execution_id TEXT PRIMARY KEY,
+                approval_id TEXT NOT NULL,
+                intent_fingerprint TEXT NOT NULL,
+                intent_version TEXT NOT NULL,
+                router_ip TEXT NOT NULL,
+                action_type TEXT NOT NULL,
+                mode TEXT NOT NULL,
+                status TEXT NOT NULL,
+                approval_status_before TEXT NOT NULL,
+                approval_status_after TEXT,
+                verification_status TEXT,
+                failure_reason TEXT,
+                started_at TEXT NOT NULL,
+                completed_at TEXT,
+                network_io_performed INTEGER NOT NULL,
+                device_command_executed INTEGER NOT NULL,
+                checksum TEXT NOT NULL
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            INSERT INTO
+            controlled_execution_receipts
+            (
+                execution_id,
+                approval_id,
+                intent_fingerprint,
+                intent_version,
+                router_ip,
+                action_type,
+                mode,
+                status,
+                approval_status_before,
+                approval_status_after,
+                verification_status,
+                failure_reason,
+                started_at,
+                completed_at,
+                network_io_performed,
+                device_command_executed,
+                checksum
+            )
+            VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+             ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                values["execution_id"],
+                values["approval_id"],
+                values["intent_fingerprint"],
+                values["intent_version"],
+                (
+                    "10.10.10.10"
+                    if tampered
+                    else values["router_ip"]
+                ),
+                values["action_type"],
+                values["mode"],
+                values["status"],
+                values[
+                    "approval_status_before"
+                ],
+                values[
+                    "approval_status_after"
+                ],
+                values[
+                    "verification_status"
+                ],
+                values["failure_reason"],
+                values["started_at"],
+                values["completed_at"],
+                int(
+                    values[
+                        "network_io_performed"
+                    ]
+                ),
+                int(
+                    values[
+                        "device_command_executed"
+                    ]
+                ),
+                checksum,
+            ),
+        )
+
+        connection.commit()
+
+
+def test_valid_legacy_receipt_database_migrates(
+    tmp_path,
+) -> None:
+    database = (
+        tmp_path
+        / "legacy-receipts.db"
+    )
+
+    _create_legacy_receipt_database(
+        database
+    )
+
+    store = (
+        ControlledExecutionReceiptStore(
+            database
+        )
+    )
+
+    receipt = store.get(
+        "legacy-execution-1"
+    )
+
+    assert receipt is not None
+
+    assert (
+        receipt.network_io_attempted
+        is False
+    )
+
+    assert (
+        receipt.network_io_performed
+        is False
+    )
+
+    assert receipt.verify(
+        receipt.checksum
+    )
+
+    with sqlite3.connect(
+        database
+    ) as connection:
+        columns = {
+            row[1]
+            for row in connection.execute(
+                """
+                PRAGMA table_info(
+                    controlled_execution_receipts
+                )
+                """
+            ).fetchall()
+        }
+
+    assert (
+        "network_io_attempted"
+        in columns
+    )
+
+
+def test_tampered_legacy_receipt_migration_fails_closed(
+    tmp_path,
+) -> None:
+    database = (
+        tmp_path
+        / "legacy-tampered.db"
+    )
+
+    _create_legacy_receipt_database(
+        database,
+        tampered=True,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "Legacy execution receipt "
+            "checksum mismatch"
+        ),
+    ):
+        ControlledExecutionReceiptStore(
+            database
+        )
+
+    with sqlite3.connect(
+        database
+    ) as connection:
+        columns = {
+            row[1]
+            for row in connection.execute(
+                """
+                PRAGMA table_info(
+                    controlled_execution_receipts
+                )
+                """
+            ).fetchall()
+        }
+
+    assert (
+        "network_io_attempted"
+        not in columns
+    )

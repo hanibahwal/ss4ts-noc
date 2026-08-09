@@ -40,6 +40,7 @@ class ControlledExecutionReceipt:
     started_at: str
     completed_at: str | None
 
+    network_io_attempted: bool = False
     network_io_performed: bool = False
     device_command_executed: bool = False
 
@@ -83,7 +84,10 @@ class ControlledExecutionReceipt:
             )
 
         if (
-            self.network_io_performed
+            (
+                self.network_io_attempted
+                or self.network_io_performed
+            )
             and self.mode != "CANARY_READ_ONLY"
         ):
             raise ValueError(
@@ -133,6 +137,8 @@ class ControlledExecutionReceipt:
                 self.started_at,
             "completed_at":
                 self.completed_at,
+            "network_io_attempted":
+                self.network_io_attempted,
             "network_io_performed":
                 self.network_io_performed,
             "device_command_executed":
@@ -166,6 +172,8 @@ class ControlledExecutionReceipt:
             "integrity":
                 "valid",
             "safety": {
+                "network_io_attempted":
+                    self.network_io_attempted,
                 "network_io_performed":
                     self.network_io_performed,
                 "device_command_executed":

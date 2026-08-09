@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from contextlib import closing
+import hashlib
+import json
 import os
 from pathlib import Path
 import sqlite3
@@ -26,6 +28,65 @@ DEFAULT_RECEIPT_DATABASE = Path(
         ),
     )
 )
+
+
+def _legacy_receipt_checksum(
+    row: sqlite3.Row,
+) -> str:
+    payload = {
+        "execution_id":
+            row["execution_id"],
+        "approval_id":
+            row["approval_id"],
+        "intent_fingerprint":
+            row["intent_fingerprint"],
+        "intent_version":
+            row["intent_version"],
+        "router_ip":
+            row["router_ip"],
+        "action_type":
+            row["action_type"],
+        "mode":
+            row["mode"],
+        "status":
+            row["status"],
+        "approval_status_before":
+            row["approval_status_before"],
+        "approval_status_after":
+            row["approval_status_after"],
+        "verification_status":
+            row["verification_status"],
+        "failure_reason":
+            row["failure_reason"],
+        "started_at":
+            row["started_at"],
+        "completed_at":
+            row["completed_at"],
+        "network_io_performed":
+            bool(
+                row[
+                    "network_io_performed"
+                ]
+            ),
+        "device_command_executed":
+            bool(
+                row[
+                    "device_command_executed"
+                ]
+            ),
+    }
+
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        default=str,
+    )
+
+    return hashlib.sha256(
+        canonical.encode("utf-8")
+    ).hexdigest()
 
 
 class ControlledExecutionReceiptStore:
@@ -91,12 +152,97 @@ class ControlledExecutionReceiptStore:
                     failure_reason TEXT,
                     started_at TEXT NOT NULL,
                     completed_at TEXT,
+                    network_io_attempted INTEGER NOT NULL DEFAULT 0,
                     network_io_performed INTEGER NOT NULL,
                     device_command_executed INTEGER NOT NULL,
                     checksum TEXT NOT NULL
                 )
                 """
             )
+
+            columns = {
+                str(row["name"])
+                for row in connection.execute(
+                    """
+                    PRAGMA table_info(
+                        controlled_execution_receipts
+                    )
+                    """
+                ).fetchall()
+            }
+
+            if (
+                "network_io_attempted"
+                not in columns
+            ):
+                legacy_rows = (
+                    connection.execute(
+                        """
+                        SELECT *
+                        FROM controlled_execution_receipts
+                        """
+                    ).fetchall()
+                )
+
+                for row in legacy_rows:
+                    expected_checksum = (
+                        _legacy_receipt_checksum(
+                            row
+                        )
+                    )
+
+                    stored_checksum = str(
+                        row["checksum"]
+                    ).strip()
+
+                    if (
+                        expected_checksum
+                        != stored_checksum
+                    ):
+                        raise ValueError(
+                            "Legacy execution receipt "
+                            "checksum mismatch during "
+                            "migration"
+                        )
+
+                connection.execute(
+                    """
+                    ALTER TABLE
+                    controlled_execution_receipts
+                    ADD COLUMN
+                    network_io_attempted
+                    INTEGER NOT NULL DEFAULT 0
+                    """
+                )
+
+                migrated_rows = (
+                    connection.execute(
+                        """
+                        SELECT *
+                        FROM controlled_execution_receipts
+                        """
+                    ).fetchall()
+                )
+
+                for row in migrated_rows:
+                    migrated = (
+                        self._receipt(
+                            row
+                        )
+                    )
+
+                    connection.execute(
+                        """
+                        UPDATE
+                        controlled_execution_receipts
+                        SET checksum=?
+                        WHERE execution_id=?
+                        """,
+                        (
+                            migrated.checksum,
+                            migrated.execution_id,
+                        ),
+                    )
 
             connection.execute(
                 """
@@ -157,6 +303,11 @@ class ControlledExecutionReceiptStore:
                 row["started_at"],
             completed_at=
                 row["completed_at"],
+            network_io_attempted=bool(
+                row[
+                    "network_io_attempted"
+                ]
+            ),
             network_io_performed=bool(
                 row[
                     "network_io_performed"
@@ -223,13 +374,14 @@ class ControlledExecutionReceiptStore:
                     failure_reason,
                     started_at,
                     completed_at,
+                    network_io_attempted,
                     network_io_performed,
                     device_command_executed,
                     checksum
                 )
                 VALUES
                 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                 ?, ?, ?, ?, ?, ?, ?)
+                 ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     receipt.execution_id,
@@ -248,6 +400,7 @@ class ControlledExecutionReceiptStore:
                     receipt.completed_at,
                     0,
                     0,
+                    0,
                     receipt.checksum,
                 ),
             )
@@ -255,6 +408,108 @@ class ControlledExecutionReceiptStore:
             connection.commit()
 
         return receipt
+
+    def mark_network_io_attempted(
+        self,
+        execution_id: str,
+    ) -> ControlledExecutionReceipt:
+        current = self.get(
+            execution_id
+        )
+
+        if current is None:
+            raise KeyError(
+                "Execution receipt not found"
+            )
+
+        if current.status != "STARTED":
+            raise ValueError(
+                "Execution receipt is already finalized"
+            )
+
+        if current.mode != "CANARY_READ_ONLY":
+            raise ValueError(
+                "Network I/O attempt is allowed only "
+                "for CANARY_READ_ONLY receipts"
+            )
+
+        if current.network_io_attempted:
+            return current
+
+        updated = ControlledExecutionReceipt(
+            execution_id=
+                current.execution_id,
+            approval_id=
+                current.approval_id,
+            intent_fingerprint=
+                current.intent_fingerprint,
+            intent_version=
+                current.intent_version,
+            router_ip=
+                current.router_ip,
+            action_type=
+                current.action_type,
+            mode=
+                current.mode,
+            status=
+                current.status,
+            approval_status_before=
+                current.approval_status_before,
+            approval_status_after=
+                current.approval_status_after,
+            verification_status=
+                current.verification_status,
+            failure_reason=
+                current.failure_reason,
+            started_at=
+                current.started_at,
+            completed_at=
+                current.completed_at,
+            network_io_attempted=True,
+            network_io_performed=
+                current.network_io_performed,
+            device_command_executed=
+                current.device_command_executed,
+        )
+
+        with closing(
+            self._connect()
+        ) as connection:
+            cursor = connection.execute(
+                """
+                UPDATE controlled_execution_receipts
+                SET network_io_attempted=1,
+                    checksum=?
+                WHERE execution_id=?
+                  AND status='STARTED'
+                  AND network_io_attempted=0
+                """,
+                (
+                    updated.checksum,
+                    execution_id,
+                ),
+            )
+
+            connection.commit()
+
+        if cursor.rowcount == 0:
+            latest = self.get(
+                execution_id
+            )
+
+            if (
+                latest is not None
+                and latest.status == "STARTED"
+                and latest.network_io_attempted
+            ):
+                return latest
+
+            raise ValueError(
+                "Execution receipt network-I/O "
+                "attempt update conflict"
+            )
+
+        return updated
 
     def finalize(
         self,
@@ -264,6 +519,7 @@ class ControlledExecutionReceiptStore:
         approval_status_after: str,
         verification_status: str | None,
         failure_reason: str | None = None,
+        network_io_attempted: bool | None = None,
         network_io_performed: bool | None = None,
         device_command_executed: bool | None = None,
     ) -> ControlledExecutionReceipt:
@@ -310,6 +566,11 @@ class ControlledExecutionReceiptStore:
                 current.started_at,
             completed_at=
                 utc_now(),
+            network_io_attempted=(
+                current.network_io_attempted
+                if network_io_attempted is None
+                else bool(network_io_attempted)
+            ),
             network_io_performed=(
                 current.network_io_performed
                 if network_io_performed is None
@@ -333,6 +594,7 @@ class ControlledExecutionReceiptStore:
                     verification_status=?,
                     failure_reason=?,
                     completed_at=?,
+                    network_io_attempted=?,
                     network_io_performed=?,
                     device_command_executed=?,
                     checksum=?
@@ -345,6 +607,9 @@ class ControlledExecutionReceiptStore:
                     completed.verification_status,
                     completed.failure_reason,
                     completed.completed_at,
+                    int(
+                        completed.network_io_attempted
+                    ),
                     int(
                         completed.network_io_performed
                     ),
