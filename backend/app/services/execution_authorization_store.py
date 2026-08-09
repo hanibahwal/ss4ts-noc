@@ -11,6 +11,7 @@ from datetime import (
     timezone,
 )
 from pathlib import Path
+from app.services.data_directory import data_path
 from typing import Any
 
 from app.models.execution_concurrency import (
@@ -31,8 +32,7 @@ from app.models.execution_authorization import (
 )
 
 
-DEFAULT_AUTHORIZATION_DATABASE = Path(
-    "/var/lib/ss4ts-noc/"
+DEFAULT_AUTHORIZATION_DATABASE = data_path(
     "execution-authorization.db"
 )
 

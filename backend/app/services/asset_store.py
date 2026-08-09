@@ -1,18 +1,12 @@
 from datetime import datetime, timezone
-import os
 import sqlite3
-from pathlib import Path
+from app.services.data_directory import data_path
 from typing import Any
 
 
-if os.path.exists("/app"):
-    DB_PATH = Path(
-        "/app/data/network_assets.db"
-    )
-else:
-    DB_PATH = Path(
-        "/opt/ss4ts-noc/data/network_assets.db"
-    )
+DB_PATH = data_path(
+    "network_assets.db"
+)
 
 
 class AssetStore:

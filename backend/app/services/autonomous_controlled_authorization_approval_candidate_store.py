@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+from app.services.data_directory import data_path
 import sqlite3
 from typing import Any
 
@@ -14,8 +15,7 @@ from app.models.autonomous_controlled_authorization_approval_candidate import (
 )
 
 
-DEFAULT_AUTONOMOUS_APPROVAL_CANDIDATE_DATABASE = Path(
-    "backend/data/"
+DEFAULT_AUTONOMOUS_APPROVAL_CANDIDATE_DATABASE = data_path(
     "autonomous-controlled-authorization-approval-candidates.db"
 )
 

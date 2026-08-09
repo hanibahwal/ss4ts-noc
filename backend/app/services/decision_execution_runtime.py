@@ -8,6 +8,7 @@ from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from app.services.data_directory import data_path
 from threading import RLock
 from typing import Any
 
@@ -27,8 +28,7 @@ from app.services.decision_action_service import (
 )
 
 
-DEFAULT_DECISION_EXECUTION_RUNTIME_DATABASE = Path(
-    "/var/lib/ss4ts-noc/"
+DEFAULT_DECISION_EXECUTION_RUNTIME_DATABASE = data_path(
     "decision-execution-runtime.db"
 )
 

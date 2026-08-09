@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from app.services.data_directory import data_path
 import sqlite3
 from typing import Any, Iterator
 
@@ -23,7 +24,11 @@ GENESIS_RECORD_HASH = "0" * 64
 DEFAULT_EXECUTIVE_PREDICTIVE_REPORT_DATABASE = Path(
     os.getenv(
         "SS4TS_EXECUTIVE_PREDICTIVE_REPORT_DB",
-        "executive-predictive-reports.db",
+        str(
+            data_path(
+                "executive-predictive-reports.db"
+            )
+        ),
     )
 )
 

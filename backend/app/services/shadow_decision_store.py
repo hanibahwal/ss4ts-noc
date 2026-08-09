@@ -5,6 +5,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from app.services.data_directory import data_path
 from typing import Iterator
 
 from app.models.shadow_decision import (
@@ -12,8 +13,8 @@ from app.models.shadow_decision import (
 )
 
 
-DEFAULT_SHADOW_DATABASE = Path(
-    "/var/lib/ss4ts-noc/shadow-decisions.db"
+DEFAULT_SHADOW_DATABASE = data_path(
+    "shadow-decisions.db"
 )
 
 

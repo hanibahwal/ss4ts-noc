@@ -6,6 +6,7 @@ import sqlite3
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
+from app.services.data_directory import data_path
 from typing import Any, Iterable
 from uuid import uuid4
 
@@ -27,8 +28,8 @@ from app.models.execution_simulation import (
 )
 
 
-DEFAULT_AUDIT_DATABASE = Path(
-    "/var/lib/ss4ts-noc/decision-audit.db"
+DEFAULT_AUDIT_DATABASE = data_path(
+    "decision-audit.db"
 )
 
 

@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from app.services.data_directory import data_path
 import sqlite3
 from typing import Any
 
@@ -388,7 +389,9 @@ class PredictiveIntelligenceStore:
             or os.getenv(
                 DATABASE_ENVIRONMENT_VARIABLE
             )
-            or DEFAULT_DATABASE_NAME
+            or data_path(
+                DEFAULT_DATABASE_NAME
+            )
         )
 
         self.database_path = Path(

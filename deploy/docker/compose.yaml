@@ -70,6 +70,16 @@ services:
       MIKROTIK_API_PASSWORD: ${MIKROTIK_API_PASSWORD}
       MIKROTIK_API_VERIFY_SSL: ${MIKROTIK_API_VERIFY_SSL}
       MIKROTIK_API_TIMEOUT: ${MIKROTIK_API_TIMEOUT}
+
+      SS4TS_DATA_DIR: /app/data
+
+      SS4TS_CONTROLLED_EXECUTION_ENABLED: "false"
+      SS4TS_REAL_DEVICE_READ_ENABLED: "false"
+      SS4TS_CONTROLLED_RECOVERY_RUNTIME_ENABLED: "false"
+
+    volumes:
+      - /opt/ss4ts-noc/data:/app/data
+
     depends_on:
       - influxdb
     networks:
