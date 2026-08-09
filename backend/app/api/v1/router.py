@@ -38,6 +38,9 @@ from app.api.v1.autonomous_proposal_binding import (
 from app.api.v1.autonomous_controlled_authorization import (
     router as autonomous_controlled_authorization_router,
 )
+from app.api.v1.autonomous_shadow import (
+    router as autonomous_shadow_router,
+)
 
 from app.api.v1.notification import router as notification_router
 from app.api.v1.notification_audit import router as notification_audit_router
@@ -108,6 +111,7 @@ for router in [
     knowledge_graph_router,
     autonomous_proposal_binding_router,
     autonomous_controlled_authorization_router,
+    autonomous_shadow_router,
 
     notification_router,
     notification_audit_router,

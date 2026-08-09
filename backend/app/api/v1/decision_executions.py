@@ -17,6 +17,9 @@ from app.api.v1.decision_audits import (
 from app.api.v1.execution_authorizations import (
     get_authorization_store,
 )
+from app.api.v1.autonomous_shadow import (
+    get_shadow_store,
+)
 from app.models.decision_action import (
     DecisionActionCommand,
     DecisionActionExecutionMode,
@@ -37,6 +40,9 @@ from app.models.execution_plan import (
 )
 from app.services.decision_approval_gateway import (
     DecisionApprovalGateway,
+)
+from app.services.autonomous_shadow_mode import (
+    AutonomousShadowMode,
 )
 from app.services.decision_execution_evidence import (
     DecisionExecutionEvidenceBuilder,
@@ -206,6 +212,90 @@ def _identity(
         role=payload.role,
         email=payload.email,
     )
+
+
+def _capture_shadow_result(
+    execution,
+) -> dict[str, Any]:
+    """
+    Persist the completed dry-run result in autonomous
+    shadow mode.
+
+    Shadow persistence is observational only. A storage
+    failure must never grant execution authority or alter
+    the dry-run execution result.
+    """
+    action = execution.action
+    simulation_payload = (
+        execution.simulation.to_dict()
+    )
+
+    source_node_id = (
+        action.target.device_id
+        or action.target.router_ip
+    )
+
+    try:
+        shadow_service = AutonomousShadowMode(
+            get_shadow_store()
+        )
+
+        record = shadow_service.record_decision(
+            decision={
+                "decision_id":
+                    action.decision_id,
+                "action":
+                    action.command.action_type,
+                "confidence":
+                    action.confidence_percent,
+                "risk_level":
+                    action.risk_level.value,
+            },
+            simulation={
+                **simulation_payload,
+                "confidence":
+                    action.confidence_percent,
+            },
+            source_node_id=
+                source_node_id,
+            predicted_outcome={
+                "simulation":
+                    simulation_payload,
+                "action_status":
+                    action.status.value,
+                "proposed_action":
+                    action.command.action_type,
+                "dry_run_only":
+                    True,
+            },
+        )
+
+        return {
+            "captured": True,
+            "shadow_id":
+                record.shadow_id,
+            "decision_id":
+                record.decision_id,
+            "dry_run_only": True,
+            "execution_authority": False,
+            "network_io_performed": False,
+            "device_command_executed": False,
+        }
+
+    except (
+        OSError,
+        RuntimeError,
+        ValueError,
+    ) as exc:
+        return {
+            "captured": False,
+            "error":
+                f"{type(exc).__name__}: {exc}",
+            "dry_run_only": True,
+            "execution_authority": False,
+            "network_io_performed": False,
+            "device_command_executed": False,
+        }
 
 
 @router.get("/readiness")
@@ -468,6 +558,12 @@ async def simulate_decision_execution(
             ),
         )
 
+        shadow_capture = (
+            _capture_shadow_result(
+                execution
+            )
+        )
+
         runtime.update(
             action=execution.action,
             plan=item.plan,
@@ -558,6 +654,8 @@ async def simulate_decision_execution(
             execution.to_dict(),
         "evidence":
             evidence.to_dict(),
+        "shadow":
+            shadow_capture,
         "safety": {
             "dry_run_only":
                 True,

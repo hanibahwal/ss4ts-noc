@@ -22,6 +22,9 @@ from app.services.decision_execution_runtime import (
 from app.services.execution_authorization_store import (
     ExecutionAuthorizationStore,
 )
+from app.services.shadow_decision_store import (
+    ShadowDecisionStore,
+)
 from tests.test_execution_simulator import (
     make_plan,
 )
@@ -53,6 +56,11 @@ def execution_environment(
         / "decision-execution-runtime.db"
     )
 
+    shadow_database = (
+        tmp_path
+        / "shadow-decisions.db"
+    )
+
     monkeypatch.setenv(
         "SS4TS_EXECUTION_AUTH_DB",
         str(authorization_database),
@@ -68,6 +76,11 @@ def execution_environment(
         str(runtime_database),
     )
 
+    monkeypatch.setenv(
+        "SS4TS_SHADOW_DECISION_DB",
+        str(shadow_database),
+    )
+
     runtime.clear()
 
     yield {
@@ -77,6 +90,8 @@ def execution_environment(
             audit_database,
         "runtime_database":
             runtime_database,
+        "shadow_database":
+            shadow_database,
     }
 
     runtime.clear()
@@ -331,6 +346,93 @@ def test_simulate_approved_execution(
         ["audit_verified"]
         is True
     )
+
+
+def test_simulation_creates_shadow_record(
+    execution_environment,
+) -> None:
+    prepared = run(
+        decision_executions
+        .prepare_decision_execution(
+            prepare_payload()
+        )
+    )
+
+    authorization_id = (
+        prepared["authorization"]
+        ["authorization_id"]
+    )
+
+    approve_authorization(
+        authorization_id,
+        execution_environment[
+            "authorization_database"
+        ],
+    )
+
+    result = run(
+        decision_executions
+        .simulate_decision_execution(
+            authorization_id,
+            simulate_payload(),
+        )
+    )
+
+    assert result["shadow"]["captured"] is True
+    assert (
+        result["shadow"]["dry_run_only"]
+        is True
+    )
+    assert (
+        result["shadow"][
+            "execution_authority"
+        ]
+        is False
+    )
+    assert (
+        result["shadow"][
+            "device_command_executed"
+        ]
+        is False
+    )
+
+    store = ShadowDecisionStore(
+        execution_environment[
+            "shadow_database"
+        ]
+    )
+
+    records = store.list_recent(
+        limit=10
+    )
+
+    assert len(records) == 1
+
+    record = records[0]
+
+    assert (
+        record.decision_id
+        == prepared["runtime"]["action"]
+        ["decision_id"]
+    )
+
+    assert (
+        record.source_node_id
+        == "device:router-01"
+    )
+
+    assert (
+        record.proposed_action
+        == "disable_interface"
+    )
+
+    assert (
+        record.confidence_percent
+        == 95
+    )
+
+    assert record.risk_level == "HIGH"
+    assert record.dry_run_only is True
 
 
 def test_simulate_pending_authorization_returns_409(
