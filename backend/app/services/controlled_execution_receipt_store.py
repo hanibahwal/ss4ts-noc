@@ -179,6 +179,7 @@ class ControlledExecutionReceiptStore:
         router_ip: str,
         action_type: str,
         approval_status_before: str,
+        mode: str = "SAFE_SIMULATION",
     ) -> ControlledExecutionReceipt:
         receipt = ControlledExecutionReceipt(
             execution_id=execution_id,
@@ -188,7 +189,7 @@ class ControlledExecutionReceiptStore:
             intent_version=intent_version,
             router_ip=router_ip,
             action_type=action_type,
-            mode="SAFE_SIMULATION",
+            mode=str(mode).strip(),
             status="STARTED",
             approval_status_before=
                 approval_status_before,
@@ -263,6 +264,8 @@ class ControlledExecutionReceiptStore:
         approval_status_after: str,
         verification_status: str | None,
         failure_reason: str | None = None,
+        network_io_performed: bool | None = None,
+        device_command_executed: bool | None = None,
     ) -> ControlledExecutionReceipt:
         current = self.get(
             execution_id
@@ -307,6 +310,16 @@ class ControlledExecutionReceiptStore:
                 current.started_at,
             completed_at=
                 utc_now(),
+            network_io_performed=(
+                current.network_io_performed
+                if network_io_performed is None
+                else bool(network_io_performed)
+            ),
+            device_command_executed=(
+                current.device_command_executed
+                if device_command_executed is None
+                else bool(device_command_executed)
+            ),
         )
 
         with closing(
@@ -320,6 +333,8 @@ class ControlledExecutionReceiptStore:
                     verification_status=?,
                     failure_reason=?,
                     completed_at=?,
+                    network_io_performed=?,
+                    device_command_executed=?,
                     checksum=?
                 WHERE execution_id=?
                   AND status='STARTED'
@@ -330,6 +345,12 @@ class ControlledExecutionReceiptStore:
                     completed.verification_status,
                     completed.failure_reason,
                     completed.completed_at,
+                    int(
+                        completed.network_io_performed
+                    ),
+                    int(
+                        completed.device_command_executed
+                    ),
                     completed.checksum,
                     execution_id,
                 ),

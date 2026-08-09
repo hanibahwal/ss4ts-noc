@@ -76,13 +76,19 @@ class ControlledExecutionReceipt:
                 value,
             )
 
-        if (
-            self.network_io_performed
-            or self.device_command_executed
-        ):
+        if self.device_command_executed:
             raise ValueError(
                 "Controlled execution receipt "
-                "cannot claim network or device execution"
+                "cannot claim device command execution"
+            )
+
+        if (
+            self.network_io_performed
+            and self.mode != "CANARY_READ_ONLY"
+        ):
+            raise ValueError(
+                "Network I/O is allowed only for "
+                "CANARY_READ_ONLY receipts"
             )
 
         datetime.fromisoformat(
@@ -161,9 +167,11 @@ class ControlledExecutionReceipt:
                 "valid",
             "safety": {
                 "network_io_performed":
-                    False,
+                    self.network_io_performed,
                 "device_command_executed":
-                    False,
+                    self.device_command_executed,
+                "read_only":
+                    not self.device_command_executed,
                 "secrets_exposed":
                     False,
                 "command_payload_exposed":

@@ -306,3 +306,145 @@ def test_receipts_can_be_retrieved_by_approval(
             "execution_id"
         ]
     )
+
+
+def test_canary_read_only_receipt_records_network_io(
+    tmp_path,
+) -> None:
+    store = _store(
+        tmp_path
+    )
+
+    started = store.create_started(
+        execution_id="execution-canary-1",
+        approval_id="approval-canary-1",
+        intent_fingerprint="f" * 64,
+        intent_version="1.0",
+        router_ip="192.168.88.1",
+        action_type="CHECK_SYSTEM_RESOURCE",
+        approval_status_before="APPROVED",
+        mode="CANARY_READ_ONLY",
+    )
+
+    assert (
+        started.mode
+        == "CANARY_READ_ONLY"
+    )
+
+    assert (
+        started.network_io_performed
+        is False
+    )
+
+    completed = store.finalize(
+        "execution-canary-1",
+        status="READ_ONLY_SUCCESS",
+        approval_status_after="EXECUTED",
+        verification_status=(
+            "READ_ONLY_VERIFIED"
+        ),
+        network_io_performed=True,
+    )
+
+    assert (
+        completed.network_io_performed
+        is True
+    )
+
+    assert (
+        completed.device_command_executed
+        is False
+    )
+
+    payload = completed.to_dict()
+
+    assert (
+        payload["safety"][
+            "network_io_performed"
+        ]
+        is True
+    )
+
+    assert (
+        payload["safety"][
+            "device_command_executed"
+        ]
+        is False
+    )
+
+    assert (
+        payload["safety"]["read_only"]
+        is True
+    )
+
+    loaded = store.get(
+        "execution-canary-1"
+    )
+
+    assert loaded == completed
+
+
+def test_safe_simulation_cannot_claim_network_io(
+    tmp_path,
+) -> None:
+    store = _store(
+        tmp_path
+    )
+
+    store.create_started(
+        execution_id="execution-simulation-io",
+        approval_id="approval-simulation-io",
+        intent_fingerprint="g" * 64,
+        intent_version="1.0",
+        router_ip="192.168.88.1",
+        action_type="CHECK_CPU_PROCESS",
+        approval_status_before="APPROVED",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="CANARY_READ_ONLY",
+    ):
+        store.finalize(
+            "execution-simulation-io",
+            status="SIMULATED_SUCCESS",
+            approval_status_after="EXECUTED",
+            verification_status=(
+                "SIMULATED_VERIFIED"
+            ),
+            network_io_performed=True,
+        )
+
+
+def test_receipt_cannot_claim_device_command_execution(
+    tmp_path,
+) -> None:
+    store = _store(
+        tmp_path
+    )
+
+    store.create_started(
+        execution_id="execution-device-command",
+        approval_id="approval-device-command",
+        intent_fingerprint="h" * 64,
+        intent_version="1.0",
+        router_ip="192.168.88.1",
+        action_type="CHECK_SYSTEM_RESOURCE",
+        approval_status_before="APPROVED",
+        mode="CANARY_READ_ONLY",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="device command",
+    ):
+        store.finalize(
+            "execution-device-command",
+            status="READ_ONLY_SUCCESS",
+            approval_status_after="EXECUTED",
+            verification_status=(
+                "READ_ONLY_VERIFIED"
+            ),
+            network_io_performed=True,
+            device_command_executed=True,
+        )
