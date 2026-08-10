@@ -45,6 +45,7 @@ services:
       INFLUX_TOKEN: ${INFLUX_TOKEN}
       INFLUX_ORG: ${INFLUX_ORG}
       INFLUX_BUCKET: ${INFLUX_BUCKET}
+      SNMP_COMMUNITY: ${SNMP_COMMUNITY}
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     depends_on:
@@ -70,6 +71,7 @@ services:
       MIKROTIK_API_PASSWORD: ${MIKROTIK_API_PASSWORD}
       MIKROTIK_API_VERIFY_SSL: ${MIKROTIK_API_VERIFY_SSL}
       MIKROTIK_API_TIMEOUT: ${MIKROTIK_API_TIMEOUT}
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
 
       SS4TS_DATA_DIR: /app/data
 

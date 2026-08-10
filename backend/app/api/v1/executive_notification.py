@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter
 
 from app.services.executive_notification_bridge import (
@@ -23,7 +24,7 @@ bridge = ExecutiveNotificationBridge(
 
     evolution_url="http://mikrotik-whatsapp-api:8080",
 
-    api_key="19d4972f466cfdc5aaa684f388fd68ce12fb1c9cd0634abfc3811ac553a8d271",
+    api_key=os.getenv("EVOLUTION_API_KEY", ""),
 
     instance="mikrotik-wa-2026",
 
